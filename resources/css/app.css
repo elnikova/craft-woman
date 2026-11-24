@@ -1,9 +1,12 @@
-@import 'tailwindcss';
+/*
+ * source(none) вимикає автосканування всього проєкту: інакше Tailwind стежить
+ * за файлами поза resources/ (storage, .idea, логи…) і в dev-режимі мовчки
+ * перезавантажує сторінку, коли вони змінюються. Скануємо тільки те, де є класи.
+ */
+@import 'tailwindcss' source(none);
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.{js,ts,vue}';
+@source '../views';
+@source '../js';
 
 /* ------------------------------------------------------------------
    Craft Woman — design tokens
