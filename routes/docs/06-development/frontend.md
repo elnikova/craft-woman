@@ -40,10 +40,12 @@ resources/js/
 │   └── home/               SectionHeader, MakerCard, ProductCard, CourseCard, WorkshopRow, PostCard
 └── pages/                  HomePage, auth/AuthPage, NotFoundPage
 
-public/images/
-├── patterns/               grain, linen, knit, weave, stitch (dark/light)
-└── ornaments/              4 рушники, зірка (логотип і декор)
+resources/images/patterns/   grain, linen, knit, weave, stitch (dark/light) — Vite їх обробляє з app.css
+public/images/ornaments/     4 рушники, зірка (логотип і декор) — віддаються як є, для <img>
 ```
+
+> Текстури для CSS лежать у `resources/images`, а не в `public/`: у dev-режимі Vite переписує
+> абсолютні `url('/images/…')` на свій сервер (порт 5173), де `public/` не роздається, і отримуємо 404.
 
 ## Дизайн-токени (`resources/css/app.css`)
 
@@ -84,4 +86,4 @@ public/images/
 ## Перевірено
 
 `vue-tsc --noEmit` без помилок, `vite build` успішний.
-Попередження «didn't resolve at build time» для `/images/...` очікуване: це файли з `public/`, вони віддаються як є.
+Текстури з `app.css` Vite збирає з хешами в `public/build`.

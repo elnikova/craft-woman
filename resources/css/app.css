@@ -1,9 +1,12 @@
-@import 'tailwindcss';
+/*
+ * source(none) вимикає автосканування всього проєкту: інакше Tailwind стежить
+ * за файлами поза resources/ (storage, .idea, логи…) і в dev-режимі мовчки
+ * перезавантажує сторінку, коли вони змінюються. Скануємо тільки те, де є класи.
+ */
+@import 'tailwindcss' source(none);
 
-@source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
-@source '../../storage/framework/views/*.php';
-@source '../**/*.blade.php';
-@source '../**/*.{js,ts,vue}';
+@source '../views';
+@source '../js';
 
 /* ------------------------------------------------------------------
    Craft Woman — design tokens
@@ -62,29 +65,29 @@
 
 /* ---------- Текстури фонів ---------- */
 @utility tx-linen {
-    background-image: url('/images/patterns/grain.png'), url('/images/patterns/linen.png');
+    background-image: url('../images/patterns/grain.png'), url('../images/patterns/linen.png');
     background-size: 256px 256px, 256px 256px;
 }
 @utility tx-weave {
-    background-image: url('/images/patterns/grain.png'), url('/images/patterns/weave-dark.svg');
+    background-image: url('../images/patterns/grain.png'), url('../images/patterns/weave-dark.svg');
     background-size: 256px 256px, 32px 32px;
 }
 @utility tx-knit {
-    background-image: url('/images/patterns/grain.png'), url('/images/patterns/knit-dark.svg');
+    background-image: url('../images/patterns/grain.png'), url('../images/patterns/knit-dark.svg');
     background-size: 256px 256px, 28px 24px;
 }
 
 /* Візерунки для заглушок фото (білі, поверх кольору) */
 @utility ph-knit {
-    background-image: url('/images/patterns/knit-light.svg');
+    background-image: url('../images/patterns/knit-light.svg');
     background-size: 28px 24px;
 }
 @utility ph-weave {
-    background-image: url('/images/patterns/weave-light.svg');
+    background-image: url('../images/patterns/weave-light.svg');
     background-size: 32px 32px;
 }
 @utility ph-stitch {
-    background-image: url('/images/patterns/stitch-light.svg');
+    background-image: url('../images/patterns/stitch-light.svg');
     background-size: 48px 24px;
 }
 
