@@ -3,9 +3,96 @@
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 @source '../**/*.blade.php';
-@source '../**/*.js';
+@source '../**/*.{js,ts,vue}';
 
+/* ------------------------------------------------------------------
+   Craft Woman — design tokens
+   Лавандова основа, фіолетовий для заголовків і дій,
+   нейтральний текст, калиновий тільки в орнаментах.
+   ------------------------------------------------------------------ */
 @theme {
-    --font-sans: 'Instrument Sans', ui-sans-serif, system-ui, sans-serif, 'Apple Color Emoji', 'Segoe UI Emoji',
-        'Segoe UI Symbol', 'Noto Color Emoji';
+    --font-sans: 'Commissioner', ui-sans-serif, system-ui, sans-serif;
+
+    /* Text */
+    --color-ink: #2b2930;          /* основний текст            14:1 на білому */
+    --color-ink-muted: #66616f;    /* другорядний               5.9:1 на білому */
+    --color-ink-soft: #5c5766;     /* другорядний на лаванді    5.7:1 на lavender-100 */
+
+    /* Brand */
+    --color-plum: #3a2a66;         /* заголовки, кнопки, посилання */
+    --color-violet: #6a4bc4;       /* hover, фокус, бейджі */
+    --color-lavender-300: #a48be6; /* шов, орнаменти */
+    --color-lavender-200: #cfc3ea; /* рамки на лаванді */
+    --color-lavender-100: #ece6f8; /* героїчні блоки */
+    --color-lavender-50: #f4f0fc;  /* тихі секції, активні вкладки */
+    --color-kalyna: #b8436a;       /* тільки серцевини орнаментів */
+
+    /* Lines */
+    --color-line: #e6dff3;
+    --color-line-strong: #d6ccea;
+
+    /* Notices */
+    --color-notice-bg: #fdf3dc;
+    --color-notice-ink: #5c3d00;
+    --color-warning-ink: #9a5b00;
+
+    /* Radius */
+    --radius-control: 12px;
+    --radius-card: 18px;
+    --radius-panel: 28px;
+}
+
+@layer base {
+    html {
+        color: var(--color-ink);
+        background: #fff;
+        -webkit-font-smoothing: antialiased;
+    }
+
+    :where(a, button, input, select, textarea, [tabindex]):focus-visible {
+        outline: 3px solid var(--color-violet);
+        outline-offset: 2px;
+    }
+}
+
+/* Розширені кінці штрихів Commissioner — для заголовків */
+@utility font-flair {
+    font-variation-settings: 'FLAR' 100, 'VOLM' 40;
+}
+
+/* ---------- Текстури фонів ---------- */
+@utility tx-linen {
+    background-image: url('/images/patterns/grain.png'), url('/images/patterns/linen.png');
+    background-size: 256px 256px, 256px 256px;
+}
+@utility tx-weave {
+    background-image: url('/images/patterns/grain.png'), url('/images/patterns/weave-dark.svg');
+    background-size: 256px 256px, 32px 32px;
+}
+@utility tx-knit {
+    background-image: url('/images/patterns/grain.png'), url('/images/patterns/knit-dark.svg');
+    background-size: 256px 256px, 28px 24px;
+}
+
+/* Візерунки для заглушок фото (білі, поверх кольору) */
+@utility ph-knit {
+    background-image: url('/images/patterns/knit-light.svg');
+    background-size: 28px 24px;
+}
+@utility ph-weave {
+    background-image: url('/images/patterns/weave-light.svg');
+    background-size: 32px 32px;
+}
+@utility ph-stitch {
+    background-image: url('/images/patterns/stitch-light.svg');
+    background-size: 48px 24px;
+}
+
+/* ---------- Рушник, що плавно змінює мотиви ---------- */
+@keyframes orn-fade {
+    0% { opacity: 1; }
+    17.86% { opacity: 1; }   /* ~5 с тримається */
+    25% { opacity: 0; }      /* 2 с перехід */
+    92.86% { opacity: 0; }
+    100% { opacity: 1; }
 }

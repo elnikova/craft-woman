@@ -4,13 +4,13 @@ namespace App\Http\Controllers\Api;
 
 use App\Enums\Role;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Requests\Auth\GoogleCallbackRequest;
 use App\Http\Requests\Auth\GoogleRedirectRequest;
 use App\Http\Requests\Auth\LoginRequest;
-use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\RegisterRequest;
+use App\Http\Requests\Auth\ResetPasswordRequest;
 use App\Http\Requests\Auth\SocialLoginRequest;
-use App\Http\Requests\Auth\ForgotPasswordRequest;
 use App\Http\Resources\UserResource;
 use App\Models\User;
 use Illuminate\Http\JsonResponse;
@@ -19,8 +19,8 @@ use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
-use Laravel\Socialite\Facades\Socialite;
 use Laravel\Socialite\Contracts\User as SocialUser;
+use Laravel\Socialite\Facades\Socialite;
 use Throwable;
 
 class AuthController extends Controller
@@ -33,21 +33,19 @@ class AuthController extends Controller
             'name' => $validated['name'],
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
-            'role' => Role::Buyer,
+            'role' => $request->role(),
         ]);
 
         Auth::login($user);
+        $this->regenerateSession($request);
 
         return UserResource::make($user);
     }
 
-    public function login(LoginRequest $request): UserResource|JsonResponse
+    public function login(LoginRequest $request): UserResource
     {
-        $credentials = $request->validated();
-
-        if (!Auth::attempt($credentials)) {
-            return response()->json(['message' => 'Invalid credentials.'], 422);
-        }
+        // Облікові дані вже перевірені й користувача авторизовано в LoginRequest::after()
+        $this->regenerateSession($request);
 
         return UserResource::make(Auth::user());
     }
@@ -71,7 +69,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (!$socialUser->getEmail()) {
+        if (! $socialUser->getEmail()) {
             return response()->json([
                 'message' => 'Provider account does not have an email address.',
             ], 422);
@@ -124,9 +122,14 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        Auth::logout();
-        request()->session()->invalidate();
-        request()->session()->regenerateToken();
+        // Під auth:sanctum guard за замовчуванням — RequestGuard без logout(),
+        // тому явно виходимо із сесійного guard'а
+        Auth::guard('web')->logout();
+
+        if ($request->hasSession()) {
+            $request->session()->invalidate();
+            $request->session()->regenerateToken();
+        }
 
         return response()->json(['message' => 'Logged out.']);
     }
@@ -160,7 +163,7 @@ class AuthController extends Controller
             ], 422);
         }
 
-        if (!$socialUser->getEmail()) {
+        if (! $socialUser->getEmail()) {
             return response()->json([
                 'message' => 'Google account does not have an email address.',
             ], 422);
@@ -173,6 +176,13 @@ class AuthController extends Controller
         return UserResource::make($user);
     }
 
+    private function regenerateSession(Request $request): void
+    {
+        if ($request->hasSession()) {
+            $request->session()->regenerate();
+        }
+    }
+
     private function findOrCreateSocialUser(SocialUser $socialUser, string $provider): User
     {
         $user = User::query()
@@ -180,14 +190,14 @@ class AuthController extends Controller
             ->where('oauth_provider_id', $socialUser->getId())
             ->first();
 
-        if (!$user) {
+        if (! $user) {
             $email = $socialUser->getEmail();
             if ($email) {
                 $user = User::where('email', $email)->first();
             }
         }
 
-        if (!$user) {
+        if (! $user) {
             $user = User::create([
                 'name' => $socialUser->getName() ?: $socialUser->getNickname() ?: 'User',
                 'email' => $socialUser->getEmail(),

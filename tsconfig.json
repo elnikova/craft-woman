@@ -1,0 +1,12 @@
+{
+    "extends": "@vue/tsconfig/tsconfig.dom.json",
+    "compilerOptions": {
+        "baseUrl": ".",
+        "paths": {
+            "@/*": ["resources/js/*"]
+        },
+        "types": ["vite/client"],
+        "noUncheckedIndexedAccess": true
+    },
+    "include": ["resources/js/**/*.ts", "resources/js/**/*.vue"]
+}

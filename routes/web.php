@@ -2,6 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('welcome');
-});
+// Усі не-API маршрути віддають SPA-оболонку; маршрутизацією займається Vue Router.
+Route::view('/{any?}', 'app')
+    ->where('any', '^(?!api|sanctum|up).*$')
+    ->name('spa');
