@@ -48,6 +48,11 @@ export function toApiError(error: unknown): ApiError {
             return { status, message: 'Немає з’єднання із сервером. Перевірте інтернет і спробуйте ще раз.', fields };
         }
 
+        // Помилки сервера (5xx) не показуємо користувачу: там можуть бути SQL і шляхи
+        if (status >= 500) {
+            return { status, message: 'На сервері сталася помилка. Спробуйте трохи пізніше.', fields };
+        }
+
         return { status, message: body.message ?? 'Щось пішло не так. Спробуйте ще раз.', fields };
     }
 
