@@ -2,7 +2,9 @@
 
 namespace App\Http\Requests\Auth;
 
+use App\Enums\Role;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 use Illuminate\Validation\Rules\Password;
 
 class RegisterRequest extends FormRequest
@@ -13,7 +15,7 @@ class RegisterRequest extends FormRequest
     }
 
     /**
-     * @return array<string, array<int, string|\Illuminate\Contracts\Validation\Rule>>
+     * @return array<string, array<int, mixed>>
      */
     public function rules(): array
     {
@@ -21,6 +23,13 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
+            // Адміністратора через реєстрацію створити не можна
+            'role' => ['sometimes', Rule::enum(Role::class)->only([Role::Buyer, Role::Master])],
         ];
+    }
+
+    public function role(): Role
+    {
+        return Role::tryFrom((string) $this->validated('role')) ?? Role::Buyer;
     }
 }

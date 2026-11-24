@@ -70,6 +70,8 @@ public/images/
 - `RegisterRequest` приймає необов'язкове `role` (`buyer` за замовчуванням або `master`); `admin` через реєстрацію отримати не можна.
 - `AuthController::login` більше не викликає `Auth::attempt()` вдруге: перевірку робить `LoginRequest::after()`.
 - Після входу й реєстрації сесія регенерується (захист від session fixation).
+- `logout` падав з 500 під `auth:sanctum` (RequestGuard не має `logout()`): тепер явно `Auth::guard('web')->logout()`.
+- Тести: реєстрація повертає `201 Created`, перевірка ролей, SPA-маршрути не перехоплюють `/api/*`.
 - `bootstrap/app.php`: `statefulApi()` для майбутніх роутів на `api`-middleware.
 
 ## Відкриті питання
