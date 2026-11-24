@@ -27,8 +27,12 @@ export default defineConfig({
         },
     },
     server: {
+        // IPv4 явно: на Windows `localhost` може резолвитися в ::1, і тоді
+        // вебсокет HMR не під'єднується, а клієнт Vite перезавантажує сторінку по колу.
+        host: '127.0.0.1',
+        hmr: { host: '127.0.0.1' },
         watch: {
-            ignored: ['**/storage/framework/views/**'],
+            ignored: ['**/storage/framework/views/**', '**/database/*.sqlite*'],
         },
     },
 });
