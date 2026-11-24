@@ -17,7 +17,7 @@ test('register creates user and returns resource', function () {
         'password_confirmation' => 'password123',
     ];
 
-    $response = $this->postJson('/api/register', $payload);
+    $response = $this->postJson('/api/v1/register', $payload);
 
     $response->assertCreated()
         ->assertJsonFragment([
@@ -36,14 +36,14 @@ test('login returns user resource for valid credentials', function () {
         'password' => Hash::make('secret123'),
     ]);
 
-    $response = $this->postJson('/api/login', [
+    $response = $this->postJson('/api/v1/login', [
         'email' => 'login@example.com',
         'password' => 'secret123',
     ]);
 
     $response->assertOk()
         ->assertJsonFragment([
-            'id' => $user->id,
+            'uuid' => $user->uuid,
             'email' => 'login@example.com',
         ]);
 });
@@ -56,7 +56,7 @@ test('login rejects invalid credentials', function () {
         'password' => Hash::make('secret123'),
     ]);
 
-    $response = $this->postJson('/api/login', [
+    $response = $this->postJson('/api/v1/login', [
         'email' => 'bad@example.com',
         'password' => 'wrong',
     ]);
@@ -67,11 +67,11 @@ test('login rejects invalid credentials', function () {
 test('me returns current user', function () {
     $user = User::factory()->create();
 
-    $response = $this->actingAs($user)->getJson('/api/me');
+    $response = $this->actingAs($user)->getJson('/api/v1/me');
 
     $response->assertOk()
         ->assertJsonFragment([
-            'id' => $user->id,
+            'uuid' => $user->uuid,
             'email' => $user->email,
         ]);
 });
@@ -82,7 +82,7 @@ test('logout clears session', function () {
     $user = User::factory()->create();
     $this->actingAs($user);
 
-    $response = $this->postJson('/api/logout');
+    $response = $this->postJson('/api/v1/logout');
 
     $response->assertOk()
         ->assertJsonFragment([
@@ -93,7 +93,7 @@ test('logout clears session', function () {
 });
 
 test('register assigns buyer role by default', function () {
-    $this->postJson('/api/register', [
+    $this->postJson('/api/v1/register', [
         'name' => 'Buyer',
         'email' => 'buyer@example.com',
         'password' => 'password123',
@@ -104,7 +104,7 @@ test('register assigns buyer role by default', function () {
 });
 
 test('register can create a master account', function () {
-    $this->postJson('/api/register', [
+    $this->postJson('/api/v1/register', [
         'name' => 'Maker',
         'email' => 'maker@example.com',
         'password' => 'password123',
@@ -116,7 +116,7 @@ test('register can create a master account', function () {
 });
 
 test('register does not allow choosing the admin role', function () {
-    $this->postJson('/api/register', [
+    $this->postJson('/api/v1/register', [
         'name' => 'Sneaky',
         'email' => 'sneaky@example.com',
         'password' => 'password123',
@@ -133,7 +133,7 @@ test('login authenticates the user in the session', function () {
         'password' => Hash::make('secret123'),
     ]);
 
-    $this->postJson('/api/login', [
+    $this->postJson('/api/v1/login', [
         'email' => 'session@example.com',
         'password' => 'secret123',
     ])->assertOk();

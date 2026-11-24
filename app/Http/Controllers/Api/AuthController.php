@@ -21,11 +21,13 @@ use Illuminate\Support\Facades\Password;
 use Illuminate\Support\Str;
 use Laravel\Socialite\Contracts\User as SocialUser;
 use Laravel\Socialite\Facades\Socialite;
+use Modules\Identity\Application\DTOs\MakerProfileData;
+use Modules\Identity\Application\Services\MakerProfileService;
 use Throwable;
 
 class AuthController extends Controller
 {
-    public function register(RegisterRequest $request): UserResource
+    public function register(RegisterRequest $request, MakerProfileService $makers): UserResource
     {
         $validated = $request->validated();
 
@@ -35,6 +37,11 @@ class AuthController extends Controller
             'password' => Hash::make($validated['password']),
             'role' => $request->role(),
         ]);
+
+        // Майстер починає з чернетки профілю; публічним він стане після схвалення адміністратором
+        if ($user->role === Role::Master) {
+            $makers->createDraft($user, new MakerProfileData(displayName: $user->name));
+        }
 
         Auth::login($user);
         $this->regenerateSession($request);

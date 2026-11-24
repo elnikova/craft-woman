@@ -38,7 +38,12 @@ resources/js/
 │   ├── ornament/           OrnamentBand, StarOrnament, StitchLine
 │   ├── ui/                 BaseButton, BaseInput
 │   └── home/               SectionHeader, MakerCard, ProductCard, CourseCard, WorkshopRow, PostCard
-└── pages/                  HomePage, auth/AuthPage, NotFoundPage
+├── components/makers/      MakerAvatar, MakerProfileCard, MakerStatusBadge
+└── pages/
+    ├── HomePage, NotFoundPage, auth/AuthPage
+    ├── makers/             MakersPage (/makers), MakerPage (/makers/:slug)
+    ├── studio/             StudioProfilePage (/studio) — профіль майстра й надсилання на перевірку
+    └── admin/              AdminMakersPage (/admin/makers) — схвалення, правки, призупинення
 
 resources/images/patterns/   grain, linen, knit, weave, stitch (dark/light) — Vite їх обробляє з app.css
 public/images/ornaments/     4 рушники, зірка (логотип і декор) — віддаються як є, для <img>
@@ -67,6 +72,17 @@ public/images/ornaments/     4 рушники, зірка (логотип і д�
 <StarOrnament :size="200" />
 ```
 
+## Майстри
+
+| Маршрут | Хто | Що |
+|---|---|---|
+| `/makers`, `/makers/:slug` | усі | каталог і профіль; неопубліковані профілі бачать тільки власник і адмін |
+| `/studio` | авторизовані | створення профілю, редагування, «Надіслати на перевірку», коментар модератора |
+| `/admin/makers` | адмін | черга перевірки: опублікувати, повернути на правки (з коментарем), призупинити, відновити |
+
+Демо-дані: `php artisan migrate:fresh --seed` — адмін `admin@craftwoman.local` / `admin123`,
+майстри `oksana@`, `marko@`, `iryna@`, `luka@`, `sofia@craftwoman.local` / `password` (Софія — на перевірці).
+
 ## Бекенд: що змінено разом із фронтендом
 
 - `RegisterRequest` приймає необов'язкове `role` (`buyer` за замовчуванням або `master`); `admin` через реєстрацію отримати не можна.
@@ -81,7 +97,7 @@ public/images/ornaments/     4 рушники, зірка (логотип і д�
 1. **Схвалення майстрів.** PRD вимагає, щоб адміністратор підтверджував майстрів. Потрібне поле статусу,
    наприклад `maker_status: pending|approved|rejected`, і фільтр у каталозі.
 2. **Версія API.** У PRD `/api/v1/...`. Коли перенесеш роути, зміни лише `baseURL` у `resources/js/api/http.ts`.
-3. **Google OAuth.** Кнопка «Продовжити з Google» поки неактивна, фронтенд-флоу ще не реалізований.
+2. **Google OAuth.** Кнопка «Продовжити з Google» поки неактивна, фронтенд-флоу ще не реалізований.
 
 ## Перевірено
 

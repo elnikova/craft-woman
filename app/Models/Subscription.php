@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -9,7 +10,9 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Subscription extends Model
 {
     /** @use HasFactory<\Database\Factories\SubscriptionFactory> */
-    use HasFactory;
+    use HasFactory, HasUuids;
+
+    protected $primaryKey = 'uuid';
 
     /**
      * The attributes that are mass assignable.
@@ -40,7 +43,6 @@ class Subscription extends Model
      */
     public function users(): HasMany
     {
-        return $this->hasMany(User::class);
+        return $this->hasMany(User::class, 'subscription_uuid');
     }
 }
-

@@ -285,6 +285,7 @@ maker_profiles
 ├── address
 ├── status
 ├── follow_enabled
+├── review_note           NULL — reviewer's message for rejected/suspended
 ├── approved_at
 ├── created_at
 ├── updated_at
@@ -307,6 +308,10 @@ Rules:
 * A MakerProfile must belong to a User.
 * A Maker must be approved before using full Maker capabilities.
 * MakerProfile is the source of public Maker information.
+* Allowed transitions: draft → pending_review → approved | rejected; rejected → pending_review;
+  approved → suspended → approved. Rejecting or suspending requires a `review_note`.
+* The slug follows `display_name` until the profile is approved; after that it is stable.
+* Only approved profiles are public. Others are visible to the owner and administrators.
 
 ---
 

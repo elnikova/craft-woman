@@ -1,15 +1,8 @@
-import type { CourseCardData, MakerCardData, PostCardData, ProductCardData, WorkshopRowData } from '@/types/catalog';
+import type { CourseCardData, PostCardData, ProductCardData, WorkshopRowData } from '@/types/catalog';
 
 /** Приклад даних для головної. Видалити, коли з'явиться API каталогу. */
 
 export const popularCrafts = ['В’язання', 'Кераміка', 'Вишивка', 'Вироби зі шкіри', 'Ткацтво', 'Свічки'];
-
-export const makers: MakerCardData[] = [
-    { id: 1, name: 'Оксана Ткачук', craft: 'В’язання', city: 'Львів', rating: 4.9, reviewsCount: 128, cover: { color: '#CFC2EE', pattern: 'ph-knit' } },
-    { id: 2, name: 'Марко Зайченко', craft: 'Кераміка', city: 'Опішня', rating: 4.8, reviewsCount: 64, cover: { color: '#EFD3A0', pattern: 'ph-weave' } },
-    { id: 3, name: 'Ірина Бойко', craft: 'Вишивка', city: 'Онлайн', rating: 5.0, reviewsCount: 41, cover: { color: '#CBD5B6', pattern: 'ph-stitch' } },
-    { id: 4, name: 'Лука Мельник', craft: 'Вироби зі шкіри', city: 'Київ', rating: 4.7, reviewsCount: 87, cover: { color: '#DCC5B8', pattern: 'ph-knit' } },
-];
 
 export const products: ProductCardData[] = [
     { id: 1, name: 'Плед з мериносу, ручне в’язання', makerName: 'Оксана Ткачук', priceCents: 14500, currency: 'EUR', isDigital: false, cover: { color: '#DBD0F3', pattern: 'ph-knit' } },
