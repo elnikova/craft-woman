@@ -42,8 +42,8 @@ function switchTo(mode: 'login' | 'register') {
 }
 
 async function afterSuccess() {
-    // Нова майстриня одразу потрапляє в «Мою майстерню», щоб заповнити профіль
-    const fallback = !isLogin.value && registerForm.role === 'master' ? '/studio' : '/';
+    // Після входу — у кабінет; нова майстриня одразу в профіль майстерні
+    const fallback = !isLogin.value && registerForm.role === 'master' ? '/account/studio' : '/account';
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : fallback;
     await router.push(redirect);
 }

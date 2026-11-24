@@ -46,11 +46,24 @@ export const router = createRouter({
                     props: true,
                     meta: { title: 'Майстер' },
                 },
+            ],
+        },
+        {
+            path: '/account',
+            component: () => import('@/layouts/AccountLayout.vue'),
+            meta: { requiresAuth: true },
+            children: [
+                {
+                    path: '',
+                    name: 'account',
+                    component: () => import('@/pages/account/AccountHomePage.vue'),
+                    meta: { title: 'Кабінет', requiresAuth: true },
+                },
                 {
                     path: 'studio',
                     name: 'studio',
                     component: () => import('@/pages/studio/StudioProfilePage.vue'),
-                    meta: { title: 'Моя майстерня', requiresAuth: true },
+                    meta: { title: 'Профіль майстерні', requiresAuth: true },
                 },
                 {
                     path: 'admin/makers',
@@ -58,8 +71,18 @@ export const router = createRouter({
                     component: () => import('@/pages/admin/AdminMakersPage.vue'),
                     meta: { title: 'Перевірка майстрів', requiresAuth: true, requiresAdmin: true },
                 },
+                {
+                    path: 'soon/:section',
+                    name: 'account-soon',
+                    component: () => import('@/pages/account/ComingSoonPage.vue'),
+                    props: true,
+                    meta: { title: 'Скоро', requiresAuth: true },
+                },
             ],
         },
+        // Старі адреси
+        { path: '/studio', redirect: { name: 'studio' } },
+        { path: '/admin/makers', redirect: { name: 'admin-makers' } },
         {
             path: '/login',
             name: 'login',

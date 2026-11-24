@@ -93,7 +93,7 @@ const dateFmt = new Intl.DateTimeFormat('uk-UA', { day: 'numeric', month: 'short
 </script>
 
 <template>
-    <div class="mx-auto max-w-[1080px] px-6 py-12 md:px-8">
+    <div class="max-w-[1080px]">
         <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Перевірка майстрів</h1>
 
         <div role="tablist" aria-label="Статус профілю" class="mt-8 flex flex-wrap gap-2">
