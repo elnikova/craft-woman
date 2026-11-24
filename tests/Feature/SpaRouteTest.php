@@ -11,5 +11,5 @@ test('web routes serve the SPA shell', function (string $path) {
 })->with(['/', '/login', '/register', '/makers/some-maker']);
 
 test('unknown api routes are not swallowed by the SPA', function () {
-    $this->getJson('/api/does-not-exist')->assertNotFound();
+    $this->getJson('/api/v1/does-not-exist')->assertNotFound();
 });

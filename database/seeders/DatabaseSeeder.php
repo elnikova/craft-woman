@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
         // Seed default admin user
         $this->call(AdminUserSeeder::class);
 
+        // Demo makers (approved + one pending review)
+        $this->call(MakerSeeder::class);
+
         // Create test users
         User::factory(10)->create();
     }
