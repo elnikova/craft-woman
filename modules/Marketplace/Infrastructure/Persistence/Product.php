@@ -92,6 +92,6 @@ class Product extends Model
     /** @param Builder<self> $query */
     public function scopePublished(Builder $query): void
     {
-        $query->where('status', ProductStatus::Published);
+        $query->where($query->qualifyColumn('status'), ProductStatus::Published);
     }
 }

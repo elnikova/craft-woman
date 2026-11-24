@@ -141,6 +141,12 @@ export const router = createRouter({
                     meta: { title: 'Замовлення', requiresAuth: true },
                 },
                 {
+                    path: 'favorites',
+                    name: 'account-favorites',
+                    component: () => import('@/pages/account/FavoritesPage.vue'),
+                    meta: { title: 'Обране', requiresAuth: true },
+                },
+                {
                     path: 'sales',
                     name: 'studio-sales',
                     component: () => import('@/pages/studio/SalesPage.vue'),

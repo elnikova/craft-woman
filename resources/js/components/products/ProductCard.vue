@@ -1,13 +1,11 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
+import { computed } from 'vue';
 import type { Product } from '@/types/product';
 import { formatPrice } from '@/utils/format';
 import ProductCover from './ProductCover.vue';
+import FavoriteButton from './FavoriteButton.vue';
 
 const props = defineProps<{ product: Product }>();
-
-// TODO: favorites store + API (модуль Favorites)
-const favorite = ref(false);
 
 /** «від …», якщо у варіантів різні ціни */
 const priceLabel = computed(() => {
@@ -32,17 +30,7 @@ const soldOut = computed(() => !props.product.is_digital && props.product.varian
             <span v-else-if="soldOut" class="absolute top-3 left-3 rounded-lg bg-white px-2.5 py-1.5 text-[13px] font-medium text-ink">
                 Розпродано
             </span>
-            <button
-                type="button"
-                class="absolute top-3 right-3 grid h-11 w-11 place-items-center rounded-full bg-white text-plum"
-                :aria-pressed="favorite"
-                :aria-label="favorite ? 'Прибрати з обраного' : 'Додати в обране'"
-                @click="favorite = !favorite"
-            >
-                <svg width="20" height="20" viewBox="0 0 24 24" :fill="favorite ? 'currentColor' : 'none'" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-                    <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
-                </svg>
-            </button>
+            <FavoriteButton :uuid="product.uuid" :name="product.name" class="absolute top-3 right-3" />
         </div>
         <RouterLink
             :to="{ name: 'product', params: { slug: product.slug } }"

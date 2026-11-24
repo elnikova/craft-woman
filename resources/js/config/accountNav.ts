@@ -44,7 +44,7 @@ const customer: NavSection = {
         { label: 'Замовлення', to: { name: 'account-orders' }, icon: 'bag' },
         soon('learning', 'Мої курси', 'book'),
         soon('bookings', 'Майстер-класи', 'calendar'),
-        soon('favorites', 'Обране', 'heart'),
+        { label: 'Обране', to: { name: 'account-favorites' }, icon: 'heart' },
     ],
 };
 
