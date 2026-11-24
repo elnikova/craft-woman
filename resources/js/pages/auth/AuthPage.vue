@@ -42,7 +42,9 @@ function switchTo(mode: 'login' | 'register') {
 }
 
 async function afterSuccess() {
-    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : '/';
+    // Нова майстриня одразу потрапляє в «Мою майстерню», щоб заповнити профіль
+    const fallback = !isLogin.value && registerForm.role === 'master' ? '/studio' : '/';
+    const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : fallback;
     await router.push(redirect);
 }
 

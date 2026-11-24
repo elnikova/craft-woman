@@ -1,14 +1,18 @@
+import type { MakerStatus } from './maker';
+
 /** Дзеркало App\Enums\Role */
 export type Role = 'admin' | 'master' | 'buyer';
 
 /** Дзеркало App\Http\Resources\UserResource */
 export interface User {
-    id: number;
+    uuid: string;
     name: string;
     email: string;
     role: Role;
     gender: string | null;
-    subscription_id: number | null;
+    /** null — у користувача немає профілю майстра */
+    maker_status: MakerStatus | null;
+    subscription_uuid: string | null;
     created_at: string;
     updated_at: string;
 }
@@ -31,4 +35,10 @@ export interface RegisterPayload {
 /** Laravel JsonResource обгортає дані в { data } */
 export interface Wrapped<T> {
     data: T;
+}
+
+/** Laravel paginate() у JsonResource::collection */
+export interface Paginated<T> {
+    data: T[];
+    meta: { current_page: number; last_page: number; per_page: number; total: number };
 }

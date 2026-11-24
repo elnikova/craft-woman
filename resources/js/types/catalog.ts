@@ -5,16 +5,6 @@
  */
 export type Placeholder = { color: string; pattern: 'ph-knit' | 'ph-weave' | 'ph-stitch' };
 
-export interface MakerCardData {
-    id: number;
-    name: string;
-    craft: string;
-    city: string;
-    rating: number;
-    reviewsCount: number;
-    cover: Placeholder;
-}
-
 export interface ProductCardData {
     id: number;
     name: string;

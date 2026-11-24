@@ -38,7 +38,12 @@ resources/js/
 │   ├── ornament/           OrnamentBand, StarOrnament, StitchLine
 │   ├── ui/                 BaseButton, BaseInput
 │   └── home/               SectionHeader, MakerCard, ProductCard, CourseCard, WorkshopRow, PostCard
-└── pages/                  HomePage, auth/AuthPage, NotFoundPage
+├── components/makers/      MakerAvatar, MakerProfileCard, MakerStatusBadge
+└── pages/
+    ├── HomePage, NotFoundPage, auth/AuthPage
+    ├── makers/             MakersPage (/makers), MakerPage (/makers/:slug)
+    ├── studio/             StudioProfilePage (/studio) — профіль майстра й надсилання на перевірку
+    └── admin/              AdminMakersPage (/admin/makers) — схвалення, правки, призупинення
 
 resources/images/patterns/   grain, linen, knit, weave, stitch (dark/light) — Vite їх обробляє з app.css
 public/images/ornaments/     4 рушники, зірка (логотип і декор) — віддаються як є, для <img>
@@ -66,6 +71,17 @@ public/images/ornaments/     4 рушники, зірка (логотип і д�
 <OrnamentBand start="rhombus" :animated="false" />
 <StarOrnament :size="200" />
 ```
+
+## Майстри
+
+| Маршрут | Хто | Що |
+|---|---|---|
+| `/makers`, `/makers/:slug` | усі | каталог і профіль; неопубліковані профілі бачать тільки власник і адмін |
+| `/studio` | авторизовані | створення профілю, редагування, «Надіслати на перевірку», коментар модератора |
+| `/admin/makers` | адмін | черга перевірки: опублікувати, повернути на правки (з коментарем), призупинити, відновити |
+
+Демо-дані: `php artisan migrate:fresh --seed` — адмін `admin@craftwoman.local` / `admin123`,
+майстри `oksana@`, `marko@`, `iryna@`, `luka@`, `sofia@craftwoman.local` / `password` (Софія — на перевірці).
 
 ## Бекенд: що змінено разом із фронтендом
 

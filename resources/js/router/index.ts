@@ -8,6 +8,10 @@ declare module 'vue-router' {
         guestOnly?: boolean;
         /** Потрібна автентифікація */
         requiresAuth?: boolean;
+        /** Тільки для адміністратора */
+        requiresAdmin?: boolean;
+        /** Сторінка сама малює шапку (головна: шапка всередині першого екрана) */
+        ownHeader?: boolean;
     }
 }
 
@@ -23,7 +27,37 @@ export const router = createRouter({
             path: '/',
             component: () => import('@/layouts/DefaultLayout.vue'),
             children: [
-                { path: '', name: 'home', component: () => import('@/pages/HomePage.vue'), meta: { title: 'Речі, зроблені руками' } },
+                {
+                    path: '',
+                    name: 'home',
+                    component: () => import('@/pages/HomePage.vue'),
+                    meta: { title: 'Речі, зроблені руками', ownHeader: true },
+                },
+                {
+                    path: 'makers',
+                    name: 'makers',
+                    component: () => import('@/pages/makers/MakersPage.vue'),
+                    meta: { title: 'Майстри' },
+                },
+                {
+                    path: 'makers/:slug',
+                    name: 'maker',
+                    component: () => import('@/pages/makers/MakerPage.vue'),
+                    props: true,
+                    meta: { title: 'Майстер' },
+                },
+                {
+                    path: 'studio',
+                    name: 'studio',
+                    component: () => import('@/pages/studio/StudioProfilePage.vue'),
+                    meta: { title: 'Моя майстерня', requiresAuth: true },
+                },
+                {
+                    path: 'admin/makers',
+                    name: 'admin-makers',
+                    component: () => import('@/pages/admin/AdminMakersPage.vue'),
+                    meta: { title: 'Перевірка майстрів', requiresAuth: true, requiresAdmin: true },
+                },
             ],
         },
         {
@@ -53,8 +87,11 @@ router.beforeEach(async (to) => {
     const auth = useAuthStore();
     if (!auth.checked) await auth.fetchUser();
 
-    if (to.meta.requiresAuth && !auth.isAuthenticated) {
+    if ((to.meta.requiresAuth || to.meta.requiresAdmin) && !auth.isAuthenticated) {
         return { name: 'login', query: { redirect: to.fullPath } };
+    }
+    if (to.meta.requiresAdmin && !auth.isAdmin) {
+        return { name: 'not-found', params: { pathMatch: to.path.slice(1).split('/') } };
     }
     if (to.meta.guestOnly && auth.isAuthenticated) {
         return { name: 'home' };

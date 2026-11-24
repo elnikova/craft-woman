@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, onMounted, ref } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import BaseButton from '@/components/ui/BaseButton.vue';
@@ -7,15 +7,36 @@ import OrnamentBand from '@/components/ornament/OrnamentBand.vue';
 import StarOrnament from '@/components/ornament/StarOrnament.vue';
 import StitchLine from '@/components/ornament/StitchLine.vue';
 import SectionHeader from '@/components/home/SectionHeader.vue';
-import MakerCard from '@/components/home/MakerCard.vue';
+import MakerProfileCard from '@/components/makers/MakerProfileCard.vue';
 import ProductCard from '@/components/home/ProductCard.vue';
 import CourseCard from '@/components/home/CourseCard.vue';
 import WorkshopRow from '@/components/home/WorkshopRow.vue';
 import PostCard from '@/components/home/PostCard.vue';
-import { courses, makers, popularCrafts, posts, products, workshops } from '@/mocks/home';
+import { courses, popularCrafts, posts, products, workshops } from '@/mocks/home';
+import { makersApi } from '@/api/makers';
+import { useAuthStore } from '@/stores/auth';
+import type { MakerProfile } from '@/types/maker';
 
 const router = useRouter();
+const auth = useAuthStore();
 const query = ref('');
+
+// Майстри — справжні, з API; решта блоків поки на прикладах
+const makers = ref<MakerProfile[]>([]);
+const makersLoading = ref(true);
+onMounted(async () => {
+    try {
+        makers.value = (await makersApi.list({ per_page: 4 })).data;
+    } catch {
+        makers.value = [];
+    } finally {
+        makersLoading.value = false;
+    }
+});
+
+const becomeMakerLink = computed(() =>
+    auth.isAuthenticated ? { name: 'studio' } : { name: 'register', query: { role: 'master' } },
+);
 
 type ProductFilter = 'all' | 'physical' | 'digital';
 const productFilter = ref<ProductFilter>('all');
@@ -102,11 +123,18 @@ const heroStitches = [
             title="Знайомтеся з майстрами"
             lead="Кожен профіль — це історія, майстерня і все, що людина створює."
             link-label="Усі майстри"
-            link-to="/"
+            :link-to="{ name: 'makers' }"
         />
-        <div class="mt-10 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6">
-            <MakerCard v-for="maker in makers" :key="maker.id" :maker="maker" />
+        <div v-if="makersLoading" class="mt-10 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6" aria-busy="true" aria-label="Завантаження">
+            <div v-for="i in 4" :key="i" class="aspect-[4/5] animate-pulse rounded-card bg-lavender-50" />
         </div>
+        <div v-else-if="makers.length" class="mt-10 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6">
+            <MakerProfileCard v-for="maker in makers" :key="maker.uuid" :maker="maker" />
+        </div>
+        <p v-else class="mt-8 mb-0 text-lg text-ink-muted">
+            Перші майстри зʼявляться тут після перевірки профілів.
+            <RouterLink :to="becomeMakerLink" class="font-semibold text-plum">Станьте одним із них</RouterLink>
+        </p>
     </section>
 
     <!-- Товари -->
@@ -183,7 +211,7 @@ const heroStitches = [
                     каталозі.
                 </p>
             </div>
-            <BaseButton size="lg" :to="{ name: 'register', query: { role: 'master' } }" class="relative">Стати майстром</BaseButton>
+            <BaseButton size="lg" :to="becomeMakerLink" class="relative">Стати майстром</BaseButton>
         </div>
     </section>
 </template>

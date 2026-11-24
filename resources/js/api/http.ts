@@ -3,10 +3,10 @@ import axios, { AxiosError } from 'axios';
 /**
  * Один axios-клієнт для всього застосунку.
  * SPA на тому ж домені → сесійна cookie Sanctum + XSRF-TOKEN.
- * Коли API переїде на /api/v1, змінюється тільки baseURL.
+ * Версія API — у baseURL.
  */
 export const http = axios.create({
-    baseURL: '/api',
+    baseURL: '/api/v1',
     withCredentials: true,
     withXSRFToken: true,
     headers: {

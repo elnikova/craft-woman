@@ -11,7 +11,7 @@ const router = useRouter();
 const menuOpen = ref(false);
 
 const nav = [
-    { label: 'Майстри', to: { path: '/', hash: '#makers' } },
+    { label: 'Майстри', to: { name: 'makers' } },
     { label: 'Товари', to: { path: '/', hash: '#products' } },
     { label: 'Курси', to: { path: '/', hash: '#courses' } },
     { label: 'Майстер-класи', to: { path: '/', hash: '#workshops' } },
@@ -54,7 +54,7 @@ async function logout() {
                     v-for="item in nav"
                     :key="item.label"
                     :to="item.to"
-                    class="py-2 text-plum no-underline hover:text-violet lg:py-0"
+                    class="py-2 whitespace-nowrap text-plum no-underline hover:text-violet lg:py-0"
                     @click="menuOpen = false"
                 >
                     {{ item.label }}
@@ -81,8 +81,13 @@ async function logout() {
                 </RouterLink>
 
                 <template v-if="auth.isAuthenticated">
-                    <span class="px-2 text-[15px] text-ink">{{ auth.user?.name }}</span>
-                    <BaseButton variant="secondary" @click="logout">Вийти</BaseButton>
+                    <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin-makers' }" class="px-2 text-[15px] font-medium whitespace-nowrap text-plum hover:text-violet">
+                        Перевірка майстрів
+                    </RouterLink>
+                    <RouterLink v-if="auth.hasStudio" :to="{ name: 'studio' }" class="px-2 text-[15px] font-medium whitespace-nowrap text-plum hover:text-violet">
+                        Моя майстерня
+                    </RouterLink>
+                    <BaseButton variant="secondary" :title="`Вийти з акаунта ${auth.user?.name ?? ''}`" @click="logout">Вийти</BaseButton>
                 </template>
                 <BaseButton v-else :to="{ name: 'login' }">Увійти</BaseButton>
             </div>
