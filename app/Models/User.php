@@ -25,6 +25,7 @@ class User extends Authenticatable
         'subscription_id',
         'oauth_provider',
         'oauth_provider_id',
+        'email_verified_at',
     ];
 
     protected $hidden = [
@@ -54,14 +55,5 @@ class User extends Authenticatable
     public function isMaster(): bool
     {
         return $this->role === Role::Master;
-    }
-
-    public function displayTitle(): string
-    {
-        if ($this->role !== Role::Master) {
-            return ucfirst($this->role->value);
-        }
-
-        return $this->gender === 'female' ? 'Майстриня' : 'Майстер';
     }
 }
