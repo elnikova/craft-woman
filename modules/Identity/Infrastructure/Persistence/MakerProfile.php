@@ -38,6 +38,10 @@ class MakerProfile extends Model
         'city',
         'address',
         'follow_enabled',
+        'cod_enabled',
+        'delivery_currency',
+        'delivery_domestic_minor',
+        'delivery_international_minor',
     ];
 
     protected $attributes = [
@@ -50,6 +54,9 @@ class MakerProfile extends Model
         return [
             'status' => MakerStatus::class,
             'follow_enabled' => 'boolean',
+            'cod_enabled' => 'boolean',
+            'delivery_domestic_minor' => 'integer',
+            'delivery_international_minor' => 'integer',
             'approved_at' => 'datetime',
         ];
     }

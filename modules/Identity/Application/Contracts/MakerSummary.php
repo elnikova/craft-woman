@@ -13,6 +13,11 @@ final readonly class MakerSummary
         public ?string $city,
         public ?string $avatarUrl,
         public bool $isApproved,
+        public ?string $countryCode = null,
+        public bool $codEnabled = false,
+        public string $deliveryCurrency = 'EUR',
+        public int $deliveryDomesticMinor = 0,
+        public ?int $deliveryInternationalMinor = null,
     ) {}
 
     /** @return array<string, mixed> */

@@ -41,7 +41,7 @@ const overview: NavItem = { label: 'Огляд', to: { name: 'account' }, icon: 
 const customer: NavSection = {
     title: 'Покупки',
     items: [
-        soon('orders', 'Замовлення', 'bag'),
+        { label: 'Замовлення', to: { name: 'account-orders' }, icon: 'bag' },
         soon('learning', 'Мої курси', 'book'),
         soon('bookings', 'Майстер-класи', 'calendar'),
         soon('favorites', 'Обране', 'heart'),
@@ -53,9 +53,9 @@ const maker: NavSection = {
     items: [
         { label: 'Профіль майстерні', to: { name: 'studio' }, icon: 'store' },
         { label: 'Товари', to: { name: 'studio-products' }, icon: 'box' },
+        { label: 'Продажі', to: { name: 'studio-sales' }, icon: 'chart' },
         soon('teaching', 'Курси', 'book'),
         soon('workshops', 'Майстер-класи', 'calendar'),
-        soon('sales', 'Продажі', 'chart'),
     ],
 };
 
@@ -66,7 +66,7 @@ const admin: NavSection = {
         soon('users', 'Користувачі', 'users'),
         { label: 'Категорії', to: { name: 'admin-categories' }, icon: 'tag' },
         { label: 'Перевірка товарів', to: { name: 'admin-products' }, icon: 'flag' },
-        soon('all-orders', 'Усі замовлення', 'bag'),
+        { label: 'Усі замовлення', to: { name: 'admin-orders' }, icon: 'bag' },
     ],
 };
 

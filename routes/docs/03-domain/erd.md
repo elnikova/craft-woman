@@ -776,9 +776,9 @@ Delivery contains the delivery information and address snapshot applicable to th
 
 Delivery currency is the same as the Order currency.
 
-Cash on Delivery is not supported.
+Each Maker sets a flat delivery fee per Order Group (domestic and, optionally, international) in their Maker profile.
 
-All Orders use online payment.
+Payment on delivery is supported under the rules in domain-rules.md §27.
 
 ---
 

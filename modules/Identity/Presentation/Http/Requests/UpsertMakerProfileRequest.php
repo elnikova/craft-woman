@@ -24,6 +24,10 @@ class UpsertMakerProfileRequest extends FormRequest
             'city' => ['nullable', 'string', 'max:120'],
             'address' => ['nullable', 'string', 'max:255'],
             'follow_enabled' => ['sometimes', 'boolean'],
+            'cod_enabled' => ['sometimes', 'boolean'],
+            'delivery_currency' => ['sometimes', 'in:EUR,USD,UAH'],
+            'delivery_domestic_minor' => ['sometimes', 'integer', 'min:0', 'max:10000000'],
+            'delivery_international_minor' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:10000000'],
         ];
     }
 

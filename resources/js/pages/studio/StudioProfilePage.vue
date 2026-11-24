@@ -9,6 +9,8 @@ import { makersApi } from '@/api/makers';
 import { toApiError, type FieldErrors } from '@/api/http';
 import { useAuthStore } from '@/stores/auth';
 import type { MakerProfile, MakerProfilePayload } from '@/types/maker';
+import type { Currency } from '@/types/product';
+import { inputToMinor, minorToInput } from '@/utils/format';
 
 const auth = useAuthStore();
 
@@ -36,8 +38,17 @@ const form = reactive<MakerProfilePayload>({
     address: '',
     follow_enabled: true,
 });
-const saved = ref(JSON.stringify(form));
-const dirty = computed(() => JSON.stringify(form) !== saved.value);
+/** Доставка й оплата: ціни в полях вводу як рядки, на сервер — у мінорних одиницях */
+const shipping = reactive({
+    cod_enabled: false,
+    delivery_currency: 'EUR' as Currency,
+    domestic: '0',
+    ships_abroad: false,
+    international: '',
+});
+const snapshot = () => JSON.stringify([form, shipping]);
+const saved = ref(snapshot());
+const dirty = computed(() => snapshot() !== saved.value);
 
 const saving = ref(false);
 const submitting = ref(false);
@@ -61,7 +72,16 @@ function fill(p: MakerProfile) {
         address: p.address ?? '',
         follow_enabled: p.follow_enabled,
     });
-    saved.value = JSON.stringify(form);
+    if (p.checkout) {
+        Object.assign(shipping, {
+            cod_enabled: p.checkout.cod_enabled,
+            delivery_currency: p.checkout.delivery_currency,
+            domestic: minorToInput(p.checkout.delivery_domestic_minor),
+            ships_abroad: p.checkout.delivery_international_minor !== null,
+            international: minorToInput(p.checkout.delivery_international_minor),
+        });
+    }
+    saved.value = snapshot();
     auth.setMakerStatus(p.status ?? null);
 }
 
@@ -77,7 +97,20 @@ function payload(): MakerProfilePayload {
         city: clean(form.city),
         address: clean(form.address),
         follow_enabled: form.follow_enabled,
+        cod_enabled: shipping.cod_enabled,
+        delivery_currency: shipping.delivery_currency,
+        delivery_domestic_minor: inputToMinor(shipping.domestic) ?? 0,
+        delivery_international_minor: shipping.ships_abroad ? (inputToMinor(shipping.international) ?? 0) : null,
     };
+}
+
+/** Перевірка цін до відправки: NaN з inputToMinor означає неправильний формат */
+function shippingErrors(): FieldErrors {
+    const e: FieldErrors = {};
+    if (Number.isNaN(inputToMinor(shipping.domestic))) e.delivery_domestic_minor = 'Вкажіть суму, наприклад 4 або 4.50';
+    if (shipping.ships_abroad && Number.isNaN(inputToMinor(shipping.international)))
+        e.delivery_international_minor = 'Вкажіть суму, наприклад 15';
+    return e;
 }
 
 async function load() {
@@ -98,6 +131,13 @@ async function save(): Promise<boolean> {
     errors.value = {};
     formError.value = '';
     notice.value = '';
+    const local = shippingErrors();
+    if (Object.keys(local).length) {
+        errors.value = local;
+        formError.value = 'Перевірте поля, позначені червоним';
+        saving.value = false;
+        return false;
+    }
     try {
         fill(await makersApi.saveMine(payload()));
         notice.value = 'Зміни збережено';
@@ -264,6 +304,58 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
                         </span>
                     </label>
                 </fieldset>
+
+                <section v-if="profile !== null" class="flex flex-col gap-5 border-t border-line pt-8" aria-labelledby="shipping-title">
+                    <h2 id="shipping-title" class="m-0 text-xl font-bold text-plum">Доставка й оплата</h2>
+                    <p class="m-0 text-[15px] text-ink-muted">
+                        Покупець платить за доставку один раз за вашу частину замовлення, скільки б товарів не взяв.
+                    </p>
+                    <div class="grid gap-6 md:grid-cols-[160px_1fr]">
+                        <div class="flex flex-col gap-2">
+                            <label for="delivery-currency" class="text-[15px] font-semibold text-ink">Валюта</label>
+                            <select
+                                id="delivery-currency"
+                                v-model="shipping.delivery_currency"
+                                :disabled="!editable"
+                                class="h-[52px] rounded-control border-[1.5px] border-line-strong bg-white px-4 text-base text-ink focus:border-plum focus:outline-none disabled:bg-lavender-50"
+                            >
+                                <option value="EUR">EUR</option>
+                                <option value="USD">USD</option>
+                                <option value="UAH">UAH</option>
+                            </select>
+                        </div>
+                        <BaseInput
+                            v-model="shipping.domestic"
+                            label="Доставка у вашій країні"
+                            hint="0 — безкоштовно"
+                            :disabled="!editable"
+                            :error="errors.delivery_domestic_minor"
+                        />
+                    </div>
+                    <p class="m-0 -mt-2 text-[13px] text-ink-muted">Валюта доставки має збігатися з валютою ваших товарів.</p>
+
+                    <label class="flex items-start gap-3 text-[15px] text-ink">
+                        <input v-model="shipping.ships_abroad" type="checkbox" :disabled="!editable" class="mt-0.5 h-5 w-5 accent-plum" />
+                        <span>Відправляю за кордон</span>
+                    </label>
+                    <BaseInput
+                        v-if="shipping.ships_abroad"
+                        v-model="shipping.international"
+                        label="Доставка за кордон"
+                        :disabled="!editable"
+                        :error="errors.delivery_international_minor"
+                    />
+
+                    <label class="flex items-start gap-3 text-[15px] text-ink">
+                        <input v-model="shipping.cod_enabled" type="checkbox" :disabled="!editable" class="mt-0.5 h-5 w-5 accent-plum" />
+                        <span>
+                            Приймаю оплату при отриманні
+                            <span class="block text-[13px] text-ink-muted">
+                                Лише для доставки у вашій країні. Покупець зможе обрати цей спосіб, якщо всі майстри в його замовленні його приймають.
+                            </span>
+                        </span>
+                    </label>
+                </section>
 
                 <div v-if="formError" role="alert" class="rounded-[10px] border border-kalyna/30 bg-kalyna/5 px-3.5 py-3 text-sm text-kalyna">{{ formError }}</div>
                 <p v-else-if="notice" role="status" class="m-0 text-sm font-semibold text-[#2F4A1C]">{{ notice }}</p>

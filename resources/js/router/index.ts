@@ -59,6 +59,18 @@ export const router = createRouter({
                     props: true,
                     meta: { title: 'Майстер' },
                 },
+                {
+                    path: 'cart',
+                    name: 'cart',
+                    component: () => import('@/pages/cart/CartPage.vue'),
+                    meta: { title: 'Кошик' },
+                },
+                {
+                    path: 'checkout',
+                    name: 'checkout',
+                    component: () => import('@/pages/cart/CheckoutPage.vue'),
+                    meta: { title: 'Оформлення', requiresAuth: true },
+                },
             ],
         },
         {
@@ -114,6 +126,31 @@ export const router = createRouter({
                     name: 'admin-categories',
                     component: () => import('@/pages/admin/AdminCategoriesPage.vue'),
                     meta: { title: 'Категорії', requiresAuth: true, requiresAdmin: true },
+                },
+                {
+                    path: 'orders',
+                    name: 'account-orders',
+                    component: () => import('@/pages/account/OrdersPage.vue'),
+                    meta: { title: 'Замовлення', requiresAuth: true },
+                },
+                {
+                    path: 'orders/:number',
+                    name: 'account-order',
+                    component: () => import('@/pages/account/OrderPage.vue'),
+                    props: true,
+                    meta: { title: 'Замовлення', requiresAuth: true },
+                },
+                {
+                    path: 'sales',
+                    name: 'studio-sales',
+                    component: () => import('@/pages/studio/SalesPage.vue'),
+                    meta: { title: 'Продажі', requiresAuth: true },
+                },
+                {
+                    path: 'admin/orders',
+                    name: 'admin-orders',
+                    component: () => import('@/pages/admin/AdminOrdersPage.vue'),
+                    meta: { title: 'Усі замовлення', requiresAuth: true, requiresAdmin: true },
                 },
                 {
                     path: 'soon/:section',

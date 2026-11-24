@@ -1,3 +1,5 @@
+import type { Currency } from './product';
+
 /** Дзеркало Modules\Identity\Domain\MakerStatus */
 export type MakerStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'suspended';
 
@@ -18,6 +20,7 @@ export interface MakerProfile {
     status?: MakerStatus;
     review_note?: string | null;
     is_editable?: boolean;
+    checkout?: MakerCheckout;
     created_at?: string;
     updated_at?: string;
     // тільки для адміністратора
@@ -33,4 +36,17 @@ export interface MakerProfilePayload {
     city: string | null;
     address: string | null;
     follow_enabled: boolean;
+    cod_enabled?: boolean;
+    delivery_currency?: Currency;
+    delivery_domestic_minor?: number;
+    /** null — майстер не відправляє за кордон */
+    delivery_international_minor?: number | null;
+}
+
+/** Налаштування доставки й оплати майстра (бачить лише власник) */
+export interface MakerCheckout {
+    cod_enabled: boolean;
+    delivery_currency: Currency;
+    delivery_domestic_minor: number;
+    delivery_international_minor: number | null;
 }

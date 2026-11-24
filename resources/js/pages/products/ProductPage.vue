@@ -9,6 +9,14 @@ import { productsApi } from '@/api/products';
 import { toApiError } from '@/api/http';
 import type { Product } from '@/types/product';
 import { formatPrice, plural } from '@/utils/format';
+import { useCartStore } from '@/stores/cart';
+
+const cart = useCartStore();
+const quantity = ref(1);
+const adding = ref(false);
+const added = ref(false);
+const cartError = ref('');
+
 
 const props = defineProps<{ slug: string }>();
 
@@ -21,6 +29,27 @@ const imageIndex = ref(0);
 const variantUuid = ref<string | null>(null);
 
 const variant = computed(() => product.value?.variants.find((v) => v.uuid === variantUuid.value) ?? null);
+const canBuy = computed(() => !!product.value && (product.value.is_digital || !!variant.value?.in_stock));
+const maxQuantity = computed(() => Math.min(99, variant.value?.stock ?? 99));
+watch(variantUuid, () => {
+    quantity.value = 1;
+    added.value = false;
+});
+
+async function addToCart() {
+    if (!product.value) return;
+    adding.value = true;
+    cartError.value = '';
+    added.value = false;
+    try {
+        await cart.add(product.value.uuid, product.value.is_digital ? null : variantUuid.value, quantity.value);
+        added.value = true;
+    } catch (e) {
+        cartError.value = toApiError(e).message;
+    } finally {
+        adding.value = false;
+    }
+}
 const price = computed(() => variant.value?.price ?? product.value?.price ?? null);
 const paragraphs = computed(() => (product.value?.description ?? '').split(/\n{2,}/).filter(Boolean));
 const stockNote = computed(() => {
@@ -136,9 +165,41 @@ watch(() => props.slug, load, { immediate: true });
 
                     <p class="m-0 text-[15px]" :class="variant && !variant.in_stock ? 'text-kalyna' : 'text-ink-muted'">{{ stockNote }}</p>
 
-                    <div class="flex flex-wrap gap-3">
-                        <BaseButton size="lg" disabled title="Кошик з’явиться наступним кроком">Додати в кошик</BaseButton>
-                        <span class="self-center text-sm text-ink-muted">Кошик — скоро</span>
+                    <div v-if="product.status === 'published' || !product.status" class="flex flex-col gap-3">
+                        <div class="flex flex-wrap items-center gap-3">
+                            <div
+                                v-if="!product.is_digital"
+                                class="flex h-[52px] items-center rounded-full border-[1.5px] border-line-strong bg-white"
+                                role="group"
+                                aria-label="Кількість"
+                            >
+                                <button
+                                    type="button"
+                                    class="h-full w-12 text-xl text-plum disabled:opacity-40"
+                                    aria-label="Менше"
+                                    :disabled="quantity <= 1"
+                                    @click="quantity--"
+                                >
+                                    −
+                                </button>
+                                <span class="w-8 text-center font-semibold" aria-live="polite">{{ quantity }}</span>
+                                <button
+                                    type="button"
+                                    class="h-full w-12 text-xl text-plum disabled:opacity-40"
+                                    aria-label="Більше"
+                                    :disabled="quantity >= maxQuantity"
+                                    @click="quantity++"
+                                >
+                                    +
+                                </button>
+                            </div>
+                            <BaseButton size="lg" :loading="adding" :disabled="!canBuy" @click="addToCart">Додати в кошик</BaseButton>
+                        </div>
+                        <p v-if="cartError" role="alert" class="m-0 text-[15px] text-kalyna">{{ cartError }}</p>
+                        <p v-else-if="added" role="status" class="m-0 text-[15px] text-ink">
+                            Додано в кошик.
+                            <RouterLink :to="{ name: 'cart' }" class="font-semibold text-plum">Перейти до кошика</RouterLink>
+                        </p>
                     </div>
 
                     <RouterLink

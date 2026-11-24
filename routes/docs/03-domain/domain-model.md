@@ -548,9 +548,10 @@ MVP supports:
 
 ```text
 Online payment
+Payment on delivery
 ```
 
-Cash on Delivery is not part of the domain.
+Payment on delivery is allowed only when every Maker in the Order allows it, the delivery is domestic for each Maker, and the Order has no digital items (domain-rules.md §27).
 
 ---
 

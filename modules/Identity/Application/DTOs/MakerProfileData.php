@@ -14,6 +14,10 @@ final readonly class MakerProfileData
         public ?string $city = null,
         public ?string $address = null,
         public bool $followEnabled = true,
+        public bool $codEnabled = false,
+        public string $deliveryCurrency = 'EUR',
+        public int $deliveryDomesticMinor = 0,
+        public ?int $deliveryInternationalMinor = null,
     ) {}
 
     /** @param array<string, mixed> $data */
@@ -28,6 +32,10 @@ final readonly class MakerProfileData
             city: $data['city'] ?? null,
             address: $data['address'] ?? null,
             followEnabled: (bool) ($data['follow_enabled'] ?? true),
+            codEnabled: (bool) ($data['cod_enabled'] ?? false),
+            deliveryCurrency: (string) ($data['delivery_currency'] ?? 'EUR'),
+            deliveryDomesticMinor: (int) ($data['delivery_domestic_minor'] ?? 0),
+            deliveryInternationalMinor: isset($data['delivery_international_minor']) ? (int) $data['delivery_international_minor'] : null,
         );
     }
 
@@ -43,6 +51,10 @@ final readonly class MakerProfileData
             'city' => $this->city,
             'address' => $this->address,
             'follow_enabled' => $this->followEnabled,
+            'cod_enabled' => $this->codEnabled,
+            'delivery_currency' => $this->deliveryCurrency,
+            'delivery_domestic_minor' => $this->deliveryDomesticMinor,
+            'delivery_international_minor' => $this->deliveryInternationalMinor,
         ];
     }
 }

@@ -966,6 +966,15 @@ Capacity must be checked against the sessions belonging to the Workshop.
 
 # 7. Orders Module
 
+> **Implementation notes (2026-11-24).** What the code does where it differs from or adds to the tables below:
+>
+> * `orders.payment_method` (`online` | `cash_on_delivery`) and `orders.billing_email` (snapshot).
+> * `order_groups.maker_name` — snapshot of the Maker's display name; `order_groups.cancel_reason` — set when a Maker cancels their part. `maker_profile_uuid` is indexed but has no FK, so Orders survive a deleted Maker profile.
+> * `order_items` keep product/variant UUIDs without FKs plus snapshots (name, variant name, unit price) and `metadata` (`type`, `slug`, `image_url`).
+> * `deliveries.phone` added. Delivery fee per group comes from the Maker profile: `maker_profiles.delivery_currency`, `delivery_domestic_minor`, `delivery_international_minor` (`null` = does not ship abroad), `cod_enabled`.
+> * Guest carts: `carts.user_uuid` is nullable and the cart UUID is the guest token (`X-Cart-Token` header). After login the guest cart is merged into the user's cart.
+> * Order statuses in code: `pending_payment`, `processing`, `partially_shipped`, `shipped`, `completed`, `cancelled` — derived from group statuses (`pending_payment`, `awaiting_shipment`, `shipped`, `delivered`, `completed`, `cancelled`). Payment is recorded in `orders.paid_at`; the `payments` table arrives with Stripe.
+
 ## 7.1 carts
 
 Stores the current shopping cart.
@@ -1055,7 +1064,7 @@ Rules:
 
 * One Order uses exactly one currency.
 * All OrderGroups inside the Order use the same currency.
-* Orders use online payment only.
+* `payment_method` is `online` or `cash_on_delivery`; payment on delivery follows domain-rules.md §27.
 * Guest checkout is supported, so `user_uuid` may be nullable.
 * `order_number` is a customer-facing identifier.
 

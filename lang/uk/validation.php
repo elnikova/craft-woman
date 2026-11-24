@@ -38,6 +38,7 @@ return [
         'symbols' => 'Пароль має містити хоча б один символ.',
         'uncompromised' => 'Цей пароль знайдено у витоках даних. Оберіть інший.',
     ],
+    'regex' => 'Поле «:attribute» має некоректний формат.',
     'required' => 'Заповніть поле «:attribute».',
     'required_if' => 'Заповніть поле «:attribute».',
     'size' => [
@@ -65,6 +66,10 @@ return [
         'parent_uuid' => 'батьківська категорія',
         'category_name' => 'назва категорії',
         'product_name' => 'назва товару',
+        'recipient_name' => 'отримувач',
+        'phone' => 'телефон',
+        'postal_code' => 'індекс',
+        'payment_method' => 'спосіб оплати',
         'variant_name' => 'назва варіанта',
         'description' => 'опис',
         'price_amount_minor' => 'ціна',
