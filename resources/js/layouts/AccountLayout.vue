@@ -19,7 +19,9 @@ watch(() => route.fullPath, () => (menuOpen.value = false));
 
 function isActive(to: unknown): boolean {
     const target = router.resolve(to as Parameters<typeof router.resolve>[0]);
-    return target.name === 'account' ? route.name === 'account' : route.path === target.path;
+    if (target.name === 'account') return route.name === 'account';
+    // Вкладені сторінки (редактор товару) підсвічують свій розділ
+    return route.path === target.path || route.path.startsWith(`${target.path}/`);
 }
 
 async function logout() {

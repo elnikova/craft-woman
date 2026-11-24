@@ -1,15 +1,8 @@
-import type { CourseCardData, PostCardData, ProductCardData, WorkshopRowData } from '@/types/catalog';
+import type { CourseCardData, PostCardData, WorkshopRowData } from '@/types/catalog';
 
 /** Приклад даних для головної. Видалити, коли з'явиться API каталогу. */
 
 export const popularCrafts = ['В’язання', 'Кераміка', 'Вишивка', 'Вироби зі шкіри', 'Ткацтво', 'Свічки'];
-
-export const products: ProductCardData[] = [
-    { id: 1, name: 'Плед з мериносу, ручне в’язання', makerName: 'Оксана Ткачук', priceCents: 14500, currency: 'EUR', isDigital: false, cover: { color: '#DBD0F3', pattern: 'ph-knit' } },
-    { id: 2, name: 'Чашка «Ранок», димлена глина', makerName: 'Марко Зайченко', priceCents: 2800, currency: 'EUR', isDigital: false, cover: { color: '#F0D9AA', pattern: 'ph-weave' } },
-    { id: 3, name: 'Схема вишивки «Полтавські маки», PDF', makerName: 'Ірина Бойко', priceCents: 900, currency: 'EUR', isDigital: true, cover: { color: '#D4DDC2', pattern: 'ph-stitch' } },
-    { id: 4, name: 'Шкіряний гаманець, ручний шов', makerName: 'Лука Мельник', priceCents: 6200, currency: 'EUR', isDigital: false, cover: { color: '#E2CFC3', pattern: 'ph-weave' } },
-];
 
 export const courses: CourseCardData[] = [
     { id: 1, title: 'В’язання спицями з нуля', makerName: 'Оксана Ткачук', lessonsCount: 24, accessMonths: null, hasCertificate: true, priceCents: 4900, currency: 'EUR', cover: { color: '#CFC2EE', pattern: 'ph-knit' } },

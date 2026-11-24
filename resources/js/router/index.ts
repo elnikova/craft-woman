@@ -34,6 +34,19 @@ export const router = createRouter({
                     meta: { title: 'Речі, зроблені руками', ownHeader: true },
                 },
                 {
+                    path: 'catalog',
+                    name: 'catalog',
+                    component: () => import('@/pages/products/CatalogPage.vue'),
+                    meta: { title: 'Каталог' },
+                },
+                {
+                    path: 'products/:slug',
+                    name: 'product',
+                    component: () => import('@/pages/products/ProductPage.vue'),
+                    props: true,
+                    meta: { title: 'Товар' },
+                },
+                {
                     path: 'makers',
                     name: 'makers',
                     component: () => import('@/pages/makers/MakersPage.vue'),
@@ -70,6 +83,31 @@ export const router = createRouter({
                     name: 'admin-makers',
                     component: () => import('@/pages/admin/AdminMakersPage.vue'),
                     meta: { title: 'Перевірка майстрів', requiresAuth: true, requiresAdmin: true },
+                },
+                {
+                    path: 'products',
+                    name: 'studio-products',
+                    component: () => import('@/pages/studio/MyProductsPage.vue'),
+                    meta: { title: 'Товари', requiresAuth: true },
+                },
+                {
+                    path: 'products/new',
+                    name: 'studio-product-new',
+                    component: () => import('@/pages/studio/ProductEditorPage.vue'),
+                    meta: { title: 'Новий товар', requiresAuth: true },
+                },
+                {
+                    path: 'products/:uuid',
+                    name: 'studio-product',
+                    component: () => import('@/pages/studio/ProductEditorPage.vue'),
+                    props: true,
+                    meta: { title: 'Товар', requiresAuth: true },
+                },
+                {
+                    path: 'admin/products',
+                    name: 'admin-products',
+                    component: () => import('@/pages/admin/AdminProductsPage.vue'),
+                    meta: { title: 'Перевірка товарів', requiresAuth: true, requiresAdmin: true },
                 },
                 {
                     path: 'admin/categories',

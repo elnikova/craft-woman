@@ -52,7 +52,7 @@ const maker: NavSection = {
     title: 'Майстерня',
     items: [
         { label: 'Профіль майстерні', to: { name: 'studio' }, icon: 'store' },
-        soon('products', 'Товари', 'box'),
+        { label: 'Товари', to: { name: 'studio-products' }, icon: 'box' },
         soon('teaching', 'Курси', 'book'),
         soon('workshops', 'Майстер-класи', 'calendar'),
         soon('sales', 'Продажі', 'chart'),
@@ -65,7 +65,7 @@ const admin: NavSection = {
         { label: 'Перевірка майстрів', to: { name: 'admin-makers' }, icon: 'check' },
         soon('users', 'Користувачі', 'users'),
         { label: 'Категорії', to: { name: 'admin-categories' }, icon: 'tag' },
-        soon('moderation', 'Модерація', 'flag'),
+        { label: 'Перевірка товарів', to: { name: 'admin-products' }, icon: 'flag' },
         soon('all-orders', 'Усі замовлення', 'bag'),
     ],
 };

@@ -12,7 +12,7 @@ const menuOpen = ref(false);
 
 const nav = [
     { label: 'Майстри', to: { name: 'makers' } },
-    { label: 'Товари', to: { path: '/', hash: '#products' } },
+    { label: 'Товари', to: { name: 'catalog' } },
     { label: 'Курси', to: { path: '/', hash: '#courses' } },
     { label: 'Майстер-класи', to: { path: '/', hash: '#workshops' } },
     { label: 'Спільнота', to: { path: '/', hash: '#community' } },

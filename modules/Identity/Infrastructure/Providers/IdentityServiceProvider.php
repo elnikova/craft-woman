@@ -5,7 +5,9 @@ namespace Modules\Identity\Infrastructure\Providers;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\ServiceProvider;
+use Modules\Identity\Application\Contracts\MakerDirectory;
 use Modules\Identity\Application\Services\MakerProfileService;
+use Modules\Identity\Infrastructure\Persistence\EloquentMakerDirectory;
 use Modules\Identity\Infrastructure\Persistence\MakerProfile;
 use Modules\Identity\Policies\MakerProfilePolicy;
 
@@ -14,6 +16,7 @@ class IdentityServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(MakerProfileService::class);
+        $this->app->singleton(MakerDirectory::class, EloquentMakerDirectory::class);
     }
 
     public function boot(): void

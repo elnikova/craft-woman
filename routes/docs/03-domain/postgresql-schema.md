@@ -334,6 +334,7 @@ products
 ├── status
 ├── production_time_days
 ├── shipping_info
+├── review_note           NULL — moderator's message (rejected/archived)
 ├── published_at
 ├── created_at
 ├── updated_at
@@ -364,6 +365,13 @@ Rules:
 * Only published products are purchasable.
 * Physical products must have at least one ProductVariant.
 * Digital products do not consume physical inventory.
+* Allowed transitions: draft → pending_review → published | rejected; rejected → pending_review;
+  published → archived; archived → draft (relist, reviewed again).
+* Submitting for review requires: name (3+), description (20+), price > 0, a category, at least one image;
+  physical — at least one active variant; digital — at least one file.
+* The slug follows the name until the first publication; after that it is stable.
+* Only drafts can be deleted; published products are archived to keep order history intact.
+* Products of suspended Makers are hidden from the public catalog.
 
 ---
 
@@ -418,6 +426,7 @@ product_images
 ├── uuid                  PK
 ├── product_uuid          FK
 ├── file_url
+├── storage_path          path on the public disk (for deletion)
 ├── alt_text
 ├── sort_order
 ├── created_at
