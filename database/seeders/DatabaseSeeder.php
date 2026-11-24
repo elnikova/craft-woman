@@ -21,6 +21,9 @@ class DatabaseSeeder extends Seeder
         // Seed default admin user
         $this->call(AdminUserSeeder::class);
 
+        // Marketplace categories
+        $this->call(CategorySeeder::class);
+
         // Demo makers (approved + one pending review)
         $this->call(MakerSeeder::class);
 

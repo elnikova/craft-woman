@@ -17,12 +17,22 @@ return Application::configure(basePath: dirname(__DIR__))
         // SPA на тому ж домені автентифікується через сесійну cookie Sanctum.
         // Bearer-токени й далі працюють для мобільних клієнтів.
         $middleware->statefulApi();
+        $middleware->appendToGroup('api', \App\Http\Middleware\SetLocaleFromHeader::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Порушення доменних правил (недозволений перехід статусу тощо) → 409 Conflict
         $exceptions->render(function (DomainException $e, Request $request) {
             if ($request->expectsJson()) {
-                return response()->json(['message' => $e->getMessage()], 409);
+                // Доменні винятки несуть ключ перекладу (lang/*/domain.php); інакше — технічне повідомлення
+                $params = array_map(
+                    fn ($v) => is_string($v) && trans()->has("domain.statuses.{$v}") ? __("domain.statuses.{$v}") : $v,
+                    property_exists($e, 'params') ? $e->params : [],
+                );
+                $message = property_exists($e, 'key') && trans()->has('domain.'.$e->key)
+                    ? __('domain.'.$e->key, $params)
+                    : $e->getMessage();
+
+                return response()->json(['message' => $message], 409);
             }
         });
     })->create();

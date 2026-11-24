@@ -72,6 +72,12 @@ export const router = createRouter({
                     meta: { title: 'Перевірка майстрів', requiresAuth: true, requiresAdmin: true },
                 },
                 {
+                    path: 'admin/categories',
+                    name: 'admin-categories',
+                    component: () => import('@/pages/admin/AdminCategoriesPage.vue'),
+                    meta: { title: 'Категорії', requiresAuth: true, requiresAdmin: true },
+                },
+                {
                     path: 'soon/:section',
                     name: 'account-soon',
                     component: () => import('@/pages/account/ComingSoonPage.vue'),

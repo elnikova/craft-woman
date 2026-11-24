@@ -29,7 +29,7 @@ class LoginRequest extends FormRequest
         return [
             function (Validator $validator) {
                 if (! auth()->attempt($this->safe(['email', 'password']), $this->boolean('remember'))) {
-                    $validator->errors()->add('password', 'These credentials do not match our records.');
+                    $validator->errors()->add('password', __('auth.failed'));
                 }
             },
         ];
