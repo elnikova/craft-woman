@@ -1341,7 +1341,7 @@ The database design must preserve the aggregate boundaries and ownership defined
 
 # 30. Next Architecture Artifact
 
-> **Historical.** The ERD, the schema and the first five modules have been built since. The current plan is [roadmap.md](../07-status/roadmap.md), and decisions taken since are in [decision-log.md](../05-decisions/decision-log.md).
+> **Historical.** The ERD, the schema and the first five modules have been built since. The current plan is [roadmap.md](../07-status/roadmap.md), and decisions taken since are in [decision-log.md](../08-decisions/decision-log.md).
 
 After approval of this Domain Model, the next artifact is:
 

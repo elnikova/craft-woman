@@ -874,7 +874,7 @@ Rules:
 > * `workshop_bookings` belongs to the workshop (not to a session). It has `seats`, `order_item_uuid` (unique, no FK), and `status` `pending` | `confirmed` | `cancelled` with `booked_at`, `confirmed_at`, `cancelled_at` and `cancel_reason`. "Completed" is derived from the last session's end.
 > * `cart_items.workshop_uuid` (unique per cart) and `order_items.workshop_uuid` (indexed, no FK) link Orders to workshops.
 >
-> Reasons: [decision-log.md](../05-decisions/decision-log.md#2026-11-25--workshops).
+> Reasons: [decision-log.md](../08-decisions/decision-log.md#2026-11-25--workshops).
 
 ## 6.1 workshops
 

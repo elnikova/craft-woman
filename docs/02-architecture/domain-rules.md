@@ -1139,7 +1139,7 @@ The architecture may expect these capabilities but must not introduce unnecessar
 
 The following decisions must be resolved before the final ERD and implementation.
 
-> **Status (2026-11-25).** Resolved: 56.1 (`OrderGroup`), 56.2 (one currency per cart), 56.3 (payment on delivery only if every Maker allows it), 56.4 (the Maker's delivery currency must match the cart), 56.7 (all required lessons), 56.10 (free-text note, 5+ characters). Still open: 56.5, 56.6, 56.8, 56.9. Answers and reasons: [decision-log.md](../05-decisions/decision-log.md).
+> **Status (2026-11-25).** Resolved: 56.1 (`OrderGroup`), 56.2 (one currency per cart), 56.3 (payment on delivery only if every Maker allows it), 56.4 (the Maker's delivery currency must match the cart), 56.7 (all required lessons), 56.10 (free-text note, 5+ characters). Still open: 56.5, 56.6, 56.8, 56.9. Answers and reasons: [decision-log.md](../08-decisions/decision-log.md).
 
 ## 56.1 Order Group Naming
 

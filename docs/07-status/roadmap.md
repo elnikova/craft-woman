@@ -37,7 +37,7 @@ Technical debt and risks, roughly by importance:
 3. **No refunds.** Cancelled workshops and cancelled paid orders need a manual refund until Stripe arrives.
 4. **No e-mails.** Participants learn about a cancelled workshop or a changed time only in their account.
 5. **Module boundary leaks** — listed in [backend.md](../06-development/backend.md#known-boundary-exceptions).
-6. **No OpenAPI spec.** [api-reference.md](../04-api/api-reference.md) is maintained by hand.
+6. **No OpenAPI spec.** [api-reference.md](../05-api/api-reference.md) is maintained by hand.
 7. **Migrations are edited in place.** That's fine before the first deploy. After that, only add new migrations.
 8. **No CI.** Tests, Pint, `vue-tsc` and `i18n:check` run locally only.
 

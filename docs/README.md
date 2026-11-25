@@ -9,10 +9,10 @@ It's a Laravel 12 modular monolith with a Vue 3 SPA in the same repository.
 |---|---|
 | Run the project locally | [06-development/getting-started.md](06-development/getting-started.md) |
 | Know what's built and what's next | [07-status/roadmap.md](07-status/roadmap.md) |
-| Understand a business rule | [02-architecture/domain-rules.md](02-architecture/domain-rules.md), then [05-decisions/decision-log.md](05-decisions/decision-log.md) |
+| Understand a business rule | [02-architecture/domain-rules.md](02-architecture/domain-rules.md), then [08-decisions/decision-log.md](08-decisions/decision-log.md) |
 | Add backend code to a module | [06-development/backend.md](06-development/backend.md) |
 | Add a page or component | [06-development/frontend.md](06-development/frontend.md) |
-| Call the API | [04-api/api-reference.md](04-api/api-reference.md) |
+| Call the API | [05-api/api-reference.md](05-api/api-reference.md) |
 
 ## All documents
 
@@ -24,12 +24,14 @@ It's a Laravel 12 modular monolith with a Vue 3 SPA in the same repository.
 | 03 | [domain-model.md](03-domain/domain-model.md) | Aggregates, entities, value objects | Design reference written before the code |
 | 03 | [erd.md](03-domain/erd.md) | Entity relationships | Design reference written before the code |
 | 03 | [postgresql-schema.md](03-domain/postgresql-schema.md) | Tables and constraints | Design reference; *Implementation notes* list what the migrations actually do |
-| 04 | [api-reference.md](04-api/api-reference.md) | Every `/api/v1` endpoint, conventions, errors | Matches the code |
-| 05 | [decision-log.md](05-decisions/decision-log.md) | Dated product and technical decisions | Append-only |
+| 05 | [api-reference.md](05-api/api-reference.md) | Every `/api/v1` endpoint, conventions, errors | Matches the code |
 | 06 | [getting-started.md](06-development/getting-started.md) | Setup on Windows + Herd, demo accounts, daily commands | Matches the code |
 | 06 | [backend.md](06-development/backend.md) | Module layout, conventions, cross-module contracts, testing | Matches the code |
 | 06 | [frontend.md](06-development/frontend.md) | SPA structure, design tokens, i18n, pages per area | Matches the code |
 | 07 | [roadmap.md](07-status/roadmap.md) | MVP status, known gaps, next steps | Update with every feature PR |
+| 08 | [decision-log.md](08-decisions/decision-log.md) | Dated product and technical decisions | Append-only |
+
+`04-database/` is reserved for database docs. The ERD and schema still live in `03-domain/`.
 
 When code and a design document disagree, the code and the *Implementation notes* win. Record the decision in the decision log, and add a note to the design document.
 

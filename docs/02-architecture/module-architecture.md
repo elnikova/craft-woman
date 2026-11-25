@@ -223,7 +223,7 @@ Workshops own scheduled workshops and bookings.
 
 The module must enforce session capacity.
 
-> **Implementation notes (2026-11-25).** Capacity and format belong to the workshop, not the session: a booking covers every session. Orders holds seats synchronously at checkout through `WorkshopCatalog::reserve()` and releases them on cancellation. Payment confirms them through the `OrderPaid` event. See [decision-log.md](../05-decisions/decision-log.md#2026-11-25--workshops).
+> **Implementation notes (2026-11-25).** Capacity and format belong to the workshop, not the session: a booking covers every session. Orders holds seats synchronously at checkout through `WorkshopCatalog::reserve()` and releases them on cancellation. Payment confirms them through the `OrderPaid` event. See [decision-log.md](../08-decisions/decision-log.md#2026-11-25--workshops).
 
 ---
 
