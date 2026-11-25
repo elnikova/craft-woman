@@ -49,6 +49,11 @@ final class EloquentMakerDirectory implements MakerDirectory
             city: $p->city,
             avatarUrl: $p->avatar_url,
             isApproved: $p->status->isActive(),
+            countryCode: $p->country_code,
+            codEnabled: $p->cod_enabled,
+            deliveryCurrency: $p->delivery_currency,
+            deliveryDomesticMinor: $p->delivery_domestic_minor,
+            deliveryInternationalMinor: $p->delivery_international_minor,
         );
     }
 }

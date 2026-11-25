@@ -21,6 +21,7 @@ class MarketplaceServiceProvider extends ServiceProvider
         $this->app->singleton(ProductService::class);
         $this->app->singleton(ProductMediaService::class);
         $this->app->singleton(InventoryService::class);
+        $this->app->singleton(\Modules\Marketplace\Application\Contracts\ProductCatalog::class, \Modules\Marketplace\Infrastructure\Persistence\EloquentProductCatalog::class);
     }
 
     public function boot(): void

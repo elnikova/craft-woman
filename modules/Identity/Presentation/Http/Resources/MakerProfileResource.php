@@ -29,6 +29,12 @@ class MakerProfileResource extends JsonResource
             'country_code' => $this->country_code,
             'city' => $this->city,
             'follow_enabled' => $this->follow_enabled,
+            'checkout' => [
+                'cod_enabled' => $this->cod_enabled,
+                'delivery_currency' => $this->delivery_currency,
+                'delivery_domestic_minor' => $this->delivery_domestic_minor,
+                'delivery_international_minor' => $this->delivery_international_minor,
+            ],
             'approved_at' => $this->approved_at,
             $this->mergeWhen($private, fn () => [
                 'address' => $this->address,

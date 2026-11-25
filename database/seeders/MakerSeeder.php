@@ -39,6 +39,10 @@ class MakerSeeder extends Seeder
                 bio: $bio,
                 countryCode: 'UA',
                 city: $city,
+                codEnabled: $email !== 'luka@craftwoman.local', // один майстер — тільки передоплата
+                deliveryCurrency: 'EUR',
+                deliveryDomesticMinor: 400,
+                deliveryInternationalMinor: $email === 'iryna@craftwoman.local' ? null : 1500,
             ));
             $makers->submitForReview($profile);
 

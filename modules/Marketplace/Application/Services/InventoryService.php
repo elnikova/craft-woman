@@ -36,10 +36,11 @@ final class InventoryService
         });
     }
 
-    public function increment(string $variantUuid, int $quantity): ProductVariant
+    /** Return stock (cancelled order). A variant deleted meanwhile is simply skipped. */
+    public function increment(string $variantUuid, int $quantity): ?ProductVariant
     {
         ProductVariant::query()->whereKey($variantUuid)->increment('stock', max(0, $quantity));
 
-        return ProductVariant::query()->findOrFail($variantUuid);
+        return ProductVariant::query()->find($variantUuid);
     }
 }

@@ -5,8 +5,10 @@ import AppLogo from './AppLogo.vue';
 import OrnamentBand from '@/components/ornament/OrnamentBand.vue';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import { useAuthStore } from '@/stores/auth';
+import { useCartStore } from '@/stores/cart';
 
 const auth = useAuthStore();
+const cart = useCartStore();
 const router = useRouter();
 const menuOpen = ref(false);
 
@@ -74,7 +76,17 @@ async function logout() {
                         <path d="M12 20s-7-4.4-7-10a4 4 0 0 1 7-2.6A4 4 0 0 1 19 10c0 5.6-7 10-7 10z" />
                     </svg>
                 </RouterLink>
-                <RouterLink to="/" aria-label="Кошик" class="grid h-11 w-11 place-items-center rounded-full text-plum">
+                <RouterLink
+                    :to="{ name: 'cart' }"
+                    :aria-label="cart.count ? `Кошик: ${cart.count}` : 'Кошик'"
+                    class="relative grid h-11 w-11 place-items-center rounded-full text-plum"
+                >
+                    <span
+                        v-if="cart.count"
+                        class="absolute top-0.5 right-0 grid h-5 min-w-5 place-items-center rounded-full bg-plum px-1 text-[11px] leading-none font-bold text-white"
+                        aria-hidden="true"
+                        >{{ cart.count > 99 ? '99+' : cart.count }}</span
+                    >
                     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
                         <path d="M5 8h14l-1 12H6L5 8z" /><path d="M9 8V6a3 3 0 0 1 6 0v2" />
                     </svg>

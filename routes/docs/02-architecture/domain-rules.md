@@ -603,12 +603,18 @@ Payment behavior must be consistent with the rules of all affected groups.
 
 An order must not enter a confirmed paid state unless the required payment conditions for the entire order have been satisfied.
 
-The exact behavior when:
+Decision (2026-11-24):
 
-* one Maker allows cash on delivery;
-* another Maker does not;
+* Online payment is always available.
+* Payment on delivery is available only when **every** Maker in the Order allows it.
+* Payment on delivery is never available for international delivery (country differs from the Maker's country) — full prepayment is required.
+* Payment on delivery is never available when the Order contains digital items — files are released only after payment.
+* The rules are evaluated by `Modules\Orders\Domain\PaymentPolicy`; checkout shows the reasons when a method is unavailable, and the server re-checks them when the Order is placed.
 
-must be finalized before checkout implementation.
+Status flow:
+
+* online — the Order starts as `pending_payment`; after payment physical groups move to `awaiting_shipment`, digital-only groups to `completed`;
+* on delivery — groups start as `awaiting_shipment`; the Order is marked paid when the last group is delivered.
 
 ---
 
