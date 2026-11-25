@@ -38,7 +38,7 @@ PostgreSQL
 
 One PostgreSQL database is used by the modular monolith.
 
-> **Current state (2026-11-25).** The migrations run on SQLite in development and tests; PostgreSQL isn't wired up yet. Column types are portable (`uuid`, `json`, `timestamp`), so the switch should need configuration only. Verify it with the full test suite.
+> **Current state (2026-11-25).** The migrations run on PostgreSQL 16+ and still on SQLite, the fast test fallback. `json` columns are plain `json` (not `jsonb`); searches cast them to text. The `categories.parent_uuid` self-reference is added after the table exists, because PostgreSQL needs the primary key first.
 
 Application modules share the same database, but module ownership and access rules are enforced at the application level.
 

@@ -11,7 +11,7 @@ return new class extends Migration
     {
         Schema::create('categories', function (Blueprint $table) {
             $table->uuid('uuid')->primary();
-            $table->foreignUuid('parent_uuid')->nullable()->constrained('categories', 'uuid')->restrictOnDelete();
+            $table->uuid('parent_uuid')->nullable();
             $table->string('name', 80);
             $table->string('slug', 100)->unique();
             $table->string('description', 500)->nullable();
@@ -20,6 +20,11 @@ return new class extends Migration
             $table->timestamps();
 
             $table->index(['parent_uuid', 'sort_order']);
+        });
+
+        // Self-reference added after the table exists: PostgreSQL needs the primary key in place first
+        Schema::table('categories', function (Blueprint $table) {
+            $table->foreign('parent_uuid')->references('uuid')->on('categories')->restrictOnDelete();
         });
 
         Schema::create('categorizables', function (Blueprint $table) {

@@ -33,13 +33,12 @@ Scope from [product-requirements.md §22](../01-product/product-requirements.md)
 Technical debt and risks, roughly by importance:
 
 1. **Unpaid orders never expire.** They hold stock and workshop seats indefinitely. Needs a scheduled job (for example, cancel after 24–48 h) and a decision on the timeout.
-2. **Only SQLite is tested.** The design targets PostgreSQL. `lockForUpdate()` (stock, seats) does nothing on SQLite, and `like` searches on JSON `translations` may behave differently. Add a PostgreSQL CI run before launch.
-3. **No refunds.** Cancelled workshops and cancelled paid orders need a manual refund until Stripe arrives.
-4. **No e-mails.** Participants learn about a cancelled workshop or a changed time only in their account.
-5. **Module boundary leaks** — listed in [backend.md](../06-development/backend.md#known-boundary-exceptions).
-6. **No OpenAPI spec.** [api-reference.md](../05-api/api-reference.md) is maintained by hand.
-7. **Migrations are edited in place.** That's fine before the first deploy. After that, only add new migrations.
-8. **No CI.** Tests, Pint, `vue-tsc` and `i18n:check` run locally only.
+2. **No refunds.** Cancelled workshops and cancelled paid orders need a manual refund until Stripe arrives.
+3. **No e-mails.** Participants learn about a cancelled workshop or a changed time only in their account.
+4. **Module boundary leaks** — listed in [backend.md](../06-development/backend.md#known-boundary-exceptions).
+5. **No OpenAPI spec.** [api-reference.md](../05-api/api-reference.md) is maintained by hand.
+6. **Migrations are edited in place.** That's fine before the first deploy. After that, only add new migrations.
+7. **No CI.** Tests, Pint, `vue-tsc` and `i18n:check` run locally only.
 
 ## Test coverage of the key invariants
 
@@ -49,11 +48,11 @@ From [domain-rules.md §57](../02-architecture/domain-rules.md).
 |---|---|
 | Maker cannot publish before approval | ✅ |
 | Maker cannot change another maker's entity | ✅ products, courses, workshops, sales |
-| Stock never negative / reserved at checkout | ✅ (no real concurrency test — SQLite) |
+| Stock never negative / reserved at checkout | ✅ (guarded update + row lock on PostgreSQL) |
 | Digital files only with a valid purchase | ✅ |
 | Course access respects expiration | ✅ |
 | Certificate only after completion | ✅ |
-| Workshop capacity never exceeded | ✅ (single-process; see gap 2) |
+| Workshop capacity never exceeded | ✅ test suite; plus a manual race of 12 parallel bookings for 3 seats on PostgreSQL → exactly 3 |
 | Several makers → several groups, each with its own delivery | ✅ |
 | International orders can't use payment on delivery | ✅ |
 | Historical order prices unchanged | ✅ snapshots |
@@ -71,4 +70,4 @@ From [domain-rules.md §57](../02-architecture/domain-rules.md).
 | 5 | Community: posts, comments, likes, following | L | decision 56.8 |
 | 6 | Favorites for courses and workshops; price filters | S | — |
 | 7 | Google sign-in, password reset | S | mail (3) |
-| 8 | PostgreSQL + CI pipeline (tests, Pint, type-check, i18n check) | M | — |
+| 8 | CI pipeline on PostgreSQL (tests, Pint, type-check, i18n check) | M | — |

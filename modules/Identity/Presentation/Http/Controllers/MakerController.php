@@ -17,7 +17,7 @@ class MakerController extends Controller
         $makers = MakerProfile::query()
             ->approved()
             ->when($request->string('city')->toString(), fn ($q, $city) => $q->where('city', $city))
-            ->when($request->string('q')->toString(), fn ($q, $term) => $q->where('display_name', 'like', "%{$term}%"))
+            ->when($request->string('q')->toString(), fn ($q, $term) => $q->whereLike('display_name', "%{$term}%"))
             ->orderByDesc('approved_at')
             ->paginate(min(max($request->integer('per_page', 12), 1), 48));
 

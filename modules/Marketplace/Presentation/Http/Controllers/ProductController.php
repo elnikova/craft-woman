@@ -54,9 +54,9 @@ class ProductController extends Controller
 
         if ($term = trim($request->string('q')->toString())) {
             // Translations are stored as JSON text, so a plain LIKE also finds English names
-            $query->where(fn ($q) => $q->where('name', 'like', "%{$term}%")
-                ->orWhere('translations', 'like', "%{$term}%")
-                ->orWhereHas('tags', fn ($t) => $t->where('name', 'like', "%{$term}%")));
+            $query->where(fn ($q) => $q->whereLike('name', "%{$term}%")
+                ->orWhereLike('translations', "%{$term}%")
+                ->orWhereHas('tags', fn ($t) => $t->whereLike('name', "%{$term}%")));
         }
 
         match ($request->string('sort')->toString()) {

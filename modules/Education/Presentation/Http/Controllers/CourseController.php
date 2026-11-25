@@ -39,7 +39,7 @@ class CourseController extends Controller
         $query = Course::query()->published()->whereIn('maker_profile_uuid', $this->makers->approvedMakerUuidsQuery())->with('categories');
 
         if ($term = trim($request->string('q')->toString())) {
-            $query->where(fn ($q) => $q->where('name', 'like', "%{$term}%")->orWhere('translations', 'like', "%{$term}%"));
+            $query->where(fn ($q) => $q->whereLike('name', "%{$term}%")->orWhereLike('translations', "%{$term}%"));
         }
         if ($slug = $request->string('category')->toString()) {
             $uuids = Category::query()->visible()->where('slug', $slug)->first()?->selfAndDescendantUuids() ?? [];

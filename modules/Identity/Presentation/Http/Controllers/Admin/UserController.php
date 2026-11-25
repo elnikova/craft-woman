@@ -28,12 +28,12 @@ class UserController extends Controller
         $users = User::query()
             ->with('makerProfile')
             ->when($request->string('q')->trim()->toString(), function ($q, $term) {
-                // SQLite lowercases only ASCII, so also try the term as typed and capitalised (Cyrillic names)
+                // PostgreSQL ILIKE ignores case for Cyrillic; SQLite (tests) only for ASCII, so also try common casings
                 $variants = array_unique([$term, mb_strtolower($term), mb_convert_case($term, MB_CASE_TITLE)]);
                 $q->where(function ($w) use ($variants) {
                     foreach ($variants as $v) {
                         $like = '%'.str_replace(['%', '_'], ['\%', '\_'], $v).'%';
-                        $w->orWhere('name', 'like', $like)->orWhereRaw('lower(email) like ?', [mb_strtolower($like)]);
+                        $w->orWhereLike('name', $like)->orWhereLike('email', $like);
                     }
                 });
             })

@@ -9,9 +9,25 @@ Local setup on Windows with [Laravel Herd](https://herd.laravel.com). The projec
 | PHP | 8.2+ (comes with Herd) |
 | Composer | 2.x (comes with Herd) |
 | Node.js | 20+ |
-| Database | SQLite (default, file `database/database.sqlite`) |
+| PostgreSQL | 16+ (tested on 16) |
+| PHP extension | `pdo_pgsql` |
 
-The design documents target PostgreSQL. The code currently runs and is tested on SQLite only; see [roadmap.md](../07-status/roadmap.md#known-gaps).
+## PostgreSQL
+
+1. Install PostgreSQL in one of these ways:
+   - **Herd Pro**: Services → add PostgreSQL;
+   - **The official Windows installer** from postgresql.org (EDB). It includes pgAdmin. Remember the password you set for the `postgres` user.
+2. Check that PHP can talk to it: `php -m | findstr pgsql` should list `pdo_pgsql` and `pgsql`. If it doesn't, enable `extension=pdo_pgsql` in Herd's `php.ini` (Herd → PHP → the version → open php.ini) and restart Herd.
+3. Create two databases, one for the site and one for tests. Use pgAdmin, or run this in PowerShell:
+   ```powershell
+   psql -U postgres -c "create database craft_woman"
+   psql -U postgres -c "create database craft_woman_test"
+   ```
+   `psql` lives in `C:\Program Files\PostgreSQL\<version>\bin`. Add that folder to `PATH`, or run it from there.
+
+Tests use `craft_woman_test` (set in `phpunit.xml`) and take the host, user and password from `.env`. Each test wipes and rebuilds that database, so never point it at real data.
+
+Without PostgreSQL, tests can still run on in-memory SQLite: `php artisan test --configuration=phpunit.sqlite.xml`. One test that needs PostgreSQL (case-insensitive Cyrillic search) is skipped there.
 
 ## First run
 
@@ -20,20 +36,27 @@ PowerShell 5 doesn't understand `&&`. Run each command on its own line, or join 
 ```powershell
 composer install
 npm install
-copy .env.example .env
+copy .env.example .env      # then set DB_PASSWORD
 php artisan key:generate
 php artisan migrate:fresh --seed
 php artisan storage:link
 npm run dev
 ```
 
-`.env` values the SPA needs:
+`.env` values to check:
 
 ```env
 APP_URL=http://craft-woman.test
 APP_LOCALE=uk
 SANCTUM_STATEFUL_DOMAINS=craft-woman.test
 SESSION_DOMAIN=null
+
+DB_CONNECTION=pgsql
+DB_HOST=127.0.0.1
+DB_PORT=5432
+DB_DATABASE=craft_woman
+DB_USERNAME=postgres
+DB_PASSWORD=your-password
 ```
 
 `APP_LOCALE=uk` makes Ukrainian the API's default when a request has no `Accept-Language` header, matching the SPA. Older `.env` files have `en`.
@@ -62,7 +85,8 @@ There's no real payment yet. An unpaid order has a **«Оплатити (тес�
 | Production build (also type-checks) | `npm run build` |
 | Type-check only | `npx vue-tsc --noEmit` |
 | Check UI translations | `npm run i18n:check` |
-| Back-end tests | `php artisan test` |
+| Back-end tests (PostgreSQL) | `php artisan test` |
+| Back-end tests without PostgreSQL | `php artisan test --configuration=phpunit.sqlite.xml` |
 | One test file or group | `php artisan test --filter=Workshops` |
 | Code style (PHP) | `vendor/bin/pint` |
 | Reset the database | `php artisan migrate:fresh --seed` |
@@ -83,4 +107,7 @@ There's no real payment yet. An unpaid order has a **«Оплатити (тес�
 | Images or covers return 404 | `php artisan storage:link` |
 | Page styles missing, textures 404 | `npm run dev` isn't running, or a stale `public/hot` file is left after it stopped: delete `public/hot` |
 | "No upcoming workshops" | Seeded dates have passed — re-seed |
+| `could not find driver` | `pdo_pgsql` isn't enabled — see step 2 under PostgreSQL |
+| `password authentication failed for user "postgres"` | `DB_PASSWORD` in `.env` doesn't match the one set during installation |
+| `database "craft_woman_test" does not exist` | Create it (step 3); tests need it |
 | A new message key shows as `workshops.title` | The key is missing in `resources/js/i18n/uk.json` or `en.json` — run `npm run i18n:check` |

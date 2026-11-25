@@ -15,6 +15,14 @@ namespace App\Support;
  */
 trait HasTranslations
 {
+    /**
+     * Keep JSON readable (Cyrillic as is, not \uXXXX) so translations can be searched with LIKE / ILIKE.
+     */
+    protected function asJson($value, $flags = 0)
+    {
+        return parent::asJson($value, $flags | JSON_UNESCAPED_UNICODE);
+    }
+
     public function initializeHasTranslations(): void
     {
         $this->mergeCasts(['translations' => 'array']);
