@@ -5,43 +5,35 @@ Authentication uses the Sanctum session cookie (same-domain SPA); no tokens are 
 
 ## Setup
 
-1. In `.env` (Herd domain):
-   ```env
-   APP_URL=http://craft-woman.test
-   SANCTUM_STATEFUL_DOMAINS=craft-woman.test
-   SESSION_DOMAIN=null
-   ```
-2. Run:
-   ```bash
-   npm install
-   php artisan config:clear
-   php artisan storage:link   # product photos are on the public disk
-   npm run dev                # development
-   npm run build              # vue-tsc + vite build
-   ```
+See [getting-started.md](getting-started.md). In short, run `npm install`, then `npm run dev` (development) or `npm run build` (type-check + build).
 
 ## Structure
 
 ```
 resources/js/
 ├── app.ts                  entry point: Vue + Pinia + Router
-├── api/                    http.ts (axios, XSRF, toApiError), auth, makers, products, taxonomy, orders, favorites, account
+├── api/                    http.ts (axios, XSRF, toApiError), auth, account, makers, products, taxonomy,
+│                           orders (cart, checkout, orders, sales), favorites, courses, workshops
 ├── stores/                 auth, cart, favorites (Pinia, setup syntax)
 ├── router/index.ts         routes + guard (guestOnly / requiresAuth / requiresAdmin / ownHeader)
 ├── config/accountNav.ts    account menu by role
-├── types/                  mirrors of the API resources (user, maker, product, taxonomy, order)
-├── utils/                  format (prices, minor units, Ukrainian plurals), makerStatus, productStatus, orderStatus
-├── mocks/home.ts           sample data for the home page blocks without an API yet
+├── i18n/                   index.ts (setup, labelMap, localePath), uk.json, en.json
+├── types/                  mirrors of the API resources (user, maker, product, taxonomy, order, course, workshop)
+├── utils/                  format (prices, minor units, plurals), makerStatus, productStatus, orderStatus,
+│                           course (access label), workshop (time zones, session labels, .ics)
+├── mocks/home.ts           sample community posts and craft list for the home page
 ├── layouts/                DefaultLayout (public site), AccountLayout (/account, sidebar)
 ├── components/
-│   ├── layout/             AppHeader, AppFooter, AppLogo
+│   ├── layout/             AppHeader, AppFooter, AppLogo, LocaleSwitcher
 │   ├── ornament/           OrnamentBand, StarOrnament, StitchLine
-│   ├── ui/                 BaseButton, BaseInput, BaseTextarea, AppIcon
-│   ├── home/               SectionHeader, MakerCard, CourseCard, WorkshopRow, PostCard
+│   ├── ui/                 BaseButton, BaseInput, BaseTextarea, AppIcon, ContentLanguage
+│   ├── home/               SectionHeader, PostCard
 │   ├── makers/             MakerAvatar, MakerProfileCard, MakerStatusBadge
 │   ├── products/           ProductCard, ProductCover, ProductStatusBadge, FavoriteButton
+│   ├── courses/            CourseCard
+│   ├── workshops/          WorkshopRow, WorkshopStatusBadge
 │   └── orders/             StatusPill
-└── pages/                  home, auth, makers, products, cart, account, studio, admin
+└── pages/                  home, auth, makers, products, courses, workshops, cart, account, studio, admin
 
 resources/images/patterns/   grain, linen, knit, weave, stitch (dark/light) — processed by Vite from app.css
 public/images/ornaments/     4 rushnyk bands, the star (logo and decoration) — served as is, for <img>
@@ -72,7 +64,7 @@ Utilities: `font-flair`, `tx-linen`, `tx-weave`, `tx-knit`, `ph-knit`, `ph-weave
 
 ## Conventions
 
-- Code, comments, commit messages and PR descriptions are in English. UI copy is Ukrainian.
+- Code, comments, commit messages and PR descriptions are in English. UI copy lives in `i18n/uk.json` (Ukrainian first) and `i18n/en.json`.
 - `<script setup lang="ts">`; API calls only through `api/*.ts`; types in `types/*.ts` mirror the Laravel resources.
 - Every data page handles loading (skeleton), error (message + retry) and empty states.
 - Prices travel as minor units (`amount_minor`); inputs use `minorToInput` / `inputToMinor` from `utils/format.ts`.
@@ -90,6 +82,7 @@ Utilities: `font-flair`, `tx-linen`, `tx-weave`, `tx-knit`, `ph-knit`, `ph-weave
 - Editing translations: `components/ui/ContentLanguage.vue` picks the source language. The product editor and the studio profile have an optional block for the other language, and admin categories take names in both languages.
 - Edit endpoints (`me.*`, `admin.*`) return the source text plus `translations`; public endpoints return the reader's language, even to the owner.
 - Not translated: the sample home blocks in `mocks/home.ts`.
+- Adding a message: add the key to **both** `uk.json` and `en.json`, then run `npm run i18n:check`. It reports keys that exist in one file only and literal keys used in code that don't exist. Keys built at runtime (`` t(`status.${s}`) ``) aren't checked.
 
 ## Account area
 
@@ -100,9 +93,9 @@ Menu items depend on the role and are defined in one place: `config/accountNav.t
 |---|---|
 | Buyer | Overview, Purchases (orders, courses, workshops, favorites), "Open a studio", Settings |
 | Maker | Overview, Studio (profile, products, courses, workshops, sales), Purchases, Settings |
-| Administrator | Overview, Administration (maker review, users, categories, product review, all orders), Settings |
+| Administrator | Overview, Administration (maker review, users, categories, product, course and workshop review, all orders), Settings |
 
-Sections not built yet are marked "скоро" (soon) and lead to `/account/soon/:section`.
+Every menu item now leads to a real page. The `/account/soon/:section` placeholder route stays for future sections.
 
 ## Products
 
@@ -192,18 +185,10 @@ Sections not built yet are marked "скоро" (soon) and lead to `/account/soon
 Demo data: `php artisan migrate:fresh --seed` — admin `admin@craftwoman.local` / `admin123`,
 makers `oksana@`, `marko@`, `iryna@`, `luka@`, `sofia@craftwoman.local` / `password` (Sofia is pending review).
 
-## Backend changes made together with the frontend
-
-- `RegisterRequest` accepts an optional `role` (`buyer` by default, or `master`); `admin` can't be chosen at registration.
-- `AuthController::login` no longer calls `Auth::attempt()` twice: `LoginRequest::after()` does the check.
-- The session is regenerated after login and registration (session fixation protection).
-- `logout` returned 500 under `auth:sanctum` (RequestGuard has no `logout()`); it now calls `Auth::guard('web')->logout()` explicitly.
-- `bootstrap/app.php`: `statefulApi()` and API prefix `api/v1`.
-
 ## Open questions
 
-1. **Google OAuth.** The "Continue with Google" button is inactive; the frontend flow isn't built yet.
+Open product questions and technical gaps are tracked in [roadmap.md](../07-status/roadmap.md).
 
-## Verified
+## Before a pull request
 
-`vue-tsc --noEmit` passes and `vite build` succeeds. Vite builds the `app.css` textures with hashes into `public/build`.
+`npx vue-tsc --noEmit`, `npm run i18n:check` and, for larger changes, a click-through of the affected pages in both languages.
