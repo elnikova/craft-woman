@@ -3,6 +3,7 @@ import { computed, ref, watch } from 'vue';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import ProductCover from '@/components/products/ProductCover.vue';
 import ProductCard from '@/components/products/ProductCard.vue';
+import FavoriteButton from '@/components/products/FavoriteButton.vue';
 import ProductStatusBadge from '@/components/products/ProductStatusBadge.vue';
 import MakerAvatar from '@/components/makers/MakerAvatar.vue';
 import { productsApi } from '@/api/products';
@@ -194,6 +195,7 @@ watch(() => props.slug, load, { immediate: true });
                                 </button>
                             </div>
                             <BaseButton size="lg" :loading="adding" :disabled="!canBuy" @click="addToCart">Додати в кошик</BaseButton>
+                            <FavoriteButton :uuid="product.uuid" :name="product.name" size="lg" />
                         </div>
                         <p v-if="cartError" role="alert" class="m-0 text-[15px] text-kalyna">{{ cartError }}</p>
                         <p v-else-if="added" role="status" class="m-0 text-[15px] text-ink">

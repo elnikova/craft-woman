@@ -4,6 +4,7 @@ use Illuminate\Support\Facades\Route;
 use Modules\Marketplace\Presentation\Http\Controllers\Admin\CategoryController;
 use Modules\Marketplace\Presentation\Http\Controllers\Admin\ProductReviewController;
 use Modules\Marketplace\Presentation\Http\Controllers\CatalogTaxonomyController;
+use Modules\Marketplace\Presentation\Http\Controllers\FavoriteController;
 use Modules\Marketplace\Presentation\Http\Controllers\Maker\MyProductController;
 use Modules\Marketplace\Presentation\Http\Controllers\Maker\MyProductMediaController;
 use Modules\Marketplace\Presentation\Http\Controllers\ProductController;
@@ -16,6 +17,13 @@ Route::get('/products', [ProductController::class, 'index'])->name('products.ind
 Route::get('/products/{slug}', [ProductController::class, 'show'])->name('products.show');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::get('/me/favorites', [FavoriteController::class, 'index'])->name('me.favorites.index');
+    Route::get('/me/favorites/ids', [FavoriteController::class, 'ids'])->name('me.favorites.ids');
+    Route::middleware('throttle:60,1')->group(function () {
+        Route::put('/me/favorites/{product}', [FavoriteController::class, 'store'])->name('me.favorites.store');
+        Route::delete('/me/favorites/{product}', [FavoriteController::class, 'destroy'])->name('me.favorites.destroy');
+    });
+
     // Maker: own products
     Route::prefix('me/products')->name('me.products.')->group(function () {
         Route::get('/', [MyProductController::class, 'index'])->name('index');
