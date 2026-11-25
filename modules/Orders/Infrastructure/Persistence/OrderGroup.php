@@ -48,6 +48,6 @@ class OrderGroup extends Model
 
     public function hasPhysical(): bool
     {
-        return $this->items->contains(fn (OrderItem $i) => ! $i->isDigital());
+        return $this->items->contains(fn (OrderItem $i) => $i->isPhysical());
     }
 }

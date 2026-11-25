@@ -7,11 +7,11 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 use Modules\Identity\Application\Contracts\MakerDirectory;
 use Modules\Identity\Application\Contracts\MakerSummary;
-use Modules\Marketplace\Application\Contracts\ProductCatalog;
-use Modules\Marketplace\Application\Contracts\PurchasableLine;
 use Modules\Marketplace\Application\Services\InventoryService;
 use Modules\Marketplace\Domain\Exceptions\ProductRuleViolation;
 use Modules\Orders\Application\DTOs\DeliveryAddress;
+use Modules\Orders\Application\Purchasables\Purchasable;
+use Modules\Orders\Application\Purchasables\PurchasableCatalog;
 use Modules\Orders\Domain\CheckoutGroupFacts;
 use Modules\Orders\Domain\Exceptions\OrderRuleViolation;
 use Modules\Orders\Domain\GroupStatus;
@@ -19,7 +19,6 @@ use Modules\Orders\Domain\OrderStatus;
 use Modules\Orders\Domain\PaymentMethod;
 use Modules\Orders\Domain\PaymentPolicy;
 use Modules\Orders\Infrastructure\Persistence\Cart;
-use Modules\Orders\Infrastructure\Persistence\CartItem;
 use Modules\Orders\Infrastructure\Persistence\Order;
 
 /**
@@ -29,7 +28,7 @@ use Modules\Orders\Infrastructure\Persistence\Order;
 final class CheckoutService
 {
     public function __construct(
-        private readonly ProductCatalog $catalog,
+        private readonly PurchasableCatalog $catalog,
         private readonly MakerDirectory $makers,
         private readonly InventoryService $inventory,
     ) {}
@@ -46,20 +45,20 @@ final class CheckoutService
             throw OrderRuleViolation::emptyCart();
         }
 
-        $lines = $this->catalog->lines($items->map(fn (CartItem $i) => [$i->product_uuid, $i->product_variant_uuid])->all());
-        $makers = $this->makers->summaries(array_values(array_map(fn (PurchasableLine $l) => $l->makerUuid, $lines)));
+        $lines = $this->catalog->forItems($items);
+        $makers = $this->makers->summaries(array_values(array_map(fn (Purchasable $l) => $l->makerUuid, $lines)));
         $currency = (string) $cart->currency;
 
         $groups = [];
         foreach ($items as $item) {
-            $line = $lines["{$item->product_uuid}:{$item->product_variant_uuid}"] ?? null;
+            $line = $lines[$item->lineKey()] ?? null;
             $maker = $line ? ($makers[$line->makerUuid] ?? null) : null;
 
             if (! $line || ! $line->isPurchasable || ! ($maker?->isApproved ?? false)) {
-                throw OrderRuleViolation::notPurchasable($line->productName ?? '—');
+                throw OrderRuleViolation::notPurchasable($line->name ?? '—');
             }
             if (! $line->isDigital && $item->quantity > (int) $line->availableStock) {
-                throw OrderRuleViolation::insufficientStock($line->productName, (int) $line->availableStock);
+                throw OrderRuleViolation::insufficientStock($line->name, (int) $line->availableStock);
             }
 
             $groups[$maker->uuid] ??= ['maker' => $maker, 'lines' => [], 'subtotal' => 0, 'physical' => false, 'digital' => false];
@@ -162,26 +161,27 @@ final class CheckoutService
                 ]);
 
                 foreach ($g['lines'] as ['item' => $item, 'line' => $line]) {
-                    /** @var PurchasableLine $line */
+                    /** @var Purchasable $line */
                     if (! $line->isDigital) {
                         try {
                             $this->inventory->decrement($line->variantUuid, $item->quantity);
                         } catch (ProductRuleViolation) {
-                            throw OrderRuleViolation::insufficientStock($line->productName, (int) $line->availableStock);
+                            throw OrderRuleViolation::insufficientStock($line->name, (int) $line->availableStock);
                         }
                     }
 
                     $group->items()->create([
-                        'product_uuid' => $line->productUuid,
+                        'product_uuid' => $line->isCourse() ? null : $line->itemUuid,
                         'product_variant_uuid' => $line->variantUuid,
-                        'product_name' => $line->productName,
+                        'course_uuid' => $line->isCourse() ? $line->itemUuid : null,
+                        'product_name' => $line->name,
                         'variant_name' => $line->variantName,
                         'unit_price_amount_minor' => $line->unitPriceMinor,
                         'quantity' => $item->quantity,
                         'total_amount_minor' => $line->unitPriceMinor * $item->quantity,
                         'currency' => $line->currency,
                         'metadata' => [
-                            'type' => $line->isDigital ? 'digital' : 'physical',
+                            'type' => $line->isCourse() ? 'course' : ($line->isDigital ? 'digital' : 'physical'),
                             'slug' => $line->slug,
                             'image_url' => $line->imageUrl,
                         ],

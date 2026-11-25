@@ -4,9 +4,10 @@ namespace Modules\Orders\Application\Services;
 
 use App\Models\User;
 use Illuminate\Support\Facades\DB;
+use Modules\Education\Domain\Exceptions\CourseRuleViolation;
 use Modules\Identity\Application\Contracts\MakerDirectory;
-use Modules\Marketplace\Application\Contracts\ProductCatalog;
-use Modules\Marketplace\Application\Contracts\PurchasableLine;
+use Modules\Orders\Application\Purchasables\Purchasable;
+use Modules\Orders\Application\Purchasables\PurchasableCatalog;
 use Modules\Orders\Domain\Exceptions\OrderRuleViolation;
 use Modules\Orders\Infrastructure\Persistence\Cart;
 use Modules\Orders\Infrastructure\Persistence\CartItem;
@@ -20,7 +21,7 @@ final class CartService
     public const MAX_QUANTITY = 99;
 
     public function __construct(
-        private readonly ProductCatalog $catalog,
+        private readonly PurchasableCatalog $catalog,
         private readonly MakerDirectory $makers,
     ) {}
 
@@ -40,11 +41,25 @@ final class CartService
 
     public function add(Cart $cart, string $productUuid, ?string $variantUuid, int $quantity): CartItem
     {
-        $line = $this->catalog->line($productUuid, $variantUuid);
+        return $this->addLine($cart, $this->catalog->product($productUuid, $variantUuid), $quantity);
+    }
+
+    /** Courses are bought once; someone who already has lifetime access can't add the course again. */
+    public function addCourse(Cart $cart, string $courseUuid, ?User $user): CartItem
+    {
+        if ($user && $this->catalog->hasLifetimeAccess($user->uuid, $courseUuid)) {
+            throw CourseRuleViolation::alreadyEnrolled();
+        }
+
+        return $this->addLine($cart, $this->catalog->course($courseUuid), 1);
+    }
+
+    private function addLine(Cart $cart, ?Purchasable $line, int $quantity): CartItem
+    {
         $maker = $line ? ($this->makers->summaries([$line->makerUuid])[$line->makerUuid] ?? null) : null;
 
         if (! $line || ! $line->isPurchasable || ! $maker?->isApproved) {
-            throw OrderRuleViolation::notPurchasable($line->productName ?? '—');
+            throw OrderRuleViolation::notPurchasable($line->name ?? '—');
         }
 
         // domain-model.md §8.1: one currency per cart
@@ -58,30 +73,31 @@ final class CartService
                 $cart->update(['currency' => $line->currency]);
             }
 
-            $item = $cart->items()
-                ->where('product_uuid', $line->productUuid)
-                ->where('product_variant_uuid', $line->variantUuid)
-                ->first();
+            $item = $line->isCourse()
+                ? $cart->items()->where('course_uuid', $line->itemUuid)->first()
+                : $cart->items()->where('product_uuid', $line->itemUuid)->where('product_variant_uuid', $line->variantUuid)->first();
 
             // Digital goods are bought once; physical quantity is capped by stock
             $qty = $line->isDigital ? 1 : min(($item?->quantity ?? 0) + $quantity, self::MAX_QUANTITY);
             if (! $line->isDigital && $qty > (int) $line->availableStock) {
-                throw OrderRuleViolation::insufficientStock($line->productName, (int) $line->availableStock);
+                throw OrderRuleViolation::insufficientStock($line->name, (int) $line->availableStock);
             }
 
             $attributes = ['quantity' => $qty, 'unit_price_amount_minor' => $line->unitPriceMinor, 'currency' => $line->currency];
 
             return $item
                 ? tap($item)->update($attributes)
-                : $cart->items()->create([...$attributes, 'product_uuid' => $line->productUuid, 'product_variant_uuid' => $line->variantUuid]);
+                : $cart->items()->create([...$attributes, ...($line->isCourse()
+                    ? ['course_uuid' => $line->itemUuid]
+                    : ['product_uuid' => $line->itemUuid, 'product_variant_uuid' => $line->variantUuid])]);
         });
     }
 
     public function setQuantity(Cart $cart, CartItem $item, int $quantity): void
     {
-        $line = $this->catalog->line($item->product_uuid, $item->product_variant_uuid);
+        $line = $this->catalog->forItem($item);
         if ($line && ! $line->isDigital && $quantity > (int) $line->availableStock) {
-            throw OrderRuleViolation::insufficientStock($line->productName, (int) $line->availableStock);
+            throw OrderRuleViolation::insufficientStock($line->name, (int) $line->availableStock);
         }
 
         $item->update(['quantity' => $line?->isDigital ? 1 : min(max($quantity, 1), self::MAX_QUANTITY)]);
@@ -111,8 +127,10 @@ final class CartService
 
         foreach ($guest->items as $item) {
             try {
-                $this->add($target, $item->product_uuid, $item->product_variant_uuid, $item->quantity);
-            } catch (OrderRuleViolation) {
+                $item->course_uuid
+                    ? $this->addCourse($target, $item->course_uuid, $user)
+                    : $this->add($target, (string) $item->product_uuid, $item->product_variant_uuid, $item->quantity);
+            } catch (OrderRuleViolation|CourseRuleViolation) {
                 // skipped silently: the cart view will show what's there
             }
         }
@@ -129,15 +147,15 @@ final class CartService
     public function view(Cart $cart): array
     {
         $items = $cart->items()->get();
-        $lines = $this->catalog->lines($items->map(fn (CartItem $i) => [$i->product_uuid, $i->product_variant_uuid])->all());
-        $makers = $this->makers->summaries(array_values(array_map(fn (PurchasableLine $l) => $l->makerUuid, $lines)));
+        $lines = $this->catalog->forItems($items);
+        $makers = $this->makers->summaries(array_values(array_map(fn (Purchasable $l) => $l->makerUuid, $lines)));
 
         $groups = [];
         $subtotal = 0;
         $hasIssues = false;
 
         foreach ($items as $item) {
-            $line = $lines["{$item->product_uuid}:{$item->product_variant_uuid}"] ?? null;
+            $line = $lines[$item->lineKey()] ?? null;
             $maker = $line ? ($makers[$line->makerUuid] ?? null) : null;
 
             $issue = match (true) {
@@ -162,9 +180,10 @@ final class CartService
             $groups[$key] ??= ['maker' => $maker?->toArray(), 'items' => []];
             $groups[$key]['items'][] = [
                 'uuid' => $item->uuid,
-                'product_uuid' => $item->product_uuid,
+                'kind' => $item->course_uuid ? 'course' : 'product',
+                'product_uuid' => $item->product_uuid ?? $item->course_uuid,
                 'variant_uuid' => $item->product_variant_uuid,
-                'name' => $line?->productName ?? '—',
+                'name' => $line?->name ?? '—',
                 'variant_name' => $line?->variantName,
                 'slug' => $line?->slug,
                 'image_url' => $line?->imageUrl,

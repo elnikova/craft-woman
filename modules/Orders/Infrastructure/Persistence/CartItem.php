@@ -11,7 +11,15 @@ class CartItem extends Model
 
     protected $primaryKey = 'uuid';
 
-    protected $fillable = ['product_uuid', 'product_variant_uuid', 'quantity', 'unit_price_amount_minor', 'currency'];
+    protected $fillable = ['product_uuid', 'product_variant_uuid', 'course_uuid', 'quantity', 'unit_price_amount_minor', 'currency'];
+
+    /** Key matching PurchasableCatalog::forItems() */
+    public function lineKey(): string
+    {
+        return $this->course_uuid
+            ? \Modules\Orders\Application\Purchasables\Purchasable::key('course', $this->course_uuid)
+            : \Modules\Orders\Application\Purchasables\Purchasable::key('product', (string) $this->product_uuid, $this->product_variant_uuid);
+    }
 
     protected function casts(): array
     {

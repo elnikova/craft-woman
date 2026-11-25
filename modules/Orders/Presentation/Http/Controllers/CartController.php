@@ -27,13 +27,16 @@ class CartController extends Controller
     public function add(Request $request): JsonResponse
     {
         $data = $request->validate([
-            'product_uuid' => ['required', 'uuid'],
+            'product_uuid' => ['required_without:course_uuid', 'nullable', 'uuid'],
+            'course_uuid' => ['required_without:product_uuid', 'nullable', 'uuid'],
             'variant_uuid' => ['nullable', 'uuid'],
             'quantity' => ['sometimes', 'integer', 'min:1', 'max:'.CartService::MAX_QUANTITY],
         ]);
 
         $cart = $this->carts->findOrCreate($request->user(), $this->token($request));
-        $this->carts->add($cart, $data['product_uuid'], $data['variant_uuid'] ?? null, $data['quantity'] ?? 1);
+        isset($data['course_uuid'])
+            ? $this->carts->addCourse($cart, $data['course_uuid'], $request->user())
+            : $this->carts->add($cart, $data['product_uuid'], $data['variant_uuid'] ?? null, $data['quantity'] ?? 1);
 
         return $this->respond($cart->refresh(), 201);
     }

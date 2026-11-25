@@ -4,6 +4,7 @@ namespace Modules\Orders\Application\Services;
 
 use Illuminate\Support\Facades\DB;
 use Modules\Marketplace\Application\Services\InventoryService;
+use Modules\Orders\Application\Events\OrderPaid;
 use Modules\Orders\Domain\Exceptions\OrderRuleViolation;
 use Modules\Orders\Domain\GroupStatus;
 use Modules\Orders\Domain\OrderStatus;
@@ -34,6 +35,15 @@ final class OrderService
             $order->unsetRelation('groups');
             $order->syncStatus();
 
+            // Other modules react to payment: Education grants course access
+            $courseItems = OrderItem::query()
+                ->whereIn('order_group_uuid', $order->groups()->select('uuid'))
+                ->whereNotNull('course_uuid')
+                ->get(['uuid', 'course_uuid'])
+                ->map(fn (OrderItem $i) => ['order_item_uuid' => $i->uuid, 'course_uuid' => $i->course_uuid])
+                ->all();
+            DB::afterCommit(fn () => OrderPaid::dispatch($order->uuid, $order->user_uuid, $courseItems));
+
             return $order;
         });
     }
@@ -55,6 +65,15 @@ final class OrderService
             }
             $order->unsetRelation('groups');
             $order->syncStatus();
+
+            // Other modules react to payment: Education grants course access
+            $courseItems = OrderItem::query()
+                ->whereIn('order_group_uuid', $order->groups()->select('uuid'))
+                ->whereNotNull('course_uuid')
+                ->get(['uuid', 'course_uuid'])
+                ->map(fn (OrderItem $i) => ['order_item_uuid' => $i->uuid, 'course_uuid' => $i->course_uuid])
+                ->all();
+            DB::afterCommit(fn () => OrderPaid::dispatch($order->uuid, $order->user_uuid, $courseItems));
 
             return $order;
         });
@@ -119,7 +138,7 @@ final class OrderService
 
         // Return reserved stock
         foreach ($group->items()->get() as $item) {
-            if (! $item->isDigital() && $item->product_variant_uuid) {
+            if ($item->isPhysical() && $item->product_variant_uuid) {
                 $this->inventory->increment($item->product_variant_uuid, $item->quantity);
             }
         }
