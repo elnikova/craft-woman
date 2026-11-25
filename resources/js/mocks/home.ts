@@ -1,14 +1,8 @@
-import type { CourseCardData, PostCardData, WorkshopRowData } from '@/types/catalog';
+import type { PostCardData, WorkshopRowData } from '@/types/catalog';
 
 /** Sample data for the home page. Remove once the catalog API exists. */
 
 export const popularCrafts = ['В’язання', 'Кераміка', 'Вишивка', 'Вироби зі шкіри', 'Ткацтво', 'Свічки'];
-
-export const courses: CourseCardData[] = [
-    { id: 1, title: 'В’язання спицями з нуля', makerName: 'Оксана Ткачук', lessonsCount: 24, accessMonths: null, hasCertificate: true, priceCents: 4900, currency: 'EUR', cover: { color: '#CFC2EE', pattern: 'ph-knit' } },
-    { id: 2, title: 'Гончарний круг: перші 10 форм', makerName: 'Марко Зайченко', lessonsCount: 12, accessMonths: 6, hasCertificate: false, priceCents: 3900, currency: 'EUR', cover: { color: '#EFD3A0', pattern: 'ph-weave' } },
-    { id: 3, title: 'Гладь і хрестик: основи вишивки', makerName: 'Ірина Бойко', lessonsCount: 18, accessMonths: null, hasCertificate: true, priceCents: 3500, currency: 'EUR', cover: { color: '#CBD5B6', pattern: 'ph-stitch' } },
-];
 
 export const workshops: WorkshopRowData[] = [
     { id: 1, title: 'Різдвяна іграшка з фетру', makerName: 'Ірина Бойко', startsAt: '2026-12-03T18:00:00+02:00', mode: 'online', place: 'Zoom', capacity: 20, booked: 16, priceCents: 1500, currency: 'EUR' },

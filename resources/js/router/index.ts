@@ -61,6 +61,23 @@ export const router = createRouter({
                             props: true,
                         },
                         {
+                            path: 'courses',
+                            name: 'courses',
+                            component: () => import('@/pages/courses/CoursesPage.vue'),
+                        },
+                        {
+                            path: 'courses/:slug',
+                            name: 'course',
+                            component: () => import('@/pages/courses/CoursePage.vue'),
+                            props: true,
+                        },
+                        {
+                            path: 'courses/:slug/learn/:lesson',
+                            name: 'course-lesson',
+                            component: () => import('@/pages/courses/LessonPage.vue'),
+                            props: true,
+                        },
+                        {
                             path: 'cart',
                             name: 'cart',
                             component: () => import('@/pages/cart/CartPage.vue'),
@@ -171,6 +188,37 @@ export const router = createRouter({
                             meta: { requiresAuth: true, requiresAdmin: true },
                         },
                         {
+                            path: 'learning',
+                            name: 'account-learning',
+                            component: () => import('@/pages/account/LearningPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'courses',
+                            name: 'studio-courses',
+                            component: () => import('@/pages/studio/MyCoursesPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'courses/new',
+                            name: 'studio-course-new',
+                            component: () => import('@/pages/studio/CourseEditorPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'courses/:uuid',
+                            name: 'studio-course',
+                            component: () => import('@/pages/studio/CourseEditorPage.vue'),
+                            props: true,
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'admin/courses',
+                            name: 'admin-courses',
+                            component: () => import('@/pages/admin/AdminCoursesPage.vue'),
+                            meta: { requiresAuth: true, requiresAdmin: true },
+                        },
+                        {
                             path: 'soon/:section',
                             name: 'account-soon',
                             component: () => import('@/pages/account/ComingSoonPage.vue'),
@@ -182,6 +230,13 @@ export const router = createRouter({
                 // Old URLs
                 { path: 'studio', redirect: { name: 'studio' } },
                 { path: 'admin/makers', redirect: { name: 'admin-makers' } },
+                {
+                    // Standalone printable page, no site chrome
+                    path: 'certificates/:number',
+                    name: 'certificate',
+                    component: () => import('@/pages/courses/CertificatePage.vue'),
+                    props: true,
+                },
                 {
                     path: 'login',
                     name: 'login',

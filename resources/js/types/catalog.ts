@@ -5,19 +5,6 @@
  */
 export type Placeholder = { color: string; pattern: 'ph-knit' | 'ph-weave' | 'ph-stitch' };
 
-export interface CourseCardData {
-    id: number;
-    title: string;
-    makerName: string;
-    lessonsCount: number;
-    /** null means lifetime access, otherwise the number of months */
-    accessMonths: number | null;
-    hasCertificate: boolean;
-    priceCents: number;
-    currency: 'EUR' | 'USD' | 'UAH';
-    cover: Placeholder;
-}
-
 export interface WorkshopRowData {
     id: number;
     title: string;

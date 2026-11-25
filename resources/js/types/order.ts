@@ -15,6 +15,7 @@ export type CartIssue = 'unavailable' | 'sold_out' | 'insufficient_stock';
 
 export interface CartItem {
     uuid: string;
+    kind: 'product' | 'course';
     product_uuid: string;
     variant_uuid: string | null;
     name: string;
@@ -81,6 +82,8 @@ export type GroupStatus = 'pending_payment' | 'awaiting_shipment' | 'shipped' | 
 export interface OrderItem {
     uuid: string;
     product_uuid: string | null;
+    is_course: boolean;
+    course_uuid: string | null;
     name: string;
     variant_name: string | null;
     is_digital: boolean;

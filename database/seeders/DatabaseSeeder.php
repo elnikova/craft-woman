@@ -29,6 +29,7 @@ class DatabaseSeeder extends Seeder
 
         // Demo products for the approved makers
         $this->call(ProductSeeder::class);
+        $this->call(CourseSeeder::class);
 
         // Create test users
         User::factory(10)->create();
