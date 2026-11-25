@@ -5,6 +5,7 @@ namespace Modules\Orders\Application\Services;
 use Illuminate\Support\Facades\DB;
 use Modules\Marketplace\Application\Services\InventoryService;
 use Modules\Orders\Application\Events\OrderPaid;
+use Modules\Orders\Application\Purchasables\PurchasableCatalog;
 use Modules\Orders\Domain\Exceptions\OrderRuleViolation;
 use Modules\Orders\Domain\GroupStatus;
 use Modules\Orders\Domain\OrderStatus;
@@ -16,7 +17,10 @@ use Modules\Orders\Infrastructure\Persistence\OrderItem;
 /** After checkout: payment confirmation, cancellation, Maker fulfilment. */
 final class OrderService
 {
-    public function __construct(private readonly InventoryService $inventory) {}
+    public function __construct(
+        private readonly InventoryService $inventory,
+        private readonly PurchasableCatalog $catalog,
+    ) {}
 
     /** Called by the payment provider (Stripe webhook, next step) or the local test payment. */
     public function markPaid(Order $order): Order
@@ -35,14 +39,13 @@ final class OrderService
             $order->unsetRelation('groups');
             $order->syncStatus();
 
-            // Other modules react to payment: Education grants course access
-            $courseItems = OrderItem::query()
-                ->whereIn('order_group_uuid', $order->groups()->select('uuid'))
-                ->whereNotNull('course_uuid')
-                ->get(['uuid', 'course_uuid'])
+            // Other modules react to payment: Education grants course access, Workshops confirm seats
+            $items = OrderItem::query()->whereIn('order_group_uuid', $order->groups()->select('uuid'))->get(['uuid', 'course_uuid', 'workshop_uuid']);
+            $courseItems = $items->whereNotNull('course_uuid')
                 ->map(fn (OrderItem $i) => ['order_item_uuid' => $i->uuid, 'course_uuid' => $i->course_uuid])
-                ->all();
-            DB::afterCommit(fn () => OrderPaid::dispatch($order->uuid, $order->user_uuid, $courseItems));
+                ->values()->all();
+            $workshopItems = $items->whereNotNull('workshop_uuid')->pluck('uuid')->values()->all();
+            DB::afterCommit(fn () => OrderPaid::dispatch($order->uuid, $order->user_uuid, $courseItems, $workshopItems));
 
             return $order;
         });
@@ -65,15 +68,6 @@ final class OrderService
             }
             $order->unsetRelation('groups');
             $order->syncStatus();
-
-            // Other modules react to payment: Education grants course access
-            $courseItems = OrderItem::query()
-                ->whereIn('order_group_uuid', $order->groups()->select('uuid'))
-                ->whereNotNull('course_uuid')
-                ->get(['uuid', 'course_uuid'])
-                ->map(fn (OrderItem $i) => ['order_item_uuid' => $i->uuid, 'course_uuid' => $i->course_uuid])
-                ->all();
-            DB::afterCommit(fn () => OrderPaid::dispatch($order->uuid, $order->user_uuid, $courseItems));
 
             return $order;
         });
@@ -136,12 +130,14 @@ final class OrderService
         $group->cancel_reason = $reason;
         $group->save();
 
-        // Return reserved stock
-        foreach ($group->items()->get() as $item) {
+        // Return reserved stock and held workshop seats
+        $items = $group->items()->get();
+        foreach ($items as $item) {
             if ($item->isPhysical() && $item->product_variant_uuid) {
                 $this->inventory->increment($item->product_variant_uuid, $item->quantity);
             }
         }
+        $this->catalog->releaseSeats($items->filter->isWorkshop()->pluck('uuid')->values()->all(), $reason);
         $group->delivery?->update(['status' => 'cancelled']);
     }
 }

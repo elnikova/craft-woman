@@ -13,7 +13,7 @@ class OrderItem extends Model
     protected $primaryKey = 'uuid';
 
     protected $fillable = [
-        'product_uuid', 'product_variant_uuid', 'course_uuid', 'product_name', 'variant_name',
+        'product_uuid', 'product_variant_uuid', 'course_uuid', 'workshop_uuid', 'product_name', 'variant_name',
         'unit_price_amount_minor', 'quantity', 'total_amount_minor', 'currency', 'metadata',
     ];
 
@@ -38,9 +38,14 @@ class OrderItem extends Model
         return ($this->metadata['type'] ?? null) === 'course' || $this->course_uuid !== null;
     }
 
+    public function isWorkshop(): bool
+    {
+        return ($this->metadata['type'] ?? null) === 'workshop' || $this->workshop_uuid !== null;
+    }
+
     /** Something a Maker has to ship */
     public function isPhysical(): bool
     {
-        return ! $this->isDigital() && ! $this->isCourse();
+        return ! $this->isDigital() && ! $this->isCourse() && ! $this->isWorkshop();
     }
 }

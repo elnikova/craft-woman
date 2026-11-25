@@ -20,6 +20,7 @@ use Modules\Orders\Domain\PaymentMethod;
 use Modules\Orders\Domain\PaymentPolicy;
 use Modules\Orders\Infrastructure\Persistence\Cart;
 use Modules\Orders\Infrastructure\Persistence\Order;
+use Modules\Workshops\Domain\Exceptions\WorkshopRuleViolation;
 
 /**
  * Turns a cart into one Order with one OrderGroup per Maker (domain-rules.md §20–24).
@@ -57,8 +58,10 @@ final class CheckoutService
             if (! $line || ! $line->isPurchasable || ! ($maker?->isApproved ?? false)) {
                 throw OrderRuleViolation::notPurchasable($line->name ?? '—');
             }
-            if (! $line->isDigital && $item->quantity > (int) $line->availableStock) {
-                throw OrderRuleViolation::insufficientStock($line->name, (int) $line->availableStock);
+            if ($line->availableStock !== null && $item->quantity > $line->availableStock) {
+                throw $line->isWorkshop()
+                    ? WorkshopRuleViolation::notEnoughSeats($line->availableStock)
+                    : OrderRuleViolation::insufficientStock($line->name, $line->availableStock);
             }
 
             $groups[$maker->uuid] ??= ['maker' => $maker, 'lines' => [], 'subtotal' => 0, 'physical' => false, 'digital' => false];
@@ -170,10 +173,11 @@ final class CheckoutService
                         }
                     }
 
-                    $group->items()->create([
-                        'product_uuid' => $line->isCourse() ? null : $line->itemUuid,
+                    $orderItem = $group->items()->create([
+                        'product_uuid' => $line->kind === Purchasable::PRODUCT ? $line->itemUuid : null,
                         'product_variant_uuid' => $line->variantUuid,
                         'course_uuid' => $line->isCourse() ? $line->itemUuid : null,
+                        'workshop_uuid' => $line->isWorkshop() ? $line->itemUuid : null,
                         'product_name' => $line->name,
                         'variant_name' => $line->variantName,
                         'unit_price_amount_minor' => $line->unitPriceMinor,
@@ -181,11 +185,17 @@ final class CheckoutService
                         'total_amount_minor' => $line->unitPriceMinor * $item->quantity,
                         'currency' => $line->currency,
                         'metadata' => [
-                            'type' => $line->isCourse() ? 'course' : ($line->isDigital ? 'digital' : 'physical'),
+                            'type' => $line->isDigital ? ($line->isSingleUnit() ? ($line->isCourse() ? 'course' : 'digital') : 'workshop') : 'physical',
                             'slug' => $line->slug,
                             'image_url' => $line->imageUrl,
+                            ...($line->isWorkshop() ? ['starts_at' => $line->startsAt] : []),
                         ],
                     ]);
+
+                    // Seats are held now so two buyers can't pay for the last place (released if the order is cancelled)
+                    if ($line->isWorkshop()) {
+                        $this->catalog->reserveSeats($line->itemUuid, $user->uuid, $orderItem->uuid, $item->quantity);
+                    }
                 }
 
                 if ($g['has_physical']) {
