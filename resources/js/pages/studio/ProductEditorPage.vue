@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave, useRouter } from 'vue-router';
+import ContentLanguage from '@/components/ui/ContentLanguage.vue';
+import type { Locale } from '@/i18n';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import BaseInput from '@/components/ui/BaseInput.vue';
 import BaseTextarea from '@/components/ui/BaseTextarea.vue';
@@ -14,6 +17,7 @@ import { formatFileSize, inputToMinor, minorToInput } from '@/utils/format';
 
 const props = defineProps<{ uuid?: string }>();
 const router = useRouter();
+const { t } = useI18n();
 
 interface VariantRow {
     uuid: string | null;
@@ -41,7 +45,17 @@ const form = reactive({
     production_time_days: '',
     shipping_info: '',
     variants: [] as VariantRow[],
+    // Source language and the optional version in the other language
+    content_locale: 'uk' as Locale,
+    tr_name: '',
+    tr_description: '',
+    tr_shipping_info: '',
 });
+const otherLocale = computed<Locale>(() => (form.content_locale === 'uk' ? 'en' : 'uk'));
+const typeOptions = computed(() => [
+    { id: 'physical' as const, title: t('editor.physical'), text: t('editor.physicalText') },
+    { id: 'digital' as const, title: t('editor.digital'), text: t('editor.digitalText') },
+]);
 const saved = ref('');
 const dirty = computed(() => JSON.stringify(form) !== saved.value);
 
@@ -73,6 +87,10 @@ function fill(p: Product) {
         tags: p.tags.join(', '),
         production_time_days: p.production_time_days?.toString() ?? '',
         shipping_info: p.shipping_info ?? '',
+        content_locale: p.content_locale ?? 'uk',
+        tr_name: p.translations?.[p.content_locale === 'en' ? 'uk' : 'en']?.name ?? '',
+        tr_description: p.translations?.[p.content_locale === 'en' ? 'uk' : 'en']?.description ?? '',
+        tr_shipping_info: p.translations?.[p.content_locale === 'en' ? 'uk' : 'en']?.shipping_info ?? '',
         variants: p.variants.map((v) => ({
             uuid: v.uuid,
             name: v.name,
@@ -89,14 +107,14 @@ function fill(p: Product) {
 function payload(): ProductPayload | null {
     const price = inputToMinor(form.price);
     const local: FieldErrors = {};
-    if (Number.isNaN(price)) local.price_amount_minor = 'Ціна — число, до двох знаків після коми, наприклад 28 або 28,50';
+    if (Number.isNaN(price)) local.price_amount_minor = t('editor.priceFormat');
     form.variants.forEach((v, i) => {
-        if (Number.isNaN(inputToMinor(v.price))) local[`variants.${i}.price_amount_minor`] = 'Некоректна ціна';
-        if (!/^\d+$/.test(v.stock.trim())) local[`variants.${i}.stock`] = 'Ціле число від 0';
+        if (Number.isNaN(inputToMinor(v.price))) local[`variants.${i}.price_amount_minor`] = t('editor.badPrice');
+        if (!/^\d+$/.test(v.stock.trim())) local[`variants.${i}.stock`] = t('editor.badStock');
     });
     if (Object.keys(local).length) {
         errors.value = local;
-        formError.value = 'Перевірте поля, позначені червоним';
+        formError.value = t('editor.checkFields');
         return null;
     }
     const num = (s: string) => (s.trim() ? Number(s) : null);
@@ -109,7 +127,15 @@ function payload(): ProductPayload | null {
         production_time_days: form.type === 'physical' ? num(form.production_time_days) : null,
         shipping_info: form.type === 'physical' ? form.shipping_info.trim() || null : null,
         category_uuid: form.category_uuid || null,
-        tags: form.tags.split(',').map((t) => t.trim()).filter(Boolean),
+        tags: form.tags.split(',').map((tag) => tag.trim()).filter(Boolean),
+        content_locale: form.content_locale,
+        translations: {
+            [otherLocale.value]: {
+                name: form.tr_name.trim() || null,
+                description: form.tr_description.trim() || null,
+                shipping_info: form.type === 'physical' ? form.tr_shipping_info.trim() || null : null,
+            },
+        },
         ...(form.type === 'physical' && form.variants.length
             ? {
                   variants: form.variants.map((v) => ({
@@ -134,7 +160,7 @@ async function load() {
         categories.value = cats;
         if (p) fill(p);
         else {
-            form.variants = [emptyVariant('Стандартний')];
+            form.variants = [emptyVariant(t('editor.defaultVariant'))];
             saved.value = JSON.stringify(form);
         }
     } catch (e) {
@@ -155,7 +181,7 @@ async function run<T>(key: string, fn: () => Promise<T>, success?: string): Prom
     } catch (e) {
         const err = toApiError(e);
         errors.value = err.fields;
-        formError.value = Object.keys(err.fields).length ? 'Перевірте поля, позначені червоним' : err.message;
+        formError.value = Object.keys(err.fields).length ? t('editor.checkFields') : err.message;
         return null;
     } finally {
         busy.value = null;
@@ -167,11 +193,11 @@ async function save(): Promise<boolean> {
     const body = payload();
     if (!body) return false;
     const wasNew = isNew.value;
-    const p = await run('save', () => (product.value ? productsApi.update(product.value.uuid, body) : productsApi.create(body)), 'Зміни збережено');
+    const p = await run('save', () => (product.value ? productsApi.update(product.value.uuid, body) : productsApi.create(body)), t('editor.saved'));
     if (!p) return false;
     fill(p);
     if (wasNew) {
-        notice.value = 'Чернетку створено. Тепер додайте фото.';
+        notice.value = t('editor.draftCreated');
         await router.replace({ name: 'studio-product', params: { uuid: p.uuid } });
     }
     return true;
@@ -179,12 +205,12 @@ async function save(): Promise<boolean> {
 
 async function submit() {
     if ((dirty.value || isNew.value) && !(await save())) return;
-    const p = await run('submit', () => productsApi.submit(product.value!.uuid), 'Товар надіслано на перевірку');
+    const p = await run('submit', () => productsApi.submit(product.value!.uuid), t('editor.submitted'));
     if (p) fill(p);
 }
 
 async function lifecycle(action: 'archive' | 'relist') {
-    const p = await run(action, () => productsApi[action](product.value!.uuid), action === 'archive' ? 'Товар знято з продажу' : 'Товар повернуто в чернетки');
+    const p = await run(action, () => productsApi[action](product.value!.uuid), action === 'archive' ? t('editor.archived') : t('editor.relisted'));
     if (p) fill(p);
 }
 
@@ -247,42 +273,42 @@ onMounted(() => {
     window.addEventListener('beforeunload', beforeUnload);
 });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
-onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window.confirm('Є незбережені зміни. Піти без збереження?') : true));
+onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window.confirm(t('editor.leaveConfirm')) : true));
 </script>
 
 <template>
     <div class="max-w-[920px]">
-        <RouterLink :to="{ name: 'studio-products' }" class="text-[15px] text-plum">← Усі товари</RouterLink>
+        <RouterLink :to="{ name: 'studio-products' }" class="text-[15px] text-plum">{{ t('editor.allProducts') }}</RouterLink>
         <div class="mt-3 flex flex-wrap items-center justify-between gap-4">
-            <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ isNew ? 'Новий товар' : form.name || 'Товар' }}</h1>
+            <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ isNew ? t('editor.newProduct') : form.name || t('editor.product') }}</h1>
             <ProductStatusBadge v-if="product?.status" :status="product.status" />
         </div>
 
-        <div v-if="loading" class="mt-8 space-y-4" aria-busy="true" aria-label="Завантаження">
+        <div v-if="loading" class="mt-8 space-y-4" aria-busy="true" :aria-label="t('common.loading')">
             <div v-for="i in 4" :key="i" class="h-14 animate-pulse rounded-control bg-lavender-50" />
         </div>
 
         <div v-else-if="loadError" role="alert" class="mt-8 flex flex-col items-start gap-4 rounded-card border border-kalyna/30 bg-kalyna/5 p-6">
             <p class="m-0 text-kalyna">{{ loadError }}</p>
-            <BaseButton variant="secondary" @click="load">Спробувати ще раз</BaseButton>
+            <BaseButton variant="secondary" @click="load">{{ t('common.retry') }}</BaseButton>
         </div>
 
         <template v-else>
             <!-- What is happening with the product -->
             <div v-if="product" class="mt-6 rounded-card p-5" :class="status === 'rejected' ? 'bg-kalyna/5' : 'bg-lavender-50'">
-                <p v-if="status === 'draft'" class="m-0 text-ink">Чернетка. Заповніть усе й надішліть на перевірку — після схвалення товар зʼявиться в каталозі.</p>
-                <p v-else-if="status === 'pending_review'" class="m-0 text-ink">Товар на перевірці. Поки вона триває, редагування недоступне.</p>
+                <p v-if="status === 'draft'" class="m-0 text-ink">{{ t('editor.draftHint') }}</p>
+                <p v-else-if="status === 'pending_review'" class="m-0 text-ink">{{ t('editor.pendingHint') }}</p>
                 <p v-else-if="status === 'published'" class="m-0 text-ink">
-                    Товар у продажу.
-                    <RouterLink :to="{ name: 'product', params: { slug: product.slug } }" class="font-semibold text-plum">Відкрити сторінку товару</RouterLink>.
-                    Зміни ціни, залишків і опису застосовуються одразу.
+                    {{ t('editor.publishedHint') }}
+                    <RouterLink :to="{ name: 'product', params: { slug: product.slug } }" class="font-semibold text-plum">{{ t('editor.openPage') }}</RouterLink>.
+                    {{ t('editor.publishedEdits') }}
                 </p>
                 <template v-else-if="status === 'rejected'">
-                    <p class="m-0 font-semibold text-kalyna">Потрібні правки</p>
-                    <p v-if="product.review_note" class="mt-1 mb-0 text-ink"><span class="font-semibold">Коментар модератора:</span> {{ product.review_note }}</p>
+                    <p class="m-0 font-semibold text-kalyna">{{ t('editor.changesNeeded') }}</p>
+                    <p v-if="product.review_note" class="mt-1 mb-0 text-ink"><span class="font-semibold">{{ t('editor.moderatorNote') }}</span> {{ product.review_note }}</p>
                 </template>
                 <p v-else-if="status === 'archived'" class="m-0 text-ink">
-                    Товар знято з продажу{{ product.review_note ? ` (${product.review_note})` : '' }}. Щоб продавати знову, поверніть його в чернетки й надішліть на перевірку.
+                    {{ t('editor.archivedHint', { note: product.review_note ? ` (${product.review_note})` : '' }) }}
                 </p>
             </div>
 
@@ -290,61 +316,85 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                 <fieldset :disabled="!editable" class="m-0 flex flex-col gap-10 border-0 p-0">
                     <!-- Basics -->
                     <section class="flex flex-col gap-6" aria-labelledby="sec-main">
-                        <h2 id="sec-main" class="m-0 text-xl font-semibold text-plum">Основне</h2>
-                        <div role="radiogroup" aria-label="Тип товару" class="grid gap-3 sm:grid-cols-2">
+                        <h2 id="sec-main" class="m-0 text-xl font-semibold text-plum">{{ t('editor.basics') }}</h2>
+                        <div role="radiogroup" :aria-label="t('editor.type')" class="grid gap-3 sm:grid-cols-2">
                             <label
-                                v-for="t in [{ id: 'physical', title: 'Фізичний', text: 'Річ, яку відправляють покупцю' }, { id: 'digital', title: 'Цифровий', text: 'Файл: схема, викрійка, книга' }] as const"
-                                :key="t.id"
+                                v-for="opt in typeOptions"
+                                :key="opt.id"
                                 class="flex cursor-pointer gap-3 rounded-control border-2 p-4"
-                                :class="[form.type === t.id ? 'border-plum bg-lavender-50' : 'border-line', typeLocked ? 'cursor-not-allowed opacity-70' : '']"
+                                :class="[form.type === opt.id ? 'border-plum bg-lavender-50' : 'border-line', typeLocked ? 'cursor-not-allowed opacity-70' : '']"
                             >
-                                <input v-model="form.type" type="radio" :value="t.id" :disabled="typeLocked" class="mt-1 h-5 w-5 accent-plum" />
+                                <input v-model="form.type" type="radio" :value="opt.id" :disabled="typeLocked" class="mt-1 h-5 w-5 accent-plum" />
                                 <span>
-                                    <span class="block font-semibold text-ink">{{ t.title }}</span>
-                                    <span class="block text-sm text-ink-muted">{{ t.text }}</span>
+                                    <span class="block font-semibold text-ink">{{ opt.title }}</span>
+                                    <span class="block text-sm text-ink-muted">{{ opt.text }}</span>
                                 </span>
                             </label>
                         </div>
-                        <p v-if="typeLocked" class="-mt-3 mb-0 text-[13px] text-ink-muted">Тип не можна змінити після надсилання на перевірку.</p>
+                        <p v-if="typeLocked" class="-mt-3 mb-0 text-[13px] text-ink-muted">{{ t('editor.typeLocked') }}</p>
 
-                        <BaseInput v-model="form.name" label="Назва" :maxlength="160" required :error="errors.name" />
+                        <BaseInput v-model="form.name" :label="t('editor.name')" :maxlength="160" required :error="errors.name" />
                         <BaseTextarea
                             v-model="form.description"
-                            label="Опис"
+                            :label="t('editor.description')"
                             :rows="6"
                             :maxlength="10000"
-                            hint="Матеріали, розміри, догляд, що входить у комплект. Абзаци — через порожній рядок."
+                            :hint="t('editor.descriptionHint')"
                             :error="errors.description"
                         />
 
+                        <ContentLanguage v-model="form.content_locale" />
+                        <fieldset class="m-0 flex flex-col gap-5 rounded-card border border-line p-5" :lang="otherLocale">
+                            <legend class="px-1 text-[15px] font-semibold text-plum">
+                                {{ t('content.translation', { lang: t(`content.langName.${otherLocale}`) }) }}
+                            </legend>
+                            <p class="m-0 text-[13px] text-ink-muted">{{ t('content.translationHint') }}</p>
+                            <BaseInput v-model="form.tr_name" :label="t('editor.name')" :maxlength="160" :error="errors[`translations.${otherLocale}.name`]" />
+                            <BaseTextarea
+                                v-model="form.tr_description"
+                                :label="t('editor.description')"
+                                :rows="5"
+                                :maxlength="10000"
+                                :error="errors[`translations.${otherLocale}.description`]"
+                            />
+                            <BaseTextarea
+                                v-if="form.type === 'physical'"
+                                v-model="form.tr_shipping_info"
+                                :label="t('editor.delivery')"
+                                :rows="2"
+                                :maxlength="1000"
+                                :error="errors[`translations.${otherLocale}.shipping_info`]"
+                            />
+                        </fieldset>
+
                         <div class="grid gap-6 md:grid-cols-2">
                             <div class="flex flex-col gap-2">
-                                <label for="category" class="text-[15px] font-semibold text-ink">Категорія</label>
+                                <label for="category" class="text-[15px] font-semibold text-ink">{{ t('editor.category') }}</label>
                                 <select
                                     id="category"
                                     v-model="form.category_uuid"
                                     class="h-[52px] rounded-control border-[1.5px] bg-white px-4 text-base text-ink focus:border-plum focus:outline-none disabled:bg-lavender-50"
                                     :class="errors.category_uuid ? 'border-kalyna' : 'border-line-strong'"
                                 >
-                                    <option value="">Оберіть категорію</option>
+                                    <option value="">{{ t('editor.chooseCategory') }}</option>
                                     <optgroup v-for="c in categories" :key="c.uuid" :label="c.name">
-                                        <option :value="c.uuid">{{ c.name }} — загальне</option>
+                                        <option :value="c.uuid">{{ t('editor.general', { name: c.name }) }}</option>
                                         <option v-for="ch in c.children" :key="ch.uuid" :value="ch.uuid">{{ ch.name }}</option>
                                     </optgroup>
                                 </select>
                                 <p v-if="errors.category_uuid" class="m-0 text-sm font-medium text-kalyna">{{ errors.category_uuid }}</p>
                             </div>
-                            <BaseInput v-model="form.tags" label="Теги" placeholder="вовна, плед, подарунок" hint="Через кому, до 10 тегів" :error="errors.tags" />
+                            <BaseInput v-model="form.tags" :label="t('editor.tags')" :placeholder="t('editor.tagsPlaceholder')" :hint="t('editor.tagsHint')" :error="errors.tags" />
                         </div>
                     </section>
 
                     <!-- Price -->
                     <section class="flex flex-col gap-6" aria-labelledby="sec-price">
-                        <h2 id="sec-price" class="m-0 text-xl font-semibold text-plum">Ціна</h2>
+                        <h2 id="sec-price" class="m-0 text-xl font-semibold text-plum">{{ t('editor.price') }}</h2>
                         <div class="grid max-w-[480px] grid-cols-[minmax(0,1fr)_120px] gap-4">
-                            <BaseInput v-model="form.price" label="Базова ціна" placeholder="28,50" :error="errors.price_amount_minor" />
+                            <BaseInput v-model="form.price" :label="t('editor.basePrice')" placeholder="28,50" :error="errors.price_amount_minor" />
                             <div class="flex flex-col gap-2">
-                                <label for="currency" class="text-[15px] font-semibold text-ink">Валюта</label>
+                                <label for="currency" class="text-[15px] font-semibold text-ink">{{ t('editor.currency') }}</label>
                                 <select id="currency" v-model="form.currency" class="h-[52px] rounded-control border-[1.5px] border-line-strong bg-white px-3 text-base text-ink focus:border-plum focus:outline-none disabled:bg-lavender-50">
                                     <option value="EUR">EUR</option>
                                     <option value="USD">USD</option>
@@ -357,97 +407,95 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                     <!-- Variants -->
                     <section v-if="form.type === 'physical'" class="flex flex-col gap-4" aria-labelledby="sec-variants">
                         <div>
-                            <h2 id="sec-variants" class="m-0 text-xl font-semibold text-plum">Варіанти й наявність</h2>
-                            <p class="mt-1 mb-0 text-[15px] text-ink-muted">Колір, розмір, матеріал. Якщо варіантів немає — лишіть один «Стандартний». Ціна варіанта порожня = ціна товару.</p>
+                            <h2 id="sec-variants" class="m-0 text-xl font-semibold text-plum">{{ t('editor.variants') }}</h2>
+                            <p class="mt-1 mb-0 text-[15px] text-ink-muted">{{ t('editor.variantsHint') }}</p>
                         </div>
                         <div class="overflow-x-auto rounded-card border border-line">
                             <table class="w-full min-w-[640px] border-collapse text-[15px]">
                                 <thead>
                                     <tr class="bg-lavender-50 text-left text-[13px] text-ink-soft">
-                                        <th scope="col" class="px-3 py-2 font-semibold">Назва</th>
-                                        <th scope="col" class="px-3 py-2 font-semibold">Кількість</th>
-                                        <th scope="col" class="px-3 py-2 font-semibold">Ціна, {{ form.currency }}</th>
-                                        <th scope="col" class="px-3 py-2 font-semibold">Вага, г</th>
-                                        <th scope="col" class="px-3 py-2 font-semibold">Артикул</th>
-                                        <th scope="col" class="px-3 py-2 font-semibold">Продається</th>
-                                        <th scope="col" class="px-3 py-2"><span class="sr-only">Дії</span></th>
+                                        <th scope="col" class="px-3 py-2 font-semibold">{{ t('editor.colName') }}</th>
+                                        <th scope="col" class="px-3 py-2 font-semibold">{{ t('editor.colQty') }}</th>
+                                        <th scope="col" class="px-3 py-2 font-semibold">{{ t('editor.colPrice', { currency: form.currency }) }}</th>
+                                        <th scope="col" class="px-3 py-2 font-semibold">{{ t('editor.colWeight') }}</th>
+                                        <th scope="col" class="px-3 py-2 font-semibold">{{ t('editor.colSku') }}</th>
+                                        <th scope="col" class="px-3 py-2 font-semibold">{{ t('editor.colActive') }}</th>
+                                        <th scope="col" class="px-3 py-2"><span class="sr-only">{{ t('editor.colActions') }}</span></th>
                                     </tr>
                                 </thead>
                                 <tbody>
                                     <tr v-for="(v, i) in form.variants" :key="v.uuid ?? `new-${i}`" class="border-t border-line align-top">
                                         <td class="px-3 py-2">
-                                            <input v-model="v.name" :aria-label="`Назва варіанта ${i + 1}`" maxlength="120" class="h-11 w-full rounded-[10px] border-[1.5px] px-3 focus:border-plum focus:outline-none" :class="errors[`variants.${i}.name`] ? 'border-kalyna' : 'border-line-strong'" />
+                                            <input v-model="v.name" :aria-label="t('editor.variantName', { n: i + 1 })" maxlength="120" class="h-11 w-full rounded-[10px] border-[1.5px] px-3 focus:border-plum focus:outline-none" :class="errors[`variants.${i}.name`] ? 'border-kalyna' : 'border-line-strong'" />
                                         </td>
                                         <td class="px-3 py-2">
-                                            <input v-model="v.stock" inputmode="numeric" :aria-label="`Кількість варіанта ${i + 1}`" class="h-11 w-20 rounded-[10px] border-[1.5px] px-3 focus:border-plum focus:outline-none" :class="errors[`variants.${i}.stock`] ? 'border-kalyna' : 'border-line-strong'" />
+                                            <input v-model="v.stock" inputmode="numeric" :aria-label="t('editor.variantQty', { n: i + 1 })" class="h-11 w-20 rounded-[10px] border-[1.5px] px-3 focus:border-plum focus:outline-none" :class="errors[`variants.${i}.stock`] ? 'border-kalyna' : 'border-line-strong'" />
                                         </td>
                                         <td class="px-3 py-2">
-                                            <input v-model="v.price" inputmode="decimal" :placeholder="form.price || '—'" :aria-label="`Ціна варіанта ${i + 1}`" class="h-11 w-24 rounded-[10px] border-[1.5px] px-3 focus:border-plum focus:outline-none" :class="errors[`variants.${i}.price_amount_minor`] ? 'border-kalyna' : 'border-line-strong'" />
+                                            <input v-model="v.price" inputmode="decimal" :placeholder="form.price || '—'" :aria-label="t('editor.variantPrice', { n: i + 1 })" class="h-11 w-24 rounded-[10px] border-[1.5px] px-3 focus:border-plum focus:outline-none" :class="errors[`variants.${i}.price_amount_minor`] ? 'border-kalyna' : 'border-line-strong'" />
                                         </td>
                                         <td class="px-3 py-2">
-                                            <input v-model="v.weight" inputmode="numeric" :aria-label="`Вага варіанта ${i + 1}`" class="h-11 w-20 rounded-[10px] border-[1.5px] border-line-strong px-3 focus:border-plum focus:outline-none" />
+                                            <input v-model="v.weight" inputmode="numeric" :aria-label="t('editor.variantWeight', { n: i + 1 })" class="h-11 w-20 rounded-[10px] border-[1.5px] border-line-strong px-3 focus:border-plum focus:outline-none" />
                                         </td>
                                         <td class="px-3 py-2">
-                                            <input v-model="v.sku" maxlength="64" :aria-label="`Артикул варіанта ${i + 1}`" class="h-11 w-28 rounded-[10px] border-[1.5px] border-line-strong px-3 focus:border-plum focus:outline-none" />
+                                            <input v-model="v.sku" maxlength="64" :aria-label="t('editor.variantSku', { n: i + 1 })" class="h-11 w-28 rounded-[10px] border-[1.5px] border-line-strong px-3 focus:border-plum focus:outline-none" />
                                         </td>
                                         <td class="px-3 py-2 text-center">
-                                            <input v-model="v.active" type="checkbox" :aria-label="`Варіант ${i + 1} продається`" class="mt-3 h-5 w-5 accent-plum" />
+                                            <input v-model="v.active" type="checkbox" :aria-label="t('editor.variantActive', { n: i + 1 })" class="mt-3 h-5 w-5 accent-plum" />
                                         </td>
                                         <td class="px-3 py-2">
                                             <button
                                                 v-if="form.variants.length > 1"
                                                 type="button"
                                                 class="h-11 rounded-full px-3 text-sm text-kalyna hover:bg-kalyna/5"
-                                                :aria-label="`Прибрати варіант ${v.name || i + 1}`"
+                                                :aria-label="t('editor.removeVariant', { name: v.name || i + 1 })"
                                                 @click="form.variants.splice(i, 1)"
-                                            >
-                                                Прибрати
-                                            </button>
+                                            >{{ t('editor.remove') }}</button>
                                         </td>
                                     </tr>
                                 </tbody>
                             </table>
                         </div>
                         <p v-for="(msg, key) in Object.fromEntries(Object.entries(errors).filter(([k]) => k.startsWith('variants.')))" :key="key" class="m-0 text-sm text-kalyna">
-                            Варіант {{ Number(String(key).split('.')[1]) + 1 }}: {{ msg }}
+                            {{ t('editor.variantError', { n: Number(String(key).split('.')[1]) + 1, msg }) }}
                         </p>
-                        <div><BaseButton variant="secondary" @click="form.variants.push(emptyVariant())">Додати варіант</BaseButton></div>
+                        <div><BaseButton variant="secondary" @click="form.variants.push(emptyVariant())">{{ t('editor.addVariant') }}</BaseButton></div>
                     </section>
 
                     <!-- Delivery -->
                     <section v-if="form.type === 'physical'" class="flex flex-col gap-6" aria-labelledby="sec-shipping">
-                        <h2 id="sec-shipping" class="m-0 text-xl font-semibold text-plum">Виготовлення й доставка</h2>
+                        <h2 id="sec-shipping" class="m-0 text-xl font-semibold text-plum">{{ t('editor.shipping') }}</h2>
                         <div class="max-w-[280px]">
-                            <BaseInput v-model="form.production_time_days" label="Час виготовлення, днів" hint="0 — є в наявності, відправка одразу" :error="errors.production_time_days" />
+                            <BaseInput v-model="form.production_time_days" :label="t('editor.productionDays')" :hint="t('editor.productionHint')" :error="errors.production_time_days" />
                         </div>
-                        <BaseTextarea v-model="form.shipping_info" label="Доставка" :rows="3" :maxlength="1000" placeholder="Нова пошта по Україні, Укрпошта за кордон…" :error="errors.shipping_info" />
+                        <BaseTextarea v-model="form.shipping_info" :label="t('editor.delivery')" :rows="3" :maxlength="1000" :placeholder="t('editor.deliveryPlaceholder')" :error="errors.shipping_info" />
                     </section>
                 </fieldset>
 
                 <!-- Photos -->
                 <section class="flex flex-col gap-4" aria-labelledby="sec-images">
                     <div>
-                        <h2 id="sec-images" class="m-0 text-xl font-semibold text-plum">Фото</h2>
-                        <p class="mt-1 mb-0 text-[15px] text-ink-muted">До 10 фото, JPG, PNG або WebP до 8 МБ. Перше фото — обкладинка.</p>
+                        <h2 id="sec-images" class="m-0 text-xl font-semibold text-plum">{{ t('editor.photos') }}</h2>
+                        <p class="mt-1 mb-0 text-[15px] text-ink-muted">{{ t('editor.photosHint') }}</p>
                     </div>
-                    <p v-if="isNew" class="m-0 rounded-[10px] bg-lavender-50 px-4 py-3 text-[15px] text-plum">Спершу збережіть чернетку — тоді можна буде додати фото.</p>
+                    <p v-if="isNew" class="m-0 rounded-[10px] bg-lavender-50 px-4 py-3 text-[15px] text-plum">{{ t('editor.saveFirstPhotos') }}</p>
                     <template v-else-if="product">
                         <ul v-if="product.images.length" class="m-0 grid list-none grid-cols-[repeat(auto-fill,minmax(150px,1fr))] gap-4 p-0">
                             <li v-for="(img, i) in product.images" :key="img.uuid" class="flex flex-col gap-2">
                                 <div class="relative">
                                     <img :src="img.url" :alt="img.alt" class="aspect-square w-full rounded-card object-cover" />
-                                    <span v-if="i === 0" class="absolute top-2 left-2 rounded-lg bg-plum px-2 py-1 text-[12px] font-semibold text-white">Обкладинка</span>
+                                    <span v-if="i === 0" class="absolute top-2 left-2 rounded-lg bg-plum px-2 py-1 text-[12px] font-semibold text-white">{{ t('editor.cover') }}</span>
                                 </div>
                                 <div v-if="editable" class="flex gap-1">
-                                    <button type="button" class="h-9 flex-1 rounded-full border border-line-strong text-sm text-plum disabled:opacity-40" :disabled="i === 0 || !!busy" :aria-label="`Перемістити фото ${i + 1} ліворуч`" @click="moveImage(i, -1)">←</button>
-                                    <button type="button" class="h-9 flex-1 rounded-full border border-line-strong text-sm text-plum disabled:opacity-40" :disabled="i === product.images.length - 1 || !!busy" :aria-label="`Перемістити фото ${i + 1} праворуч`" @click="moveImage(i, 1)">→</button>
-                                    <button type="button" class="h-9 flex-1 rounded-full border border-kalyna/40 text-sm text-kalyna disabled:opacity-40" :disabled="!!busy" :aria-label="`Видалити фото ${i + 1}`" @click="removeImage(img.uuid)">✕</button>
+                                    <button type="button" class="h-9 flex-1 rounded-full border border-line-strong text-sm text-plum disabled:opacity-40" :disabled="i === 0 || !!busy" :aria-label="t('editor.moveLeft', { n: i + 1 })" @click="moveImage(i, -1)">←</button>
+                                    <button type="button" class="h-9 flex-1 rounded-full border border-line-strong text-sm text-plum disabled:opacity-40" :disabled="i === product.images.length - 1 || !!busy" :aria-label="t('editor.moveRight', { n: i + 1 })" @click="moveImage(i, 1)">→</button>
+                                    <button type="button" class="h-9 flex-1 rounded-full border border-kalyna/40 text-sm text-kalyna disabled:opacity-40" :disabled="!!busy" :aria-label="t('editor.deletePhoto', { n: i + 1 })" @click="removeImage(img.uuid)">✕</button>
                                 </div>
                             </li>
                         </ul>
                         <label v-if="editable && product.images.length < 10" class="flex h-[52px] w-fit cursor-pointer items-center gap-2 rounded-full border-[1.5px] border-plum px-5 font-semibold text-plum hover:bg-lavender-50">
                             <input type="file" accept="image/jpeg,image/png,image/webp" multiple class="sr-only" :disabled="!!busy" @change="onImages" />
-                            {{ busy === 'image' && uploadProgress !== null ? `Завантаження… ${uploadProgress}%` : 'Додати фото' }}
+                            {{ busy === 'image' && uploadProgress !== null ? t('editor.uploading', { n: uploadProgress }) : t('editor.addPhoto') }}
                         </label>
                     </template>
                 </section>
@@ -455,21 +503,21 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                 <!-- Files -->
                 <section v-if="form.type === 'digital'" class="flex flex-col gap-4" aria-labelledby="sec-files">
                     <div>
-                        <h2 id="sec-files" class="m-0 text-xl font-semibold text-plum">Файли для покупця</h2>
-                        <p class="mt-1 mb-0 text-[15px] text-ink-muted">PDF, ZIP, EPUB, зображення, до 50 МБ. Покупець отримає доступ після оплати; публічно файли не видно.</p>
+                        <h2 id="sec-files" class="m-0 text-xl font-semibold text-plum">{{ t('editor.files') }}</h2>
+                        <p class="mt-1 mb-0 text-[15px] text-ink-muted">{{ t('editor.filesHint') }}</p>
                     </div>
-                    <p v-if="isNew" class="m-0 rounded-[10px] bg-lavender-50 px-4 py-3 text-[15px] text-plum">Спершу збережіть чернетку — тоді можна буде додати файли.</p>
+                    <p v-if="isNew" class="m-0 rounded-[10px] bg-lavender-50 px-4 py-3 text-[15px] text-plum">{{ t('editor.saveFirstFiles') }}</p>
                     <template v-else-if="product">
                         <ul v-if="product.files?.length" class="m-0 flex list-none flex-col gap-2 p-0">
                             <li v-for="f in product.files" :key="f.uuid" class="flex items-center gap-3 rounded-control border border-line px-4 py-3">
                                 <span class="min-w-0 flex-1 truncate font-medium text-ink">{{ f.name }}</span>
                                 <span class="text-sm text-ink-muted">{{ formatFileSize(f.size) }}</span>
-                                <button v-if="editable" type="button" class="h-9 rounded-full px-3 text-sm text-kalyna hover:bg-kalyna/5" :disabled="!!busy" @click="removeFile(f.uuid)">Видалити</button>
+                                <button v-if="editable" type="button" class="h-9 rounded-full px-3 text-sm text-kalyna hover:bg-kalyna/5" :disabled="!!busy" @click="removeFile(f.uuid)">{{ t('editor.delete') }}</button>
                             </li>
                         </ul>
                         <label v-if="editable" class="flex h-[52px] w-fit cursor-pointer items-center gap-2 rounded-full border-[1.5px] border-plum px-5 font-semibold text-plum hover:bg-lavender-50">
                             <input type="file" accept=".pdf,.zip,.epub,.txt,.jpg,.jpeg,.png,.svg" class="sr-only" :disabled="!!busy" @change="onFile" />
-                            {{ busy === 'file' && uploadProgress !== null ? `Завантаження… ${uploadProgress}%` : 'Додати файл' }}
+                            {{ busy === 'file' && uploadProgress !== null ? t('editor.uploading', { n: uploadProgress }) : t('editor.addFile') }}
                         </label>
                     </template>
                 </section>
@@ -481,22 +529,20 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                 <div class="flex flex-wrap gap-3 border-t border-line pt-6">
                     <template v-if="editable">
                         <BaseButton type="submit" size="lg" :variant="status === 'draft' || status === 'rejected' ? 'secondary' : 'primary'" :loading="busy === 'save'" :disabled="!dirty && !isNew">
-                            {{ isNew ? 'Створити чернетку' : 'Зберегти' }}
+                            {{ isNew ? t('editor.createDraft') : t('editor.save') }}
                         </BaseButton>
-                        <BaseButton v-if="!isNew && (status === 'draft' || status === 'rejected')" size="lg" :loading="busy === 'submit'" @click="submit">
-                            Надіслати на перевірку
-                        </BaseButton>
+                        <BaseButton v-if="!isNew && (status === 'draft' || status === 'rejected')" size="lg" :loading="busy === 'submit'" @click="submit">{{ t('editor.submit') }}</BaseButton>
                     </template>
-                    <BaseButton v-if="status === 'published' && product" variant="ghost" :loading="busy === 'archive'" @click="lifecycle('archive')">Зняти з продажу</BaseButton>
-                    <BaseButton v-if="status === 'archived'" :loading="busy === 'relist'" @click="lifecycle('relist')">Повернути в чернетки</BaseButton>
+                    <BaseButton v-if="status === 'published' && product" variant="ghost" :loading="busy === 'archive'" @click="lifecycle('archive')">{{ t('editor.archive') }}</BaseButton>
+                    <BaseButton v-if="status === 'archived'" :loading="busy === 'relist'" @click="lifecycle('relist')">{{ t('editor.relist') }}</BaseButton>
                     <template v-if="product?.is_deletable">
                         <span class="flex-1" />
                         <template v-if="confirmDelete">
-                            <span class="self-center text-[15px] text-ink">Видалити чернетку назавжди?</span>
-                            <BaseButton variant="secondary" :loading="busy === 'delete'" @click="destroy">Так, видалити</BaseButton>
-                            <BaseButton variant="ghost" @click="confirmDelete = false">Ні</BaseButton>
+                            <span class="self-center text-[15px] text-ink">{{ t('editor.deleteConfirm') }}</span>
+                            <BaseButton variant="secondary" :loading="busy === 'delete'" @click="destroy">{{ t('editor.yesDelete') }}</BaseButton>
+                            <BaseButton variant="ghost" @click="confirmDelete = false">{{ t('editor.no') }}</BaseButton>
                         </template>
-                        <BaseButton v-else variant="ghost" @click="confirmDelete = true">Видалити чернетку</BaseButton>
+                        <BaseButton v-else variant="ghost" @click="confirmDelete = true">{{ t('editor.deleteDraft') }}</BaseButton>
                     </template>
                 </div>
             </form>

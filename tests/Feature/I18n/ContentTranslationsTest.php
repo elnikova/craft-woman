@@ -94,3 +94,13 @@ test('registration remembers the language of the request', function () {
 test('catalog search finds products by their English name', function () {
     $this->getJson('/api/v1/products?q=Morning', ['Accept-Language' => 'en'])->assertJsonCount(1, 'data');
 });
+
+test('owners see the reader language on public pages and the source text in the editor', function () {
+    $this->actingAs($this->maker->user);
+
+    $this->getJson('/api/v1/products/chashka-ranok', ['Accept-Language' => 'en'])->assertJsonPath('data.name', '"Morning" mug');
+    $this->getJson("/api/v1/me/products/{$this->product->uuid}", ['Accept-Language' => 'en'])
+        ->assertJsonPath('data.name', 'Чашка «Ранок»')
+        ->assertJsonPath('data.translations.en.name', '"Morning" mug');
+    $this->getJson('/api/v1/me/maker-profile', ['Accept-Language' => 'en'])->assertJsonPath('data.bio', 'Кераміка з Опішні');
+});

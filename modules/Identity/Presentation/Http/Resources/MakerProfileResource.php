@@ -23,7 +23,8 @@ class MakerProfileResource extends JsonResource
             'uuid' => $this->uuid,
             'slug' => $this->slug,
             'display_name' => $this->display_name,
-            ...($private
+            // Edit screens get the source text and translations; public pages show the reader's language even to the owner
+            ...($private && $request->routeIs('me.*', 'admin.*')
                 ? ['bio' => $this->bio, 'story' => $this->story, 'content_locale' => $this->sourceLocale(), 'translations' => (object) ($this->translations ?? [])]
                 : $this->localized()),
             'avatar_url' => $this->avatar_url,

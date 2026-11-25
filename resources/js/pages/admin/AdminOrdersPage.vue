@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import StatusPill from '@/components/orders/StatusPill.vue';
 import { ordersApi } from '@/api/orders';
@@ -13,6 +14,7 @@ const status = ref<OrderStatus | ''>('');
 const q = ref('');
 const orders = ref<Order[]>([]);
 const total = ref(0);
+const { t } = useI18n();
 const loading = ref(true);
 const error = ref('');
 const expanded = ref<string | null>(null);
@@ -42,42 +44,42 @@ onMounted(load);
 
 <template>
     <div class="max-w-[1080px]">
-        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Усі замовлення</h1>
+        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ t('adminOrders.title') }}</h1>
 
         <div class="mt-8 flex flex-wrap gap-3">
             <input
                 v-model="q"
                 type="search"
-                aria-label="Пошук за номером або email"
-                placeholder="Номер або email покупця"
+                :aria-label="t('adminOrders.search')"
+                :placeholder="t('adminOrders.searchPlaceholder')"
                 class="h-11 min-w-[260px] flex-1 rounded-full border border-line-strong bg-white px-4 text-[15px] focus:border-plum focus:outline-none"
             />
-            <select v-model="status" aria-label="Статус" class="h-11 rounded-full border border-line-strong bg-white px-4 text-[15px]">
-                <option value="">Усі статуси</option>
+            <select v-model="status" :aria-label="t('adminOrders.status')" class="h-11 rounded-full border border-line-strong bg-white px-4 text-[15px]">
+                <option value="">{{ t('adminOrders.allStatuses') }}</option>
                 <option v-for="s in STATUSES" :key="s" :value="s">{{ ORDER_STATUS_LABELS[s] }}</option>
             </select>
         </div>
 
-        <div v-if="loading" class="mt-8 space-y-2" aria-busy="true" aria-label="Завантаження">
+        <div v-if="loading" class="mt-8 space-y-2" aria-busy="true" :aria-label="t('common.loading')">
             <div v-for="i in 5" :key="i" class="h-14 animate-pulse rounded-[12px] bg-lavender-50" />
         </div>
         <div v-else-if="error" role="alert" class="mt-8 flex flex-col items-start gap-4 rounded-card border border-kalyna/30 bg-kalyna/5 p-6">
             <p class="m-0 text-kalyna">{{ error }}</p>
-            <BaseButton variant="secondary" @click="load">Спробувати ще раз</BaseButton>
+            <BaseButton variant="secondary" @click="load">{{ t('common.retry') }}</BaseButton>
         </div>
-        <p v-else-if="orders.length === 0" class="mt-10 text-lg text-ink-muted">Замовлень не знайдено.</p>
+        <p v-else-if="orders.length === 0" class="mt-10 text-lg text-ink-muted">{{ t('adminOrders.empty') }}</p>
 
         <template v-else>
-            <p class="mt-6 mb-2 text-sm text-ink-muted">Знайдено: {{ total }}</p>
+            <p class="mt-6 mb-2 text-sm text-ink-muted">{{ t('common.found', { n: total }) }}</p>
             <table class="w-full border-collapse text-[15px]">
                 <thead>
                     <tr class="border-b border-line-strong text-left text-sm text-ink-muted">
-                        <th class="py-2 pr-3 font-semibold">Номер</th>
-                        <th class="py-2 pr-3 font-semibold">Дата</th>
-                        <th class="py-2 pr-3 font-semibold">Покупець</th>
-                        <th class="py-2 pr-3 font-semibold">Оплата</th>
-                        <th class="py-2 pr-3 text-right font-semibold">Сума</th>
-                        <th class="py-2 font-semibold">Статус</th>
+                        <th class="py-2 pr-3 font-semibold">{{ t('adminOrders.colNumber') }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ t('adminOrders.colDate') }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ t('adminOrders.colBuyer') }}</th>
+                        <th class="py-2 pr-3 font-semibold">{{ t('adminOrders.colPayment') }}</th>
+                        <th class="py-2 pr-3 text-right font-semibold">{{ t('adminOrders.colTotal') }}</th>
+                        <th class="py-2 font-semibold">{{ t('adminOrders.colStatus') }}</th>
                     </tr>
                 </thead>
                 <tbody>

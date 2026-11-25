@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, reactive, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import BaseInput from '@/components/ui/BaseInput.vue';
 import BaseTextarea from '@/components/ui/BaseTextarea.vue';
@@ -12,6 +13,7 @@ import { countryName, GROUP_STATUS_LABELS, formatDate } from '@/utils/orderStatu
 
 const TABS: (GroupStatus | 'all')[] = ['awaiting_shipment', 'shipped', 'pending_payment', 'delivered', 'cancelled', 'all'];
 const tab = ref<GroupStatus | 'all'>('awaiting_shipment');
+const { t } = useI18n();
 const sales = ref<Sale[]>([]);
 const loading = ref(true);
 const error = ref('');
@@ -72,35 +74,35 @@ onMounted(load);
 
 <template>
     <div class="max-w-[1080px]">
-        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Продажі</h1>
-        <p class="mt-2 mb-0 text-ink-muted">Тут ваша частина кожного замовлення: що відправити і куди.</p>
+        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ t('sales.title') }}</h1>
+        <p class="mt-2 mb-0 text-ink-muted">{{ t('sales.lead') }}</p>
 
-        <div role="tablist" aria-label="Статус" class="mt-8 flex flex-wrap gap-2">
+        <div role="tablist" :aria-label="t('sales.status')" class="mt-8 flex flex-wrap gap-2">
             <button
-                v-for="t in TABS"
-                :key="t"
+                v-for="tabKey in TABS"
+                :key="tabKey"
                 type="button"
                 role="tab"
-                :aria-selected="tab === t"
+                :aria-selected="tab === tabKey"
                 class="h-11 rounded-full border px-[18px] text-[15px]"
-                :class="tab === t ? 'border-plum bg-plum text-white' : 'border-line-strong bg-white text-ink hover:border-plum'"
-                @click="tab = t"
+                :class="tab === tabKey ? 'border-plum bg-plum text-white' : 'border-line-strong bg-white text-ink hover:border-plum'"
+                @click="tab = tabKey"
             >
-                {{ t === 'all' ? 'Усі' : t === 'awaiting_shipment' ? 'Треба відправити' : GROUP_STATUS_LABELS[t] }}
+                {{ tabKey === 'all' ? t('sales.all') : tabKey === 'awaiting_shipment' ? t('sales.toShip') : GROUP_STATUS_LABELS[tabKey] }}
             </button>
         </div>
 
-        <div v-if="loading" class="mt-8 space-y-3" aria-busy="true" aria-label="Завантаження">
+        <div v-if="loading" class="mt-8 space-y-3" aria-busy="true" :aria-label="t('common.loading')">
             <div v-for="i in 3" :key="i" class="h-40 animate-pulse rounded-card bg-lavender-50" />
         </div>
 
         <div v-else-if="error" role="alert" class="mt-8 flex flex-col items-start gap-4 rounded-card border border-kalyna/30 bg-kalyna/5 p-6">
             <p class="m-0 text-kalyna">{{ error }}</p>
-            <BaseButton variant="secondary" @click="load">Спробувати ще раз</BaseButton>
+            <BaseButton variant="secondary" @click="load">{{ t('common.retry') }}</BaseButton>
         </div>
 
         <p v-else-if="sales.length === 0" class="mt-10 text-lg text-ink-muted">
-            {{ tab === 'awaiting_shipment' ? 'Нічого не чекає на відправку.' : 'Тут поки порожньо.' }}
+            {{ tab === 'awaiting_shipment' ? t('sales.nothingToShip') : t('sales.empty') }}
         </p>
 
         <ul v-else class="mt-8 mb-0 flex list-none flex-col gap-4 p-0">
@@ -118,13 +120,13 @@ onMounted(load);
                         <li v-for="i in s.items" :key="i.uuid" class="flex justify-between gap-4">
                             <span>
                                 <span class="font-semibold">{{ i.name }}</span>
-                                <span class="text-ink-muted"> {{ i.is_digital ? '· файл' : i.variant_name ? `· ${i.variant_name}` : '' }} × {{ i.quantity }}</span>
+                                <span class="text-ink-muted"> {{ i.is_digital ? `· ${t('sales.file')}` : i.variant_name ? `· ${i.variant_name}` : '' }} × {{ i.quantity }}</span>
                             </span>
                             <span>{{ formatPrice(i.total.amount_minor, i.total.currency) }}</span>
                         </li>
                         <li class="flex justify-between gap-4 border-t border-line pt-2">
                             <span class="text-ink-muted">
-                                {{ s.payment_method === 'cash_on_delivery' ? (s.is_paid ? 'Оплачено при отриманні' : 'Оплата при отриманні') : s.is_paid ? 'Оплачено онлайн' : 'Чекає онлайн-оплати' }}
+                                {{ s.payment_method === 'cash_on_delivery' ? (s.is_paid ? t('sales.paidOnDelivery') : t('sales.payOnDelivery')) : s.is_paid ? t('sales.paidOnline') : t('sales.awaitingOnline') }}
                             </span>
                             <strong>{{ formatPrice(s.total.amount_minor, s.total.currency) }}</strong>
                         </li>
@@ -138,33 +140,33 @@ onMounted(load);
                                 [s.shipment.address, s.shipment.postal_code].filter(Boolean).join(', ')
                             }}
                         </div>
-                        <div v-if="s.shipment.tracking_number" class="mt-2">ТТН: <strong>{{ s.shipment.tracking_number }}</strong></div>
+                        <div v-if="s.shipment.tracking_number" class="mt-2">{{ t('sales.tracking') }} <strong>{{ s.shipment.tracking_number }}</strong></div>
                     </div>
-                    <div v-else class="rounded-[12px] bg-lavender-50 p-4 text-[15px] text-ink-muted">Цифрове замовлення — відправляти нічого не треба.</div>
+                    <div v-else class="rounded-[12px] bg-lavender-50 p-4 text-[15px] text-ink-muted">{{ t('sales.digitalOnly') }}</div>
                 </div>
 
-                <p v-if="s.cancel_reason" class="m-0 px-5 pb-4 text-kalyna">Причина скасування: {{ s.cancel_reason }}</p>
+                <p v-if="s.cancel_reason" class="m-0 px-5 pb-4 text-kalyna">{{ t('sales.cancelReason', { reason: s.cancel_reason }) }}</p>
 
                 <!-- Actions -->
                 <div v-if="s.status === 'awaiting_shipment' || s.status === 'shipped'" class="border-t border-line px-5 py-4">
                     <form v-if="open.uuid === s.uuid && open.mode === 'ship'" class="flex flex-wrap items-end gap-3" @submit.prevent="ship(s)">
-                        <BaseInput v-model="open.tracking" label="Номер відправлення (ТТН)" hint="Необов’язково, але покупцю так спокійніше." class="min-w-[260px] flex-1" />
-                        <BaseButton type="submit" :loading="open.busy">Позначити відправленим</BaseButton>
-                        <BaseButton variant="ghost" @click="open.uuid = null">Скасувати</BaseButton>
+                        <BaseInput v-model="open.tracking" :label="t('sales.trackingLabel')" :hint="t('sales.trackingHint')" class="min-w-[260px] flex-1" />
+                        <BaseButton type="submit" :loading="open.busy">{{ t('sales.markShipped') }}</BaseButton>
+                        <BaseButton variant="ghost" @click="open.uuid = null">{{ t('sales.cancel') }}</BaseButton>
                     </form>
                     <form v-else-if="open.uuid === s.uuid && open.mode === 'cancel'" class="flex flex-col gap-3" @submit.prevent="cancel(s)">
-                        <BaseTextarea v-model="open.reason" label="Чому скасовуєте" hint="Покупець побачить це пояснення." :rows="3" />
+                        <BaseTextarea v-model="open.reason" :label="t('sales.whyCancel')" :hint="t('sales.whyHint')" :rows="3" />
                         <div class="flex flex-wrap gap-3">
-                            <BaseButton type="submit" :loading="open.busy">Скасувати мою частину</BaseButton>
-                            <BaseButton variant="ghost" @click="open.uuid = null">Назад</BaseButton>
+                            <BaseButton type="submit" :loading="open.busy">{{ t('sales.cancelMine') }}</BaseButton>
+                            <BaseButton variant="ghost" @click="open.uuid = null">{{ t('sales.back') }}</BaseButton>
                         </div>
                     </form>
                     <div v-else class="flex flex-wrap gap-3">
                         <template v-if="s.status === 'awaiting_shipment'">
-                            <BaseButton @click="start(s, 'ship')">Відправлено</BaseButton>
-                            <BaseButton variant="ghost" @click="start(s, 'cancel')">Не можу виконати</BaseButton>
+                            <BaseButton @click="start(s, 'ship')">{{ t('sales.shipped') }}</BaseButton>
+                            <BaseButton variant="ghost" @click="start(s, 'cancel')">{{ t('sales.cantFulfil') }}</BaseButton>
                         </template>
-                        <BaseButton v-else variant="secondary" :loading="open.busy && open.uuid === s.uuid" @click="deliver(s)">Покупець отримав</BaseButton>
+                        <BaseButton v-else variant="secondary" :loading="open.busy && open.uuid === s.uuid" @click="deliver(s)">{{ t('sales.received') }}</BaseButton>
                     </div>
                     <p v-if="open.uuid === s.uuid && open.error" role="alert" class="mt-3 mb-0 text-kalyna">{{ open.error }}</p>
                 </div>

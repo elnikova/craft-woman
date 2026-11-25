@@ -82,7 +82,7 @@ export interface ProductPayload {
     /** Language of name/description: the source language when no translation exists */
     content_locale?: 'uk' | 'en';
     /** Owner/admin only: translations keyed by locale */
-    translations?: Partial<Record<'uk' | 'en', { name?: string; description?: string; shipping_info?: string }>>;
+    translations?: Partial<Record<'uk' | 'en', { name?: string | null; description?: string | null; shipping_info?: string | null }>>;
     description: string | null;
     price_amount_minor: number;
     currency: Currency;
