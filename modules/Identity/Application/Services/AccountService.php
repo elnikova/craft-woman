@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\DB;
 /** The signed-in user's own account settings. */
 class AccountService
 {
-    /** @param array{name: string, email: string} $data */
+    /** @param array{name?: string, email?: string, locale?: string} $data */
     public function updateProfile(User $user, array $data): User
     {
-        $emailChanged = mb_strtolower($data['email']) !== mb_strtolower($user->email);
+        $emailChanged = isset($data['email']) && mb_strtolower($data['email']) !== mb_strtolower($user->email);
 
-        $user->fill(['name' => $data['name'], 'email' => $data['email']]);
+        $user->fill(array_intersect_key($data, array_flip(['name', 'email', 'locale'])));
         if ($emailChanged) {
             // New address is unconfirmed until verification e-mails exist
             $user->email_verified_at = null;

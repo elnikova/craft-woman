@@ -194,7 +194,7 @@ Allowed values should be enforced by application/domain rules and, where appropr
 
 ## 3.1 users
 
-> **Implementation notes (2026-11-25).** The code keeps a single `role` column (`buyer`, `master`, `admin`) instead of `roles`/`user_roles`, and `name` instead of first/last name. `status` (`active` | `blocked`), `blocked_at` and `blocked_reason` are implemented; `locale`, `avatar_url` and soft deletes are not yet.
+> **Implementation notes (2026-11-25).** The code keeps a single `role` column (`buyer`, `master`, `admin`) instead of `roles`/`user_roles`, and `name` instead of first/last name. `status` (`active` | `blocked`), `blocked_at`, `blocked_reason` and `locale` (`uk` | `en`) are implemented; `avatar_url` and soft deletes are not yet. Translatable content tables (`categories`, `products`, `maker_profiles`) carry `content_locale` and JSON `translations` (domain-rules.md §42).
 
 Stores authenticated users.
 

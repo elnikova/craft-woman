@@ -20,6 +20,7 @@ class UserResource extends JsonResource
             'uuid' => $this->uuid,
             'name' => $this->name,
             'email' => $this->email,
+            'locale' => $this->locale ?? \App\Support\Locales::DEFAULT,
             'role' => $this->role?->value ?? $this->role,
             'status' => $this->status?->value,
             'email_verified' => $this->email_verified_at !== null,

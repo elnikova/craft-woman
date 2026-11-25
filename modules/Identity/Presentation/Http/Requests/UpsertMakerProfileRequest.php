@@ -28,6 +28,11 @@ class UpsertMakerProfileRequest extends FormRequest
             'delivery_currency' => ['sometimes', 'in:EUR,USD,UAH'],
             'delivery_domestic_minor' => ['sometimes', 'integer', 'min:0', 'max:10000000'],
             'delivery_international_minor' => ['sometimes', 'nullable', 'integer', 'min:0', 'max:10000000'],
+            'content_locale' => ['sometimes', \Illuminate\Validation\Rule::in(\App\Support\Locales::SUPPORTED)],
+            'translations' => ['sometimes', 'nullable', 'array'],
+            'translations.*' => ['array'],
+            'translations.*.bio' => ['nullable', 'string', 'max:280'],
+            'translations.*.story' => ['nullable', 'string', 'max:5000'],
         ];
     }
 

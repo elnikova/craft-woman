@@ -3,6 +3,7 @@
 namespace Modules\Marketplace\Infrastructure\Persistence;
 
 use Database\Factories\ProductFactory;
+use App\Support\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -27,7 +28,10 @@ use Modules\Marketplace\Domain\ValueObjects\Money;
 class Product extends Model
 {
     /** @use HasFactory<ProductFactory> */
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasTranslations, HasUuids, SoftDeletes;
+
+    /** @var list<string> */
+    protected array $translatable = ['name', 'description', 'shipping_info'];
 
     /** categorizable_type value (schema §4.6) */
     public const MORPH = 'product';
@@ -36,7 +40,7 @@ class Product extends Model
 
     protected $fillable = [
         'maker_profile_uuid', 'type', 'name', 'slug', 'description',
-        'price_amount_minor', 'currency', 'production_time_days', 'shipping_info',
+        'price_amount_minor', 'currency', 'production_time_days', 'shipping_info', 'content_locale',
     ];
 
     protected $attributes = ['status' => 'draft', 'currency' => 'EUR', 'price_amount_minor' => 0];

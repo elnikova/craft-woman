@@ -22,6 +22,13 @@ class MakerSeeder extends Seeder
             ['Софія Коваль', 'sofia@craftwoman.local', 'Одеса', 'Свічки з соєвого воску та бджолиного.', false],
         ];
 
+        $englishBio = [
+            'oksana@craftwoman.local' => 'Blankets and sweaters from Carpathian wool, knitted by hand.',
+            'marko@craftwoman.local' => 'Smoked ceramics: mugs, plates and jugs.',
+            'iryna@craftwoman.local' => 'Satin-stitch and cross-stitch embroidery, patterns and workshops.',
+            'luka@craftwoman.local' => 'Vegetable-tanned wallets and belts, stitched by hand.',
+        ];
+
         foreach ($demo as [$name, $email, $city, $bio, $approve]) {
             if (User::where('email', $email)->exists()) {
                 continue;
@@ -43,6 +50,7 @@ class MakerSeeder extends Seeder
                 deliveryCurrency: 'EUR',
                 deliveryDomesticMinor: 400,
                 deliveryInternationalMinor: $email === 'iryna@craftwoman.local' ? null : 1500,
+                translations: isset($englishBio[$email]) ? ['en' => ['bio' => $englishBio[$email]]] : null,
             ));
             $makers->submitForReview($profile);
 

@@ -2,6 +2,7 @@
 
 namespace Modules\Marketplace\Infrastructure\Persistence;
 
+use App\Support\HasTranslations;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -22,11 +23,14 @@ use Illuminate\Support\Facades\DB;
  */
 class Category extends Model
 {
-    use HasUuids;
+    use HasTranslations, HasUuids;
+
+    /** @var list<string> */
+    protected array $translatable = ['name', 'description'];
 
     protected $primaryKey = 'uuid';
 
-    protected $fillable = ['parent_uuid', 'name', 'slug', 'description', 'sort_order', 'is_visible'];
+    protected $fillable = ['parent_uuid', 'name', 'slug', 'description', 'sort_order', 'is_visible', 'content_locale'];
 
     protected function casts(): array
     {

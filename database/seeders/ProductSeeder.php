@@ -38,6 +38,17 @@ class ProductSeeder extends Seeder
             ],
         ];
 
+        // English versions; the milk jug is left untranslated to show the fallback to the source language
+        $english = [
+            'Плед з мериносу, ручне в’язання' => 'Hand-knitted merino blanket',
+            'Светр «Карпати»' => '"Carpathians" sweater',
+            'Схема пледа «Ялинка», PDF' => '"Fir tree" blanket pattern, PDF',
+            'Чашка «Ранок», димлена глина' => '"Morning" mug, smoked clay',
+            'Схема вишивки «Полтавські маки», PDF' => '"Poltava poppies" embroidery pattern, PDF',
+            'Вишита серветка «Барвінок»' => '"Periwinkle" embroidered napkin',
+            'Шкіряний гаманець, ручний шов' => 'Hand-stitched leather wallet',
+        ];
+
         foreach ($demo as $email => $products) {
             $maker = MakerProfile::query()->whereHas('user', fn ($q) => $q->where('email', $email))->first();
             if (! $maker) {
@@ -56,6 +67,14 @@ class ProductSeeder extends Seeder
                     'production_time_days' => $type === ProductType::Physical ? 7 : null,
                     'shipping_info' => $type === ProductType::Physical ? 'Нова пошта по Україні, Укрпошта за кордон.' : null,
                 ]);
+                if (isset($english[$name])) {
+                    $product->translations = ['en' => [
+                        'name' => $english[$name],
+                        'description' => "{$english[$name]}. Made by hand in {$maker->display_name}'s studio. Every piece is a little different, and that is its character.",
+                        'shipping_info' => $type === ProductType::Physical ? 'Nova Poshta within Ukraine, Ukrposhta abroad.' : null,
+                    ]];
+                    $product->translations = $product->cleanTranslations($product->translations);
+                }
                 $product->status = ProductStatus::Published;
                 $product->published_at = now()->subDays(random_int(0, 20));
                 $product->save();
