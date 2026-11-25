@@ -873,7 +873,18 @@ The MVP supports:
 
 User-facing translatable content must be designed so that adding additional languages later does not require restructuring core business entities.
 
-The exact localization strategy for product names, descriptions, categories, courses, workshops, and other content is an implementation/design decision.
+Decision (2026-11-25):
+
+| Area | Strategy |
+|---|---|
+| Interface (SPA) | Translation files per language (`resources/js/i18n/uk.json`, `en.json`, vue-i18n). |
+| API messages | Laravel `lang/{uk,en}`; the language comes from `Accept-Language`. |
+| Language choice | Ukrainian is the default and has no URL prefix; English lives under `/en/…`. The header switcher changes the URL; signed-in users also have `users.locale`, and a user whose saved language is English is taken to `/en/…`. |
+| Administrator content (categories) | Fully translated: source name plus a translation for every supported language. |
+| Maker content (products, maker profiles; later courses and workshops) | Written in one source language (`content_locale`). Translations are optional. Without one, the source text is shown with a mark of its language. |
+| Tags, variant names, order snapshots | Not translated. Order items keep the name the buyer saw at checkout. |
+
+Storage: translatable entities have `content_locale` and a JSON `translations` column keyed by locale, e.g. `{"en": {"name": "…", "description": "…"}}`. Adding a language adds keys, not columns or tables (`App\Support\HasTranslations`, `App\Support\Locales`).
 
 ---
 

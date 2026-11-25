@@ -1,7 +1,9 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRouter } from 'vue-router';
 import AppLogo from './AppLogo.vue';
+import LocaleSwitcher from './LocaleSwitcher.vue';
 import OrnamentBand from '@/components/ornament/OrnamentBand.vue';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import { useAuthStore } from '@/stores/auth';
@@ -13,14 +15,15 @@ const cart = useCartStore();
 const favorites = useFavoritesStore();
 const router = useRouter();
 const menuOpen = ref(false);
+const { t } = useI18n();
 
-const nav = [
-    { label: 'Майстри', to: { name: 'makers' } },
-    { label: 'Товари', to: { name: 'catalog' } },
-    { label: 'Курси', to: { path: '/', hash: '#courses' } },
-    { label: 'Майстер-класи', to: { path: '/', hash: '#workshops' } },
-    { label: 'Спільнота', to: { path: '/', hash: '#community' } },
-];
+const nav = computed(() => [
+    { label: t('nav.makers'), to: { name: 'makers' } },
+    { label: t('nav.products'), to: { name: 'catalog' } },
+    { label: t('nav.courses'), to: { name: 'home', hash: '#courses' } },
+    { label: t('nav.workshops'), to: { name: 'home', hash: '#workshops' } },
+    { label: t('nav.community'), to: { name: 'home', hash: '#community' } },
+]);
 
 async function logout() {
     await auth.logout();
@@ -40,7 +43,7 @@ async function logout() {
                 class="ml-auto grid h-11 w-11 place-items-center rounded-full text-plum lg:hidden"
                 :aria-expanded="menuOpen"
                 aria-controls="main-nav"
-                aria-label="Меню"
+                :aria-label="t('nav.menu')"
                 @click="menuOpen = !menuOpen"
             >
                 <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
@@ -50,7 +53,7 @@ async function logout() {
 
             <nav
                 id="main-nav"
-                aria-label="Основна навігація"
+                :aria-label="t('nav.main')"
                 class="w-full flex-col gap-1 text-[15px] font-medium lg:flex lg:w-auto lg:flex-1 lg:flex-row lg:gap-6"
                 :class="menuOpen ? 'flex' : 'hidden'"
             >
@@ -66,16 +69,10 @@ async function logout() {
             </nav>
 
             <div class="flex w-full items-center gap-2 lg:w-auto" :class="menuOpen ? 'flex' : 'hidden lg:flex'">
-                <button
-                    type="button"
-                    class="h-11 rounded-full border border-lavender-200 bg-white px-3 text-sm text-plum"
-                    aria-label="Мова і валюта: українська, EUR"
-                >
-                    UA · EUR
-                </button>
+                <LocaleSwitcher />
                 <RouterLink
                     :to="{ name: 'account-favorites' }"
-                    :aria-label="favorites.count ? `Обране: ${favorites.count}` : 'Обране'"
+                    :aria-label="favorites.count ? t('nav.favoritesCount', { n: favorites.count }) : t('nav.favorites')"
                     class="relative grid h-11 w-11 place-items-center rounded-full text-plum"
                 >
                     <span
@@ -90,7 +87,7 @@ async function logout() {
                 </RouterLink>
                 <RouterLink
                     :to="{ name: 'cart' }"
-                    :aria-label="cart.count ? `Кошик: ${cart.count}` : 'Кошик'"
+                    :aria-label="cart.count ? t('nav.cartCount', { n: cart.count }) : t('nav.cart')"
                     class="relative grid h-11 w-11 place-items-center rounded-full text-plum"
                 >
                     <span
@@ -105,10 +102,10 @@ async function logout() {
                 </RouterLink>
 
                 <template v-if="auth.isAuthenticated">
-                    <BaseButton :to="{ name: 'account' }">Кабінет</BaseButton>
-                    <BaseButton variant="secondary" @click="logout">Вийти</BaseButton>
+                    <BaseButton :to="{ name: 'account' }">{{ t('nav.account') }}</BaseButton>
+                    <BaseButton variant="secondary" @click="logout">{{ t('nav.logout') }}</BaseButton>
                 </template>
-                <BaseButton v-else :to="{ name: 'login' }">Увійти</BaseButton>
+                <BaseButton v-else :to="{ name: 'login' }">{{ t('nav.login') }}</BaseButton>
             </div>
         </header>
     </div>

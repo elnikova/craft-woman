@@ -1,27 +1,11 @@
+import { INTL_LOCALE, currentLocale, labelMap } from '@/i18n';
 import type { GroupStatus, OrderStatus, PaymentMethod } from '@/types/order';
 
-export const ORDER_STATUS_LABELS: Record<OrderStatus, string> = {
-    pending_payment: 'Очікує оплати',
-    processing: 'Готується',
-    partially_shipped: 'Частково відправлено',
-    shipped: 'Відправлено',
-    completed: 'Виконано',
-    cancelled: 'Скасовано',
-};
+export const ORDER_STATUS_LABELS = labelMap<OrderStatus>('status.order', ['pending_payment', 'processing', 'partially_shipped', 'shipped', 'completed', 'cancelled']);
 
-export const GROUP_STATUS_LABELS: Record<GroupStatus, string> = {
-    pending_payment: 'Очікує оплати',
-    awaiting_shipment: 'Готується до відправки',
-    shipped: 'Відправлено',
-    delivered: 'Доставлено',
-    completed: 'Виконано',
-    cancelled: 'Скасовано',
-};
+export const GROUP_STATUS_LABELS = labelMap<GroupStatus>('status.group', ['pending_payment', 'awaiting_shipment', 'shipped', 'delivered', 'completed', 'cancelled']);
 
-export const PAYMENT_LABELS: Record<PaymentMethod, string> = {
-    online: 'Онлайн карткою',
-    cash_on_delivery: 'При отриманні',
-};
+export const PAYMENT_LABELS = labelMap<PaymentMethod>('status.payment', ['online', 'cash_on_delivery']);
 
 type Tone = 'wait' | 'work' | 'done' | 'off';
 const TONES: Record<Tone, string> = {
@@ -43,27 +27,24 @@ export function statusTone(status: OrderStatus | GroupStatus): string {
     return TONES[tone];
 }
 
-export const COUNTRIES = [
-    { code: 'UA', name: 'Україна' },
-    { code: 'PL', name: 'Польща' },
-    { code: 'DE', name: 'Німеччина' },
-    { code: 'BG', name: 'Болгарія' },
-    { code: 'CZ', name: 'Чехія' },
-    { code: 'RO', name: 'Румунія' },
-    { code: 'MD', name: 'Молдова' },
-    { code: 'SK', name: 'Словаччина' },
-    { code: 'LT', name: 'Литва' },
-    { code: 'IT', name: 'Італія' },
-    { code: 'FR', name: 'Франція' },
-    { code: 'ES', name: 'Іспанія' },
-    { code: 'NL', name: 'Нідерланди' },
-    { code: 'AT', name: 'Австрія' },
-    { code: 'GB', name: 'Велика Британія' },
-    { code: 'US', name: 'США' },
-    { code: 'CA', name: 'Канада' },
-];
+/** Delivery countries; names come from Intl in the interface language */
+const COUNTRY_CODES = ['UA', 'PL', 'DE', 'BG', 'CZ', 'RO', 'MD', 'SK', 'LT', 'IT', 'FR', 'ES', 'NL', 'AT', 'GB', 'US', 'CA'] as const;
+
+export function countryName(code: string): string {
+    try {
+        return new Intl.DisplayNames([INTL_LOCALE[currentLocale()]], { type: 'region' }).of(code) ?? code;
+    } catch {
+        return code;
+    }
+}
+
+/** Ukraine first, the rest alphabetically in the current language */
+export function countries(): { code: string; name: string }[] {
+    const [ua, ...rest] = COUNTRY_CODES.map((code) => ({ code, name: countryName(code) }));
+    return [ua!, ...rest.sort((a, b) => a.name.localeCompare(b.name, INTL_LOCALE[currentLocale()]))];
+}
 
 export function formatDate(iso: string | null): string {
     if (!iso) return '';
-    return new Intl.DateTimeFormat('uk-UA', { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
+    return new Intl.DateTimeFormat(INTL_LOCALE[currentLocale()], { day: 'numeric', month: 'long', year: 'numeric' }).format(new Date(iso));
 }

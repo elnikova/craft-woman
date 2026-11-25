@@ -1,11 +1,14 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import AppLogo from '@/components/layout/AppLogo.vue';
 import AppIcon from '@/components/ui/AppIcon.vue';
 import OrnamentBand from '@/components/ornament/OrnamentBand.vue';
 import { accountNav, ROLE_LABELS } from '@/config/accountNav';
 import { useAuthStore } from '@/stores/auth';
+
+const { t } = useI18n();
 
 const auth = useAuthStore();
 const route = useRoute();
@@ -37,7 +40,7 @@ async function logout() {
             id="account-nav"
             class="tx-linen fixed inset-y-0 left-0 z-40 flex w-72 flex-col overflow-y-auto bg-lavender-100 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
             :class="menuOpen ? 'translate-x-0 shadow-2xl' : '-translate-x-full'"
-            aria-label="Меню кабінету"
+            :aria-label="t('accountNav.menu')"
         >
             <div class="px-6 pt-6 pb-4">
                 <AppLogo />
@@ -51,7 +54,7 @@ async function logout() {
 
             <nav class="flex flex-1 flex-col gap-5 px-3 py-4">
                 <div v-for="(section, si) in sections" :key="si">
-                    <div v-if="section.title" class="px-3 pb-2 text-[13px] font-semibold text-ink-soft">{{ section.title }}</div>
+                    <div v-if="section.title" class="px-3 pb-2 text-[13px] font-semibold text-ink-soft">{{ t(section.title) }}</div>
                     <ul class="m-0 flex list-none flex-col gap-0.5 p-0">
                         <li v-for="item in section.items" :key="item.label">
                             <RouterLink
@@ -61,14 +64,12 @@ async function logout() {
                                 :aria-current="isActive(item.to) ? 'page' : undefined"
                             >
                                 <AppIcon :name="item.icon" />
-                                <span class="flex-1">{{ item.label }}</span>
+                                <span class="flex-1">{{ t(item.label) }}</span>
                                 <span
                                     v-if="item.soon"
                                     class="rounded-full px-2 py-0.5 text-[11px] font-semibold"
                                     :class="isActive(item.to) ? 'bg-white/20 text-white' : 'bg-white/80 text-ink-soft'"
-                                >
-                                    скоро
-                                </span>
+                                >{{ t('common.soon') }}</span>
                             </RouterLink>
                         </li>
                     </ul>
@@ -76,12 +77,10 @@ async function logout() {
             </nav>
 
             <div class="border-t border-lavender-200 px-3 py-4">
-                <RouterLink to="/" class="flex h-11 items-center gap-3 rounded-control px-3 text-[15px] text-plum no-underline hover:bg-white/70">
+                <RouterLink :to="{ name: 'home' }" class="flex h-11 items-center gap-3 rounded-control px-3 text-[15px] text-plum no-underline hover:bg-white/70">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
                         <path d="M15 18l-6-6 6-6" />
-                    </svg>
-                    На сайт
-                </RouterLink>
+                    </svg>{{ t('accountNav.toSite') }}</RouterLink>
             </div>
         </aside>
 
@@ -96,21 +95,19 @@ async function logout() {
                     class="-ml-2 grid h-11 w-11 place-items-center rounded-full text-plum lg:hidden"
                     :aria-expanded="menuOpen"
                     aria-controls="account-nav"
-                    aria-label="Меню кабінету"
+                    :aria-label="t('accountNav.menu')"
                     @click="menuOpen = !menuOpen"
                 >
                     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true">
                         <path d="M4 7h16M4 12h16M4 17h16" />
                     </svg>
                 </button>
-                <RouterLink :to="{ name: 'account' }" class="min-w-0 flex-1 truncate text-lg font-semibold text-plum no-underline">Кабінет</RouterLink>
+                <RouterLink :to="{ name: 'account' }" class="min-w-0 flex-1 truncate text-lg font-semibold text-plum no-underline">{{ t('nav.account') }}</RouterLink>
                 <button
                     type="button"
                     class="h-11 rounded-full border-[1.5px] border-plum px-5 text-[15px] font-semibold text-plum hover:bg-lavender-50"
                     @click="logout"
-                >
-                    Вийти
-                </button>
+                >{{ t('nav.logout') }}</button>
             </header>
 
             <main id="main" class="flex-1 px-6 py-10 md:px-10">

@@ -14,12 +14,16 @@ class CategoryResource extends JsonResource
         return [
             'uuid' => $this->uuid,
             'parent_uuid' => $this->parent_uuid,
-            'name' => $this->name,
+            ...$this->localized(),
             'slug' => $this->slug,
-            'description' => $this->description,
             'sort_order' => $this->sort_order,
             'is_visible' => $this->is_visible,
             'children' => self::collection($this->whenLoaded('children')),
+            // Admin screens edit the source text and every translation
+            $this->mergeWhen($request->routeIs('admin.*'), fn () => [
+                'source' => ['locale' => $this->sourceLocale(), 'name' => $this->name, 'description' => $this->description],
+                'translations' => (object) ($this->translations ?? []),
+            ]),
             'usage_count' => $this->when(isset($this->usage_count), fn () => (int) $this->usage_count),
         ];
     }

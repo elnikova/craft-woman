@@ -11,7 +11,7 @@ class CategoryRequest extends FormRequest
         return true; // admin check is done by the route middleware
     }
 
-    /** @return array<string, array<int, string>> */
+    /** @return array<string, array<int, mixed>> */
     public function rules(): array
     {
         $required = $this->isMethod('post') ? 'required' : 'sometimes';
@@ -22,6 +22,11 @@ class CategoryRequest extends FormRequest
             'description' => ['sometimes', 'nullable', 'string', 'max:500'],
             'sort_order' => ['sometimes', 'integer', 'min:0', 'max:100000'],
             'is_visible' => ['sometimes', 'boolean'],
+            'content_locale' => ['sometimes', \Illuminate\Validation\Rule::in(\App\Support\Locales::SUPPORTED)],
+            'translations' => ['sometimes', 'nullable', 'array'],
+            'translations.*' => ['array'],
+            'translations.*.name' => ['nullable', 'string', 'min:2', 'max:80'],
+            'translations.*.description' => ['nullable', 'string', 'max:500'],
         ];
     }
 

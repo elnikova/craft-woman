@@ -23,8 +23,9 @@ class MakerProfileResource extends JsonResource
             'uuid' => $this->uuid,
             'slug' => $this->slug,
             'display_name' => $this->display_name,
-            'bio' => $this->bio,
-            'story' => $this->story,
+            ...($private
+                ? ['bio' => $this->bio, 'story' => $this->story, 'content_locale' => $this->sourceLocale(), 'translations' => (object) ($this->translations ?? [])]
+                : $this->localized()),
             'avatar_url' => $this->avatar_url,
             'country_code' => $this->country_code,
             'city' => $this->city,

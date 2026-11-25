@@ -18,6 +18,10 @@ final readonly class MakerProfileData
         public string $deliveryCurrency = 'EUR',
         public int $deliveryDomesticMinor = 0,
         public ?int $deliveryInternationalMinor = null,
+        /** null = keep the current value */
+        public ?string $contentLocale = null,
+        /** @var array<string, array<string, ?string>>|null null = keep the current translations */
+        public ?array $translations = null,
     ) {}
 
     /** @param array<string, mixed> $data */
@@ -36,6 +40,8 @@ final readonly class MakerProfileData
             deliveryCurrency: (string) ($data['delivery_currency'] ?? 'EUR'),
             deliveryDomesticMinor: (int) ($data['delivery_domestic_minor'] ?? 0),
             deliveryInternationalMinor: isset($data['delivery_international_minor']) ? (int) $data['delivery_international_minor'] : null,
+            contentLocale: $data['content_locale'] ?? null,
+            translations: array_key_exists('translations', $data) ? ($data['translations'] ?? []) : null,
         );
     }
 
@@ -55,6 +61,7 @@ final readonly class MakerProfileData
             'delivery_currency' => $this->deliveryCurrency,
             'delivery_domestic_minor' => $this->deliveryDomesticMinor,
             'delivery_international_minor' => $this->deliveryInternationalMinor,
+            ...($this->contentLocale !== null ? ['content_locale' => $this->contentLocale] : []),
         ];
     }
 }

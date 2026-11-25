@@ -4,7 +4,7 @@ import type { AdminUser, Paginated, Role, User, UserStatus, Wrapped } from '@/ty
 const unwrap = <T>(p: Promise<{ data: Wrapped<T> }>) => p.then((r) => r.data.data);
 
 export const accountApi = {
-    update: (payload: { name: string; email: string; current_password?: string }) => unwrap<User>(http.patch('/me/account', payload)),
+    update: (payload: { name?: string; email?: string; current_password?: string; locale?: 'uk' | 'en' }) => unwrap<User>(http.patch('/me/account', payload)),
     changePassword: (payload: { current_password: string; password: string; password_confirmation: string }) =>
         http.put<{ message: string }>('/me/password', payload).then((r) => r.data.message),
 };

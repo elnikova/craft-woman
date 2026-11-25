@@ -161,7 +161,7 @@ onMounted(load);
                             <span :class="i === 0 ? 'text-lg font-semibold text-plum' : 'text-[16px] text-ink'">{{ c.name }}</span>
                             <span v-if="!c.is_visible" class="ml-2 rounded-full bg-ink/10 px-2 py-0.5 text-[12px] font-semibold text-ink">приховано</span>
                             <div class="text-[13px] text-ink-muted">
-                                /{{ c.slug }} · {{ plural(c.usage_count ?? 0, ['товар', 'товари', 'товарів']) }}
+                                /{{ c.slug }} · {{ plural(c.usage_count ?? 0, 'products') }}
                             </div>
                         </div>
 

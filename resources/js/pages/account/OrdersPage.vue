@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import StatusPill from '@/components/orders/StatusPill.vue';
 import ProductCover from '@/components/products/ProductCover.vue';
@@ -9,6 +10,7 @@ import type { Order } from '@/types/order';
 import { formatPrice, plural } from '@/utils/format';
 import { formatDate } from '@/utils/orderStatus';
 
+const { t } = useI18n();
 const orders = ref<Order[]>([]);
 const page = ref(1);
 const lastPage = ref(1);
@@ -38,20 +40,20 @@ onMounted(() => load());
 
 <template>
     <div class="max-w-[1080px]">
-        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Замовлення</h1>
+        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ t('orders.title') }}</h1>
 
-        <div v-if="loading && orders.length === 0" class="mt-8 space-y-3" aria-busy="true" aria-label="Завантаження">
+        <div v-if="loading && orders.length === 0" class="mt-8 space-y-3" aria-busy="true" :aria-label="t('common.loading')">
             <div v-for="i in 3" :key="i" class="h-24 animate-pulse rounded-card bg-lavender-50" />
         </div>
 
         <div v-else-if="error" role="alert" class="mt-8 flex flex-col items-start gap-4 rounded-card border border-kalyna/30 bg-kalyna/5 p-6">
             <p class="m-0 text-kalyna">{{ error }}</p>
-            <BaseButton variant="secondary" @click="load()">Спробувати ще раз</BaseButton>
+            <BaseButton variant="secondary" @click="load()">{{ t('common.retry') }}</BaseButton>
         </div>
 
         <div v-else-if="orders.length === 0" class="mt-10 flex flex-col items-start gap-4">
-            <p class="m-0 text-lg text-ink-muted">Ви ще нічого не замовляли.</p>
-            <BaseButton :to="{ name: 'catalog' }">Перейти до каталогу</BaseButton>
+            <p class="m-0 text-lg text-ink-muted">{{ t('orders.empty') }}</p>
+            <BaseButton :to="{ name: 'catalog' }">{{ t('common.toCatalog') }}</BaseButton>
         </div>
 
         <template v-else>
@@ -72,9 +74,9 @@ onMounted(() => load());
                             />
                         </div>
                         <div class="min-w-0 flex-[1_1_220px]">
-                            <div class="font-semibold text-plum">№ {{ o.order_number }}</div>
+                            <div class="font-semibold text-plum">{{ t('orders.number', { number: o.order_number }) }}</div>
                             <div class="mt-0.5 text-sm text-ink-muted">
-                                {{ formatDate(o.placed_at) }} · {{ plural(count(o), ['товар', 'товари', 'товарів']) }}
+                                {{ formatDate(o.placed_at) }} · {{ plural(count(o), 'items') }}
                             </div>
                         </div>
                         <div class="w-28 text-right font-bold text-plum">{{ formatPrice(o.total.amount_minor, o.total.currency) }}</div>
@@ -82,7 +84,7 @@ onMounted(() => load());
                     </RouterLink>
                 </li>
             </ul>
-            <BaseButton v-if="page < lastPage" variant="secondary" class="mt-6" :loading="loading" @click="load(page + 1)">Показати ще</BaseButton>
+            <BaseButton v-if="page < lastPage" variant="secondary" class="mt-6" :loading="loading" @click="load(page + 1)">{{ t('common.showMore') }}</BaseButton>
         </template>
     </div>
 </template>

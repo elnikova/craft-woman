@@ -42,18 +42,19 @@ class ProductResource extends JsonResource
             'uuid' => $this->uuid,
             'slug' => $this->slug,
             'type' => $this->type->value,
-            'name' => $this->name,
-            'description' => $this->description,
+            // Buyers get their language when the maker added it; the editor gets the source text plus translations
+            ...($this->private
+                ? ['name' => $this->name, 'description' => $this->description, 'shipping_info' => $this->shipping_info, 'content_locale' => $this->sourceLocale(), 'translations' => (object) ($this->translations ?? [])]
+                : $this->localized()),
             'price' => $this->price()->toArray(),
             'production_time_days' => $this->production_time_days,
-            'shipping_info' => $this->shipping_info,
             'published_at' => $this->published_at,
-            'category' => $category ? ['uuid' => $category->uuid, 'name' => $category->name, 'slug' => $category->slug] : null,
+            'category' => $category ? ['uuid' => $category->uuid, 'name' => $category->translate('name'), 'slug' => $category->slug] : null,
             'tags' => $this->whenLoaded('tags', fn () => $this->tags->pluck('name')->values()),
             'images' => $this->whenLoaded('images', fn () => $this->images->map(fn ($i) => [
                 'uuid' => $i->uuid,
                 'url' => $i->file_url,
-                'alt' => $i->alt_text ?? $this->name,
+                'alt' => $i->alt_text ?? $this->translate('name'),
             ])->values()),
             'variants' => $this->whenLoaded('variants', fn () => $this->variants
                 ->when(! $this->private, fn ($c) => $c->filter->isActive())

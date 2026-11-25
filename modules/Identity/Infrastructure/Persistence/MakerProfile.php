@@ -3,6 +3,7 @@
 namespace Modules\Identity\Infrastructure\Persistence;
 
 use App\Models\User;
+use App\Support\HasTranslations;
 use Database\Factories\MakerProfileFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
@@ -23,13 +24,17 @@ use Modules\Identity\Domain\MakerStatus;
 class MakerProfile extends Model
 {
     /** @use HasFactory<MakerProfileFactory> */
-    use HasFactory, HasUuids, SoftDeletes;
+    use HasFactory, HasTranslations, HasUuids, SoftDeletes;
+
+    /** @var list<string> */
+    protected array $translatable = ['bio', 'story'];
 
     protected $primaryKey = 'uuid';
 
     protected $fillable = [
         'user_uuid',
         'display_name',
+        'content_locale',
         'slug',
         'bio',
         'story',

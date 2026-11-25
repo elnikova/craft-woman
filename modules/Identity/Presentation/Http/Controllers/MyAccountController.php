@@ -18,11 +18,12 @@ class MyAccountController extends Controller
     public function update(Request $request): UserResource
     {
         $user = $request->user();
-        $emailChanged = mb_strtolower((string) $request->input('email')) !== mb_strtolower($user->email);
+        $emailChanged = $request->has('email') && mb_strtolower((string) $request->input('email')) !== mb_strtolower($user->email);
 
         $data = $request->validate([
-            'name' => ['required', 'string', 'min:2', 'max:120'],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->uuid, 'uuid')],
+            'name' => ['sometimes', 'required', 'string', 'min:2', 'max:120'],
+            'locale' => ['sometimes', Rule::in(\App\Support\Locales::SUPPORTED)],
+            'email' => ['sometimes', 'required', 'string', 'email', 'max:255', Rule::unique('users', 'email')->ignore($user->uuid, 'uuid')],
             // Changing the e-mail changes how you sign in, so it needs the password
             'current_password' => [$emailChanged ? 'required' : 'nullable', 'string', 'current_password:web'],
         ]);

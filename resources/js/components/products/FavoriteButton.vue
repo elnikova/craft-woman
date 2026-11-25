@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute, useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import { useFavoritesStore } from '@/stores/favorites';
@@ -7,6 +8,7 @@ import { useFavoritesStore } from '@/stores/favorites';
 const props = withDefaults(defineProps<{ uuid: string; name: string; size?: 'md' | 'lg' }>(), { size: 'md' });
 
 const auth = useAuthStore();
+const { t } = useI18n();
 const favorites = useFavoritesStore();
 const router = useRouter();
 const route = useRoute();
@@ -35,8 +37,8 @@ async function toggle() {
         class="grid place-items-center rounded-full bg-white text-plum transition-colors hover:bg-lavender-50"
         :class="[size === 'lg' ? 'h-[52px] w-[52px] border-[1.5px] border-line-strong' : 'h-11 w-11', failed ? 'ring-2 ring-kalyna' : '']"
         :aria-pressed="active"
-        :aria-label="active ? `Прибрати «${name}» з обраного` : `Додати «${name}» в обране`"
-        :title="failed ? 'Не вдалося зберегти. Спробуйте ще раз.' : undefined"
+        :aria-label="active ? t('product.removeFavorite', { name }) : t('product.addFavorite', { name })"
+        :title="failed ? t('product.favoriteFailed') : undefined"
         @click.prevent="toggle"
     >
         <svg

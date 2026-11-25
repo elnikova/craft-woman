@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
+import { localePath } from '@/i18n';
 import { computed, nextTick, reactive, ref, watch } from 'vue';
 import { useRoute, useRouter } from 'vue-router';
 import AppLogo from '@/components/layout/AppLogo.vue';
@@ -18,7 +20,12 @@ const auth = useAuthStore();
 const router = useRouter();
 const route = useRoute();
 
+const { t } = useI18n();
 const isLogin = computed(() => props.mode === 'login');
+const roleOptions = computed(() => [
+    { id: 'buyer' as const, title: t('auth.buyerTitle'), text: t('auth.buyerText') },
+    { id: 'master' as const, title: t('auth.makerTitle'), text: t('auth.makerText') },
+]);
 
 const loginForm = reactive({ email: '', password: '', remember: true });
 const registerForm = reactive<RegisterPayload>({
@@ -32,7 +39,7 @@ watch(() => props.role, (role) => (registerForm.role = role));
 
 const submitting = ref(false);
 const errors = ref<FieldErrors>({});
-const formError = ref(route.query.blocked === '1' ? 'Акаунт заблоковано. Якщо це помилка, напишіть у підтримку.' : '');
+const formError = ref(route.query.blocked === '1' ? t('errors.blocked') : '');
 const errorSummary = ref<HTMLElement | null>(null);
 
 function switchTo(mode: 'login' | 'register') {
@@ -43,7 +50,7 @@ function switchTo(mode: 'login' | 'register') {
 
 async function afterSuccess() {
     // After login go to the account; a new maker goes straight to the studio profile
-    const fallback = !isLogin.value && registerForm.role === 'master' ? '/account/studio' : '/account';
+    const fallback = localePath(!isLogin.value && registerForm.role === 'master' ? '/account/studio' : '/account');
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : fallback;
     await router.push(redirect);
 }
@@ -78,13 +85,13 @@ async function submit() {
             <div class="flex flex-1 items-center justify-center pt-10">
                 <div class="w-full max-w-[420px]">
                     <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">
-                        {{ isLogin ? 'З поверненням' : 'Створіть акаунт' }}
+                        {{ isLogin ? t('auth.welcomeBack') : t('auth.createAccount') }}
                     </h1>
                     <p class="mt-2.5 mb-0 text-[17px] text-ink-muted">
-                        {{ isLogin ? 'Увійдіть, щоб побачити замовлення, курси й обране.' : 'Це займе хвилину. Тип акаунта можна буде змінити пізніше.' }}
+                        {{ isLogin ? t('auth.loginLead') : t('auth.registerLead') }}
                     </p>
 
-                    <div role="tablist" aria-label="Вхід або реєстрація" class="mt-7 grid grid-cols-2 rounded-[14px] bg-lavender-50 p-1">
+                    <div role="tablist" :aria-label="t('auth.tabs')" class="mt-7 grid grid-cols-2 rounded-[14px] bg-lavender-50 p-1">
                         <button
                             type="button"
                             role="tab"
@@ -92,9 +99,7 @@ async function submit() {
                             class="h-11 rounded-[10px] text-[15px] font-semibold text-plum"
                             :class="isLogin ? 'bg-white shadow-sm' : ''"
                             @click="switchTo('login')"
-                        >
-                            Вхід
-                        </button>
+                        >{{ t('auth.signInTab') }}</button>
                         <button
                             type="button"
                             role="tab"
@@ -102,24 +107,20 @@ async function submit() {
                             class="h-11 rounded-[10px] text-[15px] font-semibold text-plum"
                             :class="!isLogin ? 'bg-white shadow-sm' : ''"
                             @click="switchTo('register')"
-                        >
-                            Реєстрація
-                        </button>
+                        >{{ t('auth.signUpTab') }}</button>
                     </div>
 
                     <!-- Google OAuth: the backend has googleRedirect/googleCallback, the routes are commented out -->
                     <button
                         type="button"
                         disabled
-                        title="Скоро"
+                        :title="t('auth.soon')"
                         class="mt-6 flex h-[52px] w-full items-center justify-center gap-3 rounded-control border-[1.5px] border-line-strong bg-white text-base font-semibold text-ink disabled:cursor-not-allowed disabled:opacity-60"
-                    >
-                        Продовжити з Google
-                    </button>
+                    >{{ t('auth.google') }}</button>
 
                     <div class="my-6 flex items-center gap-3 text-sm text-ink-muted">
                         <div class="h-px flex-1 bg-line" />
-                        або поштою
+                        {{ t('auth.orEmail') }}
                         <div class="h-px flex-1 bg-line" />
                     </div>
 
@@ -137,44 +138,41 @@ async function submit() {
                     <form v-if="isLogin" class="flex flex-col gap-[18px]" novalidate @submit.prevent="submit">
                         <BaseInput
                             v-model="loginForm.email"
-                            label="Електронна пошта"
+                            :label="t('auth.email')"
                             type="email"
                             autocomplete="email"
-                            placeholder="you@example.com"
+                            :placeholder="t('auth.emailPlaceholder')"
                             required
                             :error="errors.email"
                         />
                         <BaseInput
                             v-model="loginForm.password"
-                            label="Пароль"
+                            :label="t('auth.password')"
                             type="password"
                             autocomplete="current-password"
                             required
                             :error="errors.password"
                         >
                             <template #label-action>
-                                <RouterLink to="/" class="text-sm text-plum hover:text-violet">Забули пароль?</RouterLink>
+                                <RouterLink :to="{ name: 'home' }" class="text-sm text-plum hover:text-violet">{{ t('auth.forgot') }}</RouterLink>
                             </template>
                         </BaseInput>
                         <label class="flex items-center gap-2.5 text-[15px] text-ink">
                             <input v-model="loginForm.remember" type="checkbox" class="h-5 w-5 accent-plum" />
-                            Запам’ятати мене
+                            {{ t('auth.remember') }}
                         </label>
                         <BaseButton type="submit" size="lg" block :loading="submitting">
-                            {{ submitting ? 'Входимо…' : 'Увійти' }}
+                            {{ submitting ? t('auth.signingIn') : t('auth.signIn') }}
                         </BaseButton>
                     </form>
 
                     <!-- Register -->
                     <form v-else class="flex flex-col gap-[18px]" novalidate @submit.prevent="submit">
                         <fieldset class="m-0 border-0 p-0">
-                            <legend class="mb-2 text-[15px] font-semibold text-ink">Я хочу</legend>
+                            <legend class="mb-2 text-[15px] font-semibold text-ink">{{ t('auth.iWant') }}</legend>
                             <div class="grid grid-cols-2 gap-2.5">
                                 <button
-                                    v-for="option in [
-                                        { id: 'buyer', title: 'Купувати й навчатися', text: 'Товари, курси, майстер-класи' },
-                                        { id: 'master', title: 'Відкрити майстерню', text: 'Продавати й навчати' },
-                                    ] as const"
+                                    v-for="option in roleOptions"
                                     :key="option.id"
                                     type="button"
                                     :aria-pressed="registerForm.role === option.id"
@@ -189,42 +187,44 @@ async function submit() {
                         </fieldset>
 
                         <p v-if="registerForm.role === 'master'" class="m-0 rounded-[10px] bg-notice-bg px-3.5 py-3 text-sm leading-snug text-notice-ink">
-                            Профіль майстра з'явиться в каталозі після перевірки адміністратором. Зазвичай це займає до двох робочих днів.
+                            {{ t('auth.makerNote') }}
                         </p>
 
-                        <BaseInput v-model="registerForm.name" label="Ім’я" autocomplete="name" required :error="errors.name" />
+                        <BaseInput v-model="registerForm.name" :label="t('auth.name')" autocomplete="name" required :error="errors.name" />
                         <BaseInput
                             v-model="registerForm.email"
-                            label="Електронна пошта"
+                            :label="t('auth.email')"
                             type="email"
                             autocomplete="email"
-                            placeholder="you@example.com"
+                            :placeholder="t('auth.emailPlaceholder')"
                             required
                             :error="errors.email"
                         />
                         <BaseInput
                             v-model="registerForm.password"
-                            label="Пароль"
+                            :label="t('auth.password')"
                             type="password"
                             autocomplete="new-password"
-                            hint="Щонайменше 8 символів"
+                            :hint="t('auth.passwordHint')"
                             required
                             :error="errors.password"
                         />
                         <BaseInput
                             v-model="registerForm.password_confirmation"
-                            label="Повторіть пароль"
+                            :label="t('auth.passwordRepeat')"
                             type="password"
                             autocomplete="new-password"
                             required
                             :error="errors.password_confirmation"
                         />
                         <BaseButton type="submit" size="lg" block :loading="submitting">
-                            {{ submitting ? 'Створюємо…' : 'Створити акаунт' }}
+                            {{ submitting ? t('auth.creating') : t('auth.create') }}
                         </BaseButton>
                         <p class="m-0 text-[13px] leading-normal text-ink-muted">
-                            Створюючи акаунт, ви погоджуєтеся з <a href="#" class="text-plum">умовами</a> і
-                            <a href="#" class="text-plum">політикою конфіденційності</a>.
+                            <i18n-t keypath="auth.terms" tag="span" scope="global">
+                                <template #terms><a href="#" class="text-plum">{{ t('auth.termsLink') }}</a></template>
+                                <template #privacy><a href="#" class="text-plum">{{ t('auth.privacyLink') }}</a></template>
+                            </i18n-t>
                         </p>
                     </form>
                 </div>
@@ -237,9 +237,9 @@ async function submit() {
             <StarOrnament :size="260" class="absolute top-[140px] right-14 hidden md:block" />
             <div class="relative max-w-[440px]">
                 <p class="font-flair m-0 text-[34px] leading-tight font-semibold text-plum">
-                    Кожна річ тут має автора, якого можна знайти й подякувати.
+                    {{ t('auth.brand') }}
                 </p>
-                <p class="mt-4 mb-0 text-base text-ink-soft">Українською та англійською · EUR, USD, UAH</p>
+                <p class="mt-4 mb-0 text-base text-ink-soft">{{ t('auth.brandNote') }}</p>
             </div>
         </aside>
     </div>

@@ -29,6 +29,9 @@ final class MakerProfileService
             'slug' => $this->uniqueSlug($data->displayName),
         ]);
         $profile->status = MakerStatus::Draft;
+        if ($data->translations !== null) {
+            $profile->translations = $profile->cleanTranslations($data->translations) ?: null;
+        }
         $profile->save();
 
         return $profile;
@@ -41,6 +44,9 @@ final class MakerProfileService
         }
 
         $profile->fill($data->toAttributes());
+        if ($data->translations !== null) {
+            $profile->translations = $profile->cleanTranslations($data->translations) ?: null;
+        }
 
         // The slug follows the name only until the profile is public — public links must not break.
         if ($profile->isDirty('display_name') && ! $profile->status->isActive()) {

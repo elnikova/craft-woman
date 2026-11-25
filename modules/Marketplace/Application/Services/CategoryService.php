@@ -16,12 +16,18 @@ final class CategoryService
     public function create(array $data): Category
     {
         $this->assertParentAllowed(null, $data['parent_uuid'] ?? null);
+        $translations = $data['translations'] ?? null;
+        unset($data['translations']);
 
-        return Category::create([
+        $category = new Category([
             ...$data,
             'slug' => $this->uniqueSlug($data['name']),
             'sort_order' => $data['sort_order'] ?? $this->nextSortOrder($data['parent_uuid'] ?? null),
         ]);
+        $category->translations = $category->cleanTranslations($translations) ?: null;
+        $category->save();
+
+        return $category;
     }
 
     /** @param array{name?: string, parent_uuid?: ?string, description?: ?string, sort_order?: int, is_visible?: bool} $data */
@@ -31,7 +37,14 @@ final class CategoryService
             $this->assertParentAllowed($category, $data['parent_uuid']);
         }
 
+        $hasTranslations = array_key_exists('translations', $data);
+        $translations = $data['translations'] ?? null;
+        unset($data['translations']);
+
         $category->fill($data);
+        if ($hasTranslations) {
+            $category->translations = $category->cleanTranslations($translations) ?: null;
+        }
         if ($category->isDirty('name')) {
             $category->slug = $this->uniqueSlug($category->name, ignore: $category->uuid);
         }

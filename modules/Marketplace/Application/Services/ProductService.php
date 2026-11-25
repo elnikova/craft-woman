@@ -167,6 +167,13 @@ final class ProductService
             'production_time_days' => $product->type === ProductType::Physical ? $data->productionTimeDays : null,
             'shipping_info' => $product->type === ProductType::Physical ? $data->shippingInfo : null,
         ]);
+
+        if ($data->contentLocale !== null) {
+            $product->content_locale = $data->contentLocale;
+        }
+        if ($data->translations !== null) {
+            $product->translations = $product->cleanTranslations($data->translations) ?: null;
+        }
     }
 
     private function syncRelations(Product $product, ProductData $data): void

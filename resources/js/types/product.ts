@@ -42,6 +42,10 @@ export interface Product {
     type: ProductType;
     is_digital: boolean;
     name: string;
+    /** Language of name/description: the source language when no translation exists */
+    content_locale?: 'uk' | 'en';
+    /** Owner/admin only: translations keyed by locale */
+    translations?: Partial<Record<'uk' | 'en', { name?: string; description?: string; shipping_info?: string }>>;
     description: string | null;
     price: Money;
     production_time_days: number | null;
@@ -75,6 +79,10 @@ export interface VariantPayload {
 export interface ProductPayload {
     type: ProductType;
     name: string;
+    /** Language of name/description: the source language when no translation exists */
+    content_locale?: 'uk' | 'en';
+    /** Owner/admin only: translations keyed by locale */
+    translations?: Partial<Record<'uk' | 'en', { name?: string; description?: string; shipping_info?: string }>>;
     description: string | null;
     price_amount_minor: number;
     currency: Currency;

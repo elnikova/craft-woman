@@ -70,7 +70,7 @@ final class EloquentProductCatalog implements ProductCatalog
             variantUuid: $variant?->uuid,
             makerUuid: $product->maker_profile_uuid,
             isDigital: $product->type === ProductType::Digital,
-            productName: $product->name,
+            productName: $product->translate('name'),
             variantName: $variant && ($product->variants->count() > 1 || ! $variant->is_default) ? $variant->name : null,
             slug: $product->slug,
             imageUrl: $product->images->first()?->file_url,

@@ -36,6 +36,7 @@ class AuthController extends Controller
             'email' => $validated['email'],
             'password' => Hash::make($validated['password']),
             'role' => $request->role(),
+            'locale' => \App\Support\Locales::current(),
         ]);
 
         // A maker starts with a draft profile; it becomes public once an administrator approves it

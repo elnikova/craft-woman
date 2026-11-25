@@ -1,4 +1,5 @@
 import type { RouteLocationRaw } from 'vue-router';
+import { labelMap } from '@/i18n';
 import type { Role } from '@/types/user';
 
 export type IconName =
@@ -17,6 +18,7 @@ export type IconName =
     | 'flag';
 
 export interface NavItem {
+    /** Message key */
     label: string;
     to: RouteLocationRaw;
     icon: IconName;
@@ -25,6 +27,7 @@ export interface NavItem {
 }
 
 export interface NavSection {
+    /** Message key */
     title?: string;
     items: NavItem[];
 }
@@ -36,41 +39,41 @@ const soon = (slug: string, label: string, icon: IconName): NavItem => ({
     to: { name: 'account-soon', params: { section: slug } },
 });
 
-const overview: NavItem = { label: 'Огляд', to: { name: 'account' }, icon: 'home' };
+const overview: NavItem = { label: 'accountNav.overview', to: { name: 'account' }, icon: 'home' };
 
 const customer: NavSection = {
-    title: 'Покупки',
+    title: 'accountNav.purchases',
     items: [
-        { label: 'Замовлення', to: { name: 'account-orders' }, icon: 'bag' },
-        soon('learning', 'Мої курси', 'book'),
-        soon('bookings', 'Майстер-класи', 'calendar'),
-        { label: 'Обране', to: { name: 'account-favorites' }, icon: 'heart' },
+        { label: 'accountNav.orders', to: { name: 'account-orders' }, icon: 'bag' },
+        soon('learning', 'accountNav.learning', 'book'),
+        soon('bookings', 'accountNav.bookings', 'calendar'),
+        { label: 'accountNav.favorites', to: { name: 'account-favorites' }, icon: 'heart' },
     ],
 };
 
 const maker: NavSection = {
-    title: 'Майстерня',
+    title: 'accountNav.studio',
     items: [
-        { label: 'Профіль майстерні', to: { name: 'studio' }, icon: 'store' },
-        { label: 'Товари', to: { name: 'studio-products' }, icon: 'box' },
-        { label: 'Продажі', to: { name: 'studio-sales' }, icon: 'chart' },
-        soon('teaching', 'Курси', 'book'),
-        soon('workshops', 'Майстер-класи', 'calendar'),
+        { label: 'accountNav.studioProfile', to: { name: 'studio' }, icon: 'store' },
+        { label: 'accountNav.products', to: { name: 'studio-products' }, icon: 'box' },
+        { label: 'accountNav.sales', to: { name: 'studio-sales' }, icon: 'chart' },
+        soon('teaching', 'accountNav.teaching', 'book'),
+        soon('workshops', 'accountNav.workshops', 'calendar'),
     ],
 };
 
 const admin: NavSection = {
-    title: 'Адміністрування',
+    title: 'accountNav.admin',
     items: [
-        { label: 'Перевірка майстрів', to: { name: 'admin-makers' }, icon: 'check' },
-        { label: 'Користувачі', to: { name: 'admin-users' }, icon: 'users' },
-        { label: 'Категорії', to: { name: 'admin-categories' }, icon: 'tag' },
-        { label: 'Перевірка товарів', to: { name: 'admin-products' }, icon: 'flag' },
-        { label: 'Усі замовлення', to: { name: 'admin-orders' }, icon: 'bag' },
+        { label: 'accountNav.adminMakers', to: { name: 'admin-makers' }, icon: 'check' },
+        { label: 'accountNav.users', to: { name: 'admin-users' }, icon: 'users' },
+        { label: 'accountNav.categories', to: { name: 'admin-categories' }, icon: 'tag' },
+        { label: 'accountNav.adminProducts', to: { name: 'admin-products' }, icon: 'flag' },
+        { label: 'accountNav.allOrders', to: { name: 'admin-orders' }, icon: 'bag' },
     ],
 };
 
-const settings: NavSection = { items: [{ label: 'Налаштування', to: { name: 'account-settings' }, icon: 'settings' }] };
+const settings: NavSection = { items: [{ label: 'accountNav.settings', to: { name: 'account-settings' }, icon: 'settings' }] };
 
 /** Account menu items by role. A maker is also a buyer (domain-model.md §4.1). */
 export function accountNav(role: Role, hasStudio: boolean): NavSection[] {
@@ -80,13 +83,9 @@ export function accountNav(role: Role, hasStudio: boolean): NavSection[] {
     return [
         { items: [overview] },
         customer,
-        { title: 'Продавати', items: [{ label: 'Відкрити майстерню', to: { name: 'studio' }, icon: 'store' }] },
+        { title: 'accountNav.sell', items: [{ label: 'accountNav.openStudio', to: { name: 'studio' }, icon: 'store' }] },
         settings,
     ];
 }
 
-export const ROLE_LABELS: Record<Role, string> = {
-    admin: 'Адміністратор',
-    master: 'Майстер',
-    buyer: 'Покупець',
-};
+export const ROLE_LABELS = labelMap<Role>('role', ['admin', 'master', 'buyer']);

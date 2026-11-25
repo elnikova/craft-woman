@@ -1,9 +1,4 @@
+import { labelMap } from '@/i18n';
 import type { MakerStatus } from '@/types/maker';
 
-export const MAKER_STATUS_LABELS: Record<MakerStatus, string> = {
-    draft: 'Чернетка',
-    pending_review: 'На перевірці',
-    approved: 'Опубліковано',
-    rejected: 'Потрібні правки',
-    suspended: 'Призупинено',
-};
+export const MAKER_STATUS_LABELS = labelMap<MakerStatus>('status.maker', ['draft', 'pending_review', 'approved', 'rejected', 'suspended']);

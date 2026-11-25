@@ -23,6 +23,10 @@ final readonly class ProductData
         public ?string $categoryUuid,
         public ?array $tags,
         public ?array $variants,
+        /** null = keep the current value */
+        public ?string $contentLocale = null,
+        /** @var array<string, array<string, ?string>>|null null = keep the current translations */
+        public ?array $translations = null,
     ) {}
 
     /** @param array<string, mixed> $v validated request data */
@@ -39,6 +43,8 @@ final readonly class ProductData
             categoryUuid: $v['category_uuid'] ?? null,
             tags: array_key_exists('tags', $v) ? array_values($v['tags'] ?? []) : null,
             variants: array_key_exists('variants', $v) ? array_values($v['variants'] ?? []) : null,
+            contentLocale: $v['content_locale'] ?? null,
+            translations: array_key_exists('translations', $v) ? ($v['translations'] ?? []) : null,
         );
     }
 }

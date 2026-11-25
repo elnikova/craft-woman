@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import ProductCover from '@/components/products/ProductCover.vue';
 import ProductCard from '@/components/products/ProductCard.vue';
@@ -13,6 +14,7 @@ import { formatPrice, plural } from '@/utils/format';
 import { useCartStore } from '@/stores/cart';
 
 const cart = useCartStore();
+const { t, locale } = useI18n();
 const quantity = ref(1);
 const adding = ref(false);
 const added = ref(false);
@@ -54,11 +56,11 @@ async function addToCart() {
 const price = computed(() => variant.value?.price ?? product.value?.price ?? null);
 const paragraphs = computed(() => (product.value?.description ?? '').split(/\n{2,}/).filter(Boolean));
 const stockNote = computed(() => {
-    if (!product.value || product.value.is_digital) return 'Цифровий файл — доступ одразу після оплати';
+    if (!product.value || product.value.is_digital) return t('product.digitalAccess');
     if (!variant.value) return '';
-    if (!variant.value.in_stock) return 'Зараз немає в наявності';
-    if (variant.value.stock !== null) return `Лишилось ${plural(variant.value.stock, ['штука', 'штуки', 'штук'])}`;
-    return 'Є в наявності';
+    if (!variant.value.in_stock) return t('product.outOfStock');
+    if (variant.value.stock !== null) return t('product.left', { count: plural(variant.value.stock, 'pieces') });
+    return t('product.inStock');
 });
 
 async function load() {
@@ -87,33 +89,33 @@ watch(() => props.slug, load, { immediate: true });
 </script>
 
 <template>
-    <div v-if="loading" class="mx-auto grid max-w-[1280px] animate-pulse gap-10 px-6 py-12 md:grid-cols-2 md:px-8" aria-busy="true" aria-label="Завантаження">
+    <div v-if="loading" class="mx-auto grid max-w-[1280px] animate-pulse gap-10 px-6 py-12 md:grid-cols-2 md:px-8" aria-busy="true" :aria-label="t('common.loading')">
         <div class="aspect-square rounded-card bg-lavender-50" />
         <div class="space-y-4"><div class="h-10 w-3/4 rounded bg-lavender-50" /><div class="h-8 w-1/3 rounded bg-lavender-50" /></div>
     </div>
 
     <div v-else-if="notFound" class="mx-auto flex max-w-[1280px] flex-col items-start gap-4 px-6 py-20 md:px-8">
-        <h1 class="font-flair m-0 text-4xl font-bold text-plum">Такого товару немає</h1>
-        <p class="m-0 text-lg text-ink-muted">Можливо, його зняли з продажу або посилання змінилося.</p>
-        <BaseButton :to="{ name: 'catalog' }">До каталогу</BaseButton>
+        <h1 class="font-flair m-0 text-4xl font-bold text-plum">{{ t('product.notFoundTitle') }}</h1>
+        <p class="m-0 text-lg text-ink-muted">{{ t('product.notFoundText') }}</p>
+        <BaseButton :to="{ name: 'catalog' }">{{ t('product.toCatalog') }}</BaseButton>
     </div>
 
     <div v-else-if="error" role="alert" class="mx-auto flex max-w-[1280px] flex-col items-start gap-4 px-6 py-20 md:px-8">
         <p class="m-0 text-kalyna">{{ error }}</p>
-        <BaseButton variant="secondary" @click="load">Спробувати ще раз</BaseButton>
+        <BaseButton variant="secondary" @click="load">{{ t('common.retry') }}</BaseButton>
     </div>
 
     <template v-else-if="product">
         <div v-if="product.status && product.status !== 'published'" class="bg-notice-bg">
             <div class="mx-auto flex max-w-[1280px] flex-wrap items-center gap-3 px-6 py-3 text-notice-ink md:px-8">
                 <ProductStatusBadge :status="product.status" />
-                <span>Товар не опубліковано: так його бачите тільки ви.</span>
+                <span>{{ t('product.unpublished') }}</span>
             </div>
         </div>
 
         <div class="mx-auto max-w-[1280px] px-6 py-10 md:px-8">
-            <nav aria-label="Шлях" class="mb-6 text-[15px] text-ink-muted">
-                <RouterLink :to="{ name: 'catalog' }" class="text-plum">Каталог</RouterLink>
+            <nav :aria-label="t('catalog.breadcrumb')" class="mb-6 text-[15px] text-ink-muted">
+                <RouterLink :to="{ name: 'catalog' }" class="text-plum">{{ t('catalog.title') }}</RouterLink>
                 <template v-if="product.category">
                     / <RouterLink :to="{ name: 'catalog', query: { category: product.category.slug } }" class="text-plum">{{ product.category.name }}</RouterLink>
                 </template>
@@ -123,14 +125,14 @@ watch(() => props.slug, load, { immediate: true });
                 <!-- Gallery -->
                 <div class="flex flex-col gap-3">
                     <ProductCover :uuid="product.uuid" :name="product.name" :src="product.images[imageIndex]?.url" />
-                    <div v-if="product.images.length > 1" class="flex flex-wrap gap-2" role="group" aria-label="Фото товару">
+                    <div v-if="product.images.length > 1" class="flex flex-wrap gap-2" role="group" :aria-label="t('product.photos')">
                         <button
                             v-for="(img, i) in product.images"
                             :key="img.uuid"
                             type="button"
                             class="h-20 w-20 overflow-hidden rounded-[12px] border-2"
                             :class="i === imageIndex ? 'border-plum' : 'border-transparent'"
-                            :aria-label="`Фото ${i + 1}`"
+                            :aria-label="t('product.photo', { n: i + 1 })"
                             :aria-pressed="i === imageIndex"
                             @click="imageIndex = i"
                         >
@@ -141,11 +143,11 @@ watch(() => props.slug, load, { immediate: true });
 
                 <!-- Purchase -->
                 <div class="flex flex-col gap-5">
-                    <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum md:text-[44px]">{{ product.name }}</h1>
+                    <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum md:text-[44px]" :lang="product.content_locale">{{ product.name }}</h1>
                     <div v-if="price" class="text-3xl font-bold text-plum">{{ formatPrice(price.amount_minor, price.currency) }}</div>
 
                     <fieldset v-if="product.variants.length > 1" class="m-0 border-0 p-0">
-                        <legend class="mb-2 text-[15px] font-semibold text-ink">Варіант</legend>
+                        <legend class="mb-2 text-[15px] font-semibold text-ink">{{ t('product.variant') }}</legend>
                         <div class="flex flex-wrap gap-2">
                             <button
                                 v-for="v in product.variants"
@@ -172,12 +174,12 @@ watch(() => props.slug, load, { immediate: true });
                                 v-if="!product.is_digital"
                                 class="flex h-[52px] items-center rounded-full border-[1.5px] border-line-strong bg-white"
                                 role="group"
-                                aria-label="Кількість"
+                                :aria-label="t('common.quantity')"
                             >
                                 <button
                                     type="button"
                                     class="h-full w-12 text-xl text-plum disabled:opacity-40"
-                                    aria-label="Менше"
+                                    :aria-label="t('common.less')"
                                     :disabled="quantity <= 1"
                                     @click="quantity--"
                                 >
@@ -187,20 +189,20 @@ watch(() => props.slug, load, { immediate: true });
                                 <button
                                     type="button"
                                     class="h-full w-12 text-xl text-plum disabled:opacity-40"
-                                    aria-label="Більше"
+                                    :aria-label="t('common.more')"
                                     :disabled="quantity >= maxQuantity"
                                     @click="quantity++"
                                 >
                                     +
                                 </button>
                             </div>
-                            <BaseButton size="lg" :loading="adding" :disabled="!canBuy" @click="addToCart">Додати в кошик</BaseButton>
+                            <BaseButton size="lg" :loading="adding" :disabled="!canBuy" @click="addToCart">{{ t('product.addToCart') }}</BaseButton>
                             <FavoriteButton :uuid="product.uuid" :name="product.name" size="lg" />
                         </div>
                         <p v-if="cartError" role="alert" class="m-0 text-[15px] text-kalyna">{{ cartError }}</p>
                         <p v-else-if="added" role="status" class="m-0 text-[15px] text-ink">
-                            Додано в кошик.
-                            <RouterLink :to="{ name: 'cart' }" class="font-semibold text-plum">Перейти до кошика</RouterLink>
+                            {{ t('product.added') }}
+                            <RouterLink :to="{ name: 'cart' }" class="font-semibold text-plum">{{ t('product.toCart') }}</RouterLink>
                         </p>
                     </div>
 
@@ -211,7 +213,7 @@ watch(() => props.slug, load, { immediate: true });
                     >
                         <MakerAvatar :uuid="product.maker.uuid" :name="product.maker.display_name" :src="product.maker.avatar_url" shape="circle" class="w-14 shrink-0" />
                         <div>
-                            <div class="text-sm text-ink-muted">Майстер</div>
+                            <div class="text-sm text-ink-muted">{{ t('product.maker') }}</div>
                             <div class="font-semibold text-plum">{{ product.maker.display_name }}</div>
                             <div v-if="product.maker.city" class="text-sm text-ink-muted">{{ product.maker.city }}</div>
                         </div>
@@ -219,11 +221,11 @@ watch(() => props.slug, load, { immediate: true });
 
                     <dl v-if="!product.is_digital" class="m-0 grid gap-3 border-t border-line pt-5 text-[15px]">
                         <div v-if="product.production_time_days" class="flex gap-2">
-                            <dt class="font-semibold text-ink">Виготовлення:</dt>
-                            <dd class="m-0 text-ink-muted">до {{ plural(product.production_time_days, ['дня', 'днів', 'днів']) }}</dd>
+                            <dt class="font-semibold text-ink">{{ t('product.production') }}</dt>
+                            <dd class="m-0 text-ink-muted">{{ t('product.productionDays', { days: plural(product.production_time_days, 'days') }) }}</dd>
                         </div>
                         <div v-if="product.shipping_info" class="flex gap-2">
-                            <dt class="font-semibold text-ink">Доставка:</dt>
+                            <dt class="font-semibold text-ink">{{ t('product.delivery') }}</dt>
                             <dd class="m-0 text-ink-muted">{{ product.shipping_info }}</dd>
                         </div>
                     </dl>
@@ -232,8 +234,11 @@ watch(() => props.slug, load, { immediate: true });
 
             <section class="mt-16 grid gap-10 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)]" aria-labelledby="about-title">
                 <div>
-                    <h2 id="about-title" class="font-flair m-0 text-3xl font-bold text-plum">Про товар</h2>
-                    <div class="mt-5 flex max-w-[68ch] flex-col gap-4 text-[17px] leading-relaxed text-ink">
+                    <h2 id="about-title" class="font-flair m-0 text-3xl font-bold text-plum">{{ t('product.about') }}</h2>
+                    <p v-if="product.content_locale && product.content_locale !== locale" class="mt-3 mb-0 text-sm text-ink-muted">
+                        {{ t('lang.contentNote') }}
+                    </p>
+                    <div class="mt-5 flex max-w-[68ch] flex-col gap-4 text-[17px] leading-relaxed text-ink" :lang="product.content_locale">
                         <p v-for="(p, i) in paragraphs" :key="i" class="m-0">{{ p }}</p>
                     </div>
                 </div>
@@ -250,7 +255,7 @@ watch(() => props.slug, load, { immediate: true });
             </section>
 
             <section v-if="more.length" class="mt-16" aria-labelledby="more-title">
-                <h2 id="more-title" class="font-flair m-0 text-3xl font-bold text-plum">Ще від {{ product.maker?.display_name }}</h2>
+                <h2 id="more-title" class="font-flair m-0 text-3xl font-bold text-plum">{{ t('product.moreFrom', { maker: product.maker?.display_name }) }}</h2>
                 <div class="mt-8 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-6">
                     <ProductCard v-for="p in more" :key="p.uuid" :product="p" />
                 </div>

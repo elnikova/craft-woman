@@ -1,16 +1,31 @@
 <script setup lang="ts">
 import { computed, reactive, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
+import { useRoute, useRouter } from 'vue-router';
+import { LOCALES, type Locale } from '@/i18n';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import BaseInput from '@/components/ui/BaseInput.vue';
 import { accountApi } from '@/api/account';
 import { toApiError, type FieldErrors } from '@/api/http';
 import { useAuthStore } from '@/stores/auth';
-import type { Role } from '@/types/user';
+import { ROLE_LABELS } from '@/config/accountNav';
 import { MAKER_STATUS_LABELS } from '@/utils/makerStatus';
 
 const auth = useAuthStore();
+const { t, locale } = useI18n();
+const route = useRoute();
+const router = useRouter();
 
-const ROLE_LABELS: Record<Role, string> = { buyer: 'Покупець', master: 'Майстер', admin: 'Адміністратор' };
+/** Save the language on the account, then show this page in it */
+async function changeLanguage(next: Locale) {
+    try {
+        auth.setUser(await accountApi.update({ locale: next }));
+    } catch {
+        /* the URL still switches the language for this visit */
+    }
+    await router.push({ name: route.name ?? 'account-settings', params: { ...route.params, locale: next === 'en' ? 'en' : '' } });
+}
+
 
 // ---------- Profile ----------
 const profile = reactive({ name: auth.user?.name ?? '', email: auth.user?.email ?? '', current_password: '' });
@@ -35,7 +50,7 @@ async function saveProfile() {
         });
         auth.setUser(user);
         Object.assign(profile, { name: user.name, email: user.email, current_password: '' });
-        profileSaved.value = 'Зміни збережено';
+        profileSaved.value = t('settings.saved');
     } catch (e) {
         const err = toApiError(e);
         profileErrors.value = err.fields;
@@ -57,7 +72,7 @@ async function savePassword() {
     pwdError.value = '';
     pwdSaved.value = '';
     if (pwd.password !== pwd.password_confirmation) {
-        pwdErrors.value = { password_confirmation: 'Паролі не збігаються.' };
+        pwdErrors.value = { password_confirmation: t('settings.mismatch') };
         return;
     }
     savingPwd.value = true;
@@ -76,46 +91,46 @@ async function savePassword() {
 
 <template>
     <div class="max-w-[720px]">
-        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Налаштування</h1>
+        <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ t('settings.title') }}</h1>
 
         <section class="mt-8 rounded-card border border-line bg-white p-6" aria-labelledby="profile-title">
-            <h2 id="profile-title" class="m-0 text-xl font-bold text-plum">Профіль</h2>
+            <h2 id="profile-title" class="m-0 text-xl font-bold text-plum">{{ t('settings.profile') }}</h2>
             <form class="mt-5 flex flex-col gap-5" novalidate @submit.prevent="saveProfile">
-                <BaseInput v-model="profile.name" label="Ім’я" autocomplete="name" required :error="profileErrors.name" />
+                <BaseInput v-model="profile.name" :label="t('settings.name')" autocomplete="name" required :error="profileErrors.name" />
                 <BaseInput
                     v-model="profile.email"
                     type="email"
-                    label="Електронна пошта"
+                    :label="t('settings.email')"
                     autocomplete="email"
                     required
-                    :hint="auth.user?.email_verified || emailChanged ? undefined : 'Адресу ще не підтверджено.'"
+                    :hint="auth.user?.email_verified || emailChanged ? undefined : t('settings.unverified')"
                     :error="profileErrors.email"
                 />
                 <BaseInput
                     v-if="emailChanged"
                     v-model="profile.current_password"
                     type="password"
-                    label="Поточний пароль"
+                    :label="t('settings.currentPassword')"
                     autocomplete="current-password"
-                    hint="Пошта — це ваш логін, тому зміну підтверджуємо паролем."
+                    :hint="t('settings.emailPasswordHint')"
                     required
                     :error="profileErrors.current_password"
                 />
                 <div v-if="profileError" role="alert" class="rounded-[10px] border border-kalyna/30 bg-kalyna/5 px-4 py-3 text-kalyna">{{ profileError }}</div>
                 <div class="flex flex-wrap items-center gap-4">
-                    <BaseButton type="submit" :loading="savingProfile" :disabled="!profileDirty">Зберегти</BaseButton>
+                    <BaseButton type="submit" :loading="savingProfile" :disabled="!profileDirty">{{ t('settings.save') }}</BaseButton>
                     <span v-if="profileSaved" role="status" class="text-[15px] text-ink-muted">{{ profileSaved }}</span>
                 </div>
             </form>
         </section>
 
         <section class="mt-6 rounded-card border border-line bg-white p-6" aria-labelledby="password-title">
-            <h2 id="password-title" class="m-0 text-xl font-bold text-plum">Пароль</h2>
+            <h2 id="password-title" class="m-0 text-xl font-bold text-plum">{{ t('settings.password') }}</h2>
             <form class="mt-5 flex flex-col gap-5" novalidate @submit.prevent="savePassword">
                 <BaseInput
                     v-model="pwd.current_password"
                     type="password"
-                    label="Поточний пароль"
+                    :label="t('settings.currentPassword')"
                     autocomplete="current-password"
                     required
                     :error="pwdErrors.current_password"
@@ -123,44 +138,57 @@ async function savePassword() {
                 <BaseInput
                     v-model="pwd.password"
                     type="password"
-                    label="Новий пароль"
+                    :label="t('settings.newPassword')"
                     autocomplete="new-password"
-                    hint="Щонайменше 8 символів."
+                    :hint="t('settings.newPasswordHint')"
                     required
                     :error="pwdErrors.password"
                 />
                 <BaseInput
                     v-model="pwd.password_confirmation"
                     type="password"
-                    label="Повторіть новий пароль"
+                    :label="t('settings.repeatPassword')"
                     autocomplete="new-password"
                     required
                     :error="pwdErrors.password_confirmation"
                 />
                 <div v-if="pwdError" role="alert" class="rounded-[10px] border border-kalyna/30 bg-kalyna/5 px-4 py-3 text-kalyna">{{ pwdError }}</div>
                 <div class="flex flex-wrap items-center gap-4">
-                    <BaseButton type="submit" :loading="savingPwd" :disabled="!pwd.current_password || !pwd.password">Змінити пароль</BaseButton>
+                    <BaseButton type="submit" :loading="savingPwd" :disabled="!pwd.current_password || !pwd.password">{{ t('settings.changePassword') }}</BaseButton>
                     <span v-if="pwdSaved" role="status" class="text-[15px] text-ink-muted">{{ pwdSaved }}</span>
                 </div>
             </form>
         </section>
 
         <section class="mt-6 rounded-card bg-lavender-50 p-6" aria-labelledby="account-title">
-            <h2 id="account-title" class="m-0 text-xl font-bold text-plum">Акаунт</h2>
+            <h2 id="account-title" class="m-0 text-xl font-bold text-plum">{{ t('settings.account') }}</h2>
             <dl class="mt-4 mb-0 grid grid-cols-[160px_1fr] gap-y-2 text-[15px]">
-                <dt class="text-ink-muted">Роль</dt>
+                <dt class="text-ink-muted">{{ t('settings.role') }}</dt>
                 <dd class="m-0">{{ auth.user ? ROLE_LABELS[auth.user.role] : '' }}</dd>
                 <template v-if="auth.user?.maker_status">
-                    <dt class="text-ink-muted">Майстерня</dt>
+                    <dt class="text-ink-muted">{{ t('settings.studio') }}</dt>
                     <dd class="m-0">
                         {{ MAKER_STATUS_LABELS[auth.user.maker_status] }} ·
-                        <RouterLink :to="{ name: 'studio' }" class="text-plum">профіль майстерні</RouterLink>
+                        <RouterLink :to="{ name: 'studio' }" class="text-plum">{{ t('settings.studioLink') }}</RouterLink>
                     </dd>
                 </template>
+                <dt class="self-center text-ink-muted"><label for="ui-language">{{ t('settings.language') }}</label></dt>
+                <dd class="m-0">
+                    <select
+                        id="ui-language"
+                        :value="locale"
+                        aria-describedby="ui-language-hint"
+                        class="h-11 rounded-full border border-line-strong bg-white px-4 text-[15px]"
+                        @change="changeLanguage(($event.target as HTMLSelectElement).value as Locale)"
+                    >
+                        <option v-for="l in LOCALES" :key="l" :value="l" :lang="l">{{ t(`lang.${l}`) }}</option>
+                    </select>
+                    <p id="ui-language-hint" class="mt-1 mb-0 text-[13px] text-ink-muted">{{ t('settings.languageHint') }}</p>
+                </dd>
             </dl>
             <p v-if="!auth.user?.maker_status && auth.user?.role === 'buyer'" class="mt-4 mb-0 text-[15px]">
-                Хочете продавати свої роботи?
-                <RouterLink :to="{ name: 'studio' }" class="font-semibold text-plum">Відкрийте майстерню</RouterLink>
+                {{ t('settings.sellQuestion') }}
+                <RouterLink :to="{ name: 'studio' }" class="font-semibold text-plum">{{ t('settings.openStudio') }}</RouterLink>
             </p>
         </section>
     </div>
