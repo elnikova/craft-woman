@@ -28,8 +28,15 @@ class LoginRequest extends FormRequest
     {
         return [
             function (Validator $validator) {
-                if (! auth()->attempt($this->safe(['email', 'password']), $this->boolean('remember'))) {
+                if (! auth()->guard('web')->attempt($this->safe(['email', 'password']), $this->boolean('remember'))) {
                     $validator->errors()->add('password', __('auth.failed'));
+
+                    return;
+                }
+                // Correct password, but the account is blocked: don't keep the session
+                if (auth()->guard('web')->user()?->isBlocked()) {
+                    auth()->guard('web')->logout();
+                    $validator->errors()->add('email', __('auth.blocked'));
                 }
             },
         ];

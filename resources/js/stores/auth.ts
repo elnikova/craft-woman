@@ -44,5 +44,9 @@ export const useAuthStore = defineStore('auth', () => {
         if (user.value) user.value = { ...user.value, maker_status: status };
     }
 
-    return { user, checked, isAuthenticated, isMaster, isAdmin, hasStudio, fetchUser, login, register, logout, setMakerStatus };
+    function setUser(next: User) {
+        user.value = next;
+    }
+
+    return { user, checked, setUser, isAuthenticated, isMaster, isAdmin, hasStudio, fetchUser, login, register, logout, setMakerStatus };
 });

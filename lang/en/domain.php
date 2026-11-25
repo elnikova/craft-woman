@@ -41,7 +41,15 @@ return [
             'cod_international' => 'international delivery requires prepayment',
         ],
     ],
+    'account' => [
+        'not_on_yourself' => 'You cannot block yourself or change your own role.',
+        'last_admin' => 'The platform must keep at least one active administrator.',
+        'maker_role' => 'The maker role is managed through the maker profile.',
+        'already' => 'The account is already :status.',
+    ],
     'values' => [
+        'account_active' => 'active',
+        'account_blocked' => 'blocked',
         'group_pending_payment' => 'awaiting payment',
         'group_awaiting_shipment' => 'preparing to ship',
         'group_shipped' => 'shipped',

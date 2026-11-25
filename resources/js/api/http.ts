@@ -17,6 +17,14 @@ export const http = axios.create({
     },
 });
 
+// Заблокований акаунт: сервер уже завершив сесію — повне перезавантаження очищає всі сторінки й сховища
+http.interceptors.response.use(undefined, (error) => {
+    if (error instanceof AxiosError && error.response?.status === 403 && error.response.data?.code === 'account_blocked') {
+        if (!window.location.pathname.startsWith('/login')) window.location.assign('/login?blocked=1');
+    }
+    return Promise.reject(error);
+});
+
 /** Отримати CSRF-cookie перед першим запитом, що змінює стан (login, register). */
 export function ensureCsrfCookie(): Promise<unknown> {
     return axios.get('/sanctum/csrf-cookie', { withCredentials: true });

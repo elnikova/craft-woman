@@ -141,6 +141,18 @@ export const router = createRouter({
                     meta: { title: 'Замовлення', requiresAuth: true },
                 },
                 {
+                    path: 'settings',
+                    name: 'account-settings',
+                    component: () => import('@/pages/account/SettingsPage.vue'),
+                    meta: { title: 'Налаштування', requiresAuth: true },
+                },
+                {
+                    path: 'admin/users',
+                    name: 'admin-users',
+                    component: () => import('@/pages/admin/AdminUsersPage.vue'),
+                    meta: { title: 'Користувачі', requiresAuth: true, requiresAdmin: true },
+                },
+                {
                     path: 'favorites',
                     name: 'account-favorites',
                     component: () => import('@/pages/account/FavoritesPage.vue'),

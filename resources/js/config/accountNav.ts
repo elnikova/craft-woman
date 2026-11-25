@@ -63,14 +63,14 @@ const admin: NavSection = {
     title: 'Адміністрування',
     items: [
         { label: 'Перевірка майстрів', to: { name: 'admin-makers' }, icon: 'check' },
-        soon('users', 'Користувачі', 'users'),
+        { label: 'Користувачі', to: { name: 'admin-users' }, icon: 'users' },
         { label: 'Категорії', to: { name: 'admin-categories' }, icon: 'tag' },
         { label: 'Перевірка товарів', to: { name: 'admin-products' }, icon: 'flag' },
         { label: 'Усі замовлення', to: { name: 'admin-orders' }, icon: 'bag' },
     ],
 };
 
-const settings: NavSection = { items: [soon('settings', 'Налаштування', 'settings')] };
+const settings: NavSection = { items: [{ label: 'Налаштування', to: { name: 'account-settings' }, icon: 'settings' }] };
 
 /** Пункти меню кабінету за роллю. Майстер — це ще й покупець (domain-model.md §4.1). */
 export function accountNav(role: Role, hasStudio: boolean): NavSection[] {
