@@ -506,6 +506,8 @@ Possible homepage sections:
 
 # 18. Technology
 
+> **Current state (2026-11-25).** In use: Laravel 12 (PHP 8.2+), Sanctum session auth, Pest, Vue 3 + TypeScript + Vite, Pinia, vue-i18n and Tailwind CSS 4. PostgreSQL (SQLite only as a fast test fallback). Not yet: Redis, Docker, OpenAPI. Queues use the `database` driver.
+
 ## Backend
 
 * PHP
@@ -592,6 +594,8 @@ Every important business invariant must have a corresponding automated test.
 ---
 
 # 22. MVP Scope
+
+> What is built and what is left: [roadmap.md](../07-status/roadmap.md).
 
 The MVP includes:
 

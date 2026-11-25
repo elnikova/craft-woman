@@ -38,6 +38,8 @@ PostgreSQL
 
 One PostgreSQL database is used by the modular monolith.
 
+> **Current state (2026-11-25).** The migrations run on PostgreSQL 16+ and still on SQLite, the fast test fallback. `json` columns are plain `json` (not `jsonb`); searches cast them to text. The `categories.parent_uuid` self-reference is added after the table exists, because PostgreSQL needs the primary key first.
+
 Application modules share the same database, but module ownership and access rules are enforced at the application level.
 
 ---
@@ -617,6 +619,15 @@ The model can be extended later to support additional favorite targets.
 
 # 5. Education Module
 
+> **Implementation notes (2026-11-25).** Migration `modules/Education/.../2026_11_25_300001_create_education_tables.php`:
+>
+> * `courses` adds `cover_path`, `review_note`, `content_locale`, `translations` (JSON) and `certificate_enabled`. Categories attach through `categorizables`.
+> * `lessons` add `is_required` (counts for completion) and `is_preview` (free for everyone).
+> * `lesson_materials.type` is `text` | `video` | `file` | `link`. Video stores the original YouTube/Vimeo URL; the embed URL is derived (`VideoUrl`). Files are stored on the private `local` disk.
+> * `enrollments.order_item_uuid` has no FK (Orders is migrated later). `expires_at` is extended when a limited course is bought again.
+> * `certificates.certificate_number` has the format `CWC-YYYY-XXXXXX` and keeps snapshots of holder, course and maker names.
+> * Completion = every lesson with `is_required = true` has a `lesson_progress` row.
+
 ## 5.1 courses
 
 Stores purchasable courses.
@@ -855,6 +866,15 @@ Rules:
 ---
 
 # 6. Workshops Module
+
+> **Implementation notes (2026-11-25).** Migration `modules/Workshops/.../2026_11_25_400001_create_workshops_tables.php` differs from the tables below:
+>
+> * `workshops` holds `format` (`online` | `offline`), `timezone` (IANA), **`capacity`**, `location_country_code`, `location_city`, `location_address`, `external_url` (meeting link) and `participant_note` (translatable), plus `cover_path`, `review_note`, `cancelled_at`, `content_locale` and `translations`. Statuses add `cancelled`.
+> * `workshop_sessions` has only `starts_at` / `ends_at` (UTC). There is no per-session capacity, mode or status.
+> * `workshop_bookings` belongs to the workshop (not to a session). It has `seats`, `order_item_uuid` (unique, no FK), and `status` `pending` | `confirmed` | `cancelled` with `booked_at`, `confirmed_at`, `cancelled_at` and `cancel_reason`. "Completed" is derived from the last session's end.
+> * `cart_items.workshop_uuid` (unique per cart) and `order_items.workshop_uuid` (indexed, no FK) link Orders to workshops.
+>
+> Reasons: [decision-log.md](../08-decisions/decision-log.md#2026-11-25--workshops).
 
 ## 6.1 workshops
 

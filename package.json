@@ -5,7 +5,8 @@
     "scripts": {
         "build": "vue-tsc --noEmit && vite build",
         "dev": "vite",
-        "type-check": "vue-tsc --noEmit"
+        "type-check": "vue-tsc --noEmit",
+        "i18n:check": "node scripts/i18n-check.mjs"
     },
     "devDependencies": {
         "@tailwindcss/vite": "^4.0.0",

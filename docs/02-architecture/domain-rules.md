@@ -308,6 +308,8 @@ A course must have an explicit publication lifecycle.
 
 Only published courses may be purchased.
 
+Decision (2026-11-25): video is added as a YouTube or Vimeo link and embedded; the platform doesn't host video. Material types are text, video link, file (private download) and external link.
+
 ---
 
 # 13. Course Access
@@ -341,6 +343,8 @@ The backend must persist completion state.
 
 The exact definition of course completion must be explicitly defined before certificate implementation.
 
+Decision (2026-11-25): a course is complete when **every required lesson** is marked done. Makers can mark lessons optional; optional lessons don't count.
+
 ---
 
 # 15. Certificates
@@ -356,6 +360,8 @@ If certificates are enabled:
 A certificate must not be issued before the required completion criteria are satisfied.
 
 The exact certificate format and verification mechanism are implementation/product decisions.
+
+Decision (2026-11-25): the certificate is a printable page. Anyone can verify it at `/certificates/{number}` (format `CWC-YYYY-XXXXXX`). Holder, course and maker names are recorded when it is issued.
 
 ---
 
@@ -391,6 +397,8 @@ The platform does not host video meetings in the MVP.
 
 Offline workshops must contain appropriate location information.
 
+Decision (2026-11-25): the delivery mode (online / offline), location and meeting link are set **for the whole workshop**, not per session. Sessions carry only start and end. The meeting link and exact address are visible only to confirmed participants, the owner and admins; the public page shows the city. The link may be added after review.
+
 ---
 
 # 17. Workshop Capacity
@@ -405,6 +413,8 @@ The backend is responsible for enforcing capacity.
 
 A frontend availability check is informational only and cannot be treated as sufficient protection against overbooking.
 
+Decision (2026-11-25): capacity is **one number per workshop**, because a booking covers all its sessions. Seats are held when the order is placed (row lock on the workshop), confirmed on payment and released when the order is cancelled. Pending and confirmed bookings both count against capacity.
+
 ---
 
 # 18. Workshop Booking
@@ -418,6 +428,13 @@ A Customer may book an available workshop session if:
 A booking must be associated with the Customer and the relevant Workshop Session.
 
 Historical bookings must remain auditable after a Workshop or Session is no longer available for new bookings.
+
+Decision (2026-11-25):
+
+* A booking covers the whole Workshop; one order line may book several seats.
+* Booking closes when the first session starts.
+* Customers can't cancel a booking in the MVP. The Maker can cancel the whole Workshop with a reason; every booking becomes cancelled and keeps that reason. Refunds are manual until online payment exists.
+* Former participants can still open a cancelled Workshop's page to see the reason.
 
 ---
 
@@ -1122,6 +1139,8 @@ The architecture may expect these capabilities but must not introduce unnecessar
 
 The following decisions must be resolved before the final ERD and implementation.
 
+> **Status (2026-11-25).** Resolved: 56.1 (`OrderGroup`), 56.2 (one currency per cart), 56.3 (payment on delivery only if every Maker allows it), 56.4 (the Maker's delivery currency must match the cart), 56.7 (all required lessons), 56.10 (free-text note, 5+ characters). Still open: 56.5, 56.6, 56.8, 56.9. Answers and reasons: [decision-log.md](../08-decisions/decision-log.md).
+
 ## 56.1 Order Group Naming
 
 Choose the domain term:
@@ -1260,6 +1279,8 @@ The domain model is considered sufficiently defined for implementation when:
 ---
 
 # 59. Next Architecture Artifacts
+
+> **Historical.** This was the plan before implementation. The design documents and the first modules now exist; the current plan is [roadmap.md](../07-status/roadmap.md).
 
 After the open business decisions are resolved, the architecture work should proceed in this order:
 

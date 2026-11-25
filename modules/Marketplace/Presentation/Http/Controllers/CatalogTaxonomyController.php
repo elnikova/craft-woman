@@ -32,7 +32,7 @@ class CatalogTaxonomyController extends Controller
 
         return TagResource::collection(
             Tag::query()
-                ->when($term !== '', fn ($q) => $q->where('name', 'like', "{$term}%"))
+                ->when($term !== '', fn ($q) => $q->whereLike('name', "{$term}%"))
                 ->orderBy('name')
                 ->limit(20)
                 ->get()

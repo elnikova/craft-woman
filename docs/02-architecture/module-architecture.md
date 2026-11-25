@@ -90,6 +90,8 @@ Instead, Orders should use an application-level contract or query interface prov
 
 # 3. Modules
 
+> **Implementation status (2026-11-25).** Identity, Marketplace, Education, Workshops and Orders exist in `modules/`. Payments, Reviews, Community and Notifications don't exist yet. Administration has no module of its own: each module serves its `/admin/…` endpoints behind gates (`manage-catalog`, `manage-users`). See [roadmap.md](../07-status/roadmap.md).
+
 The initial system consists of:
 
 ```text
@@ -220,6 +222,8 @@ Workshops own scheduled workshops and bookings.
 * bookings.
 
 The module must enforce session capacity.
+
+> **Implementation notes (2026-11-25).** Capacity and format belong to the workshop, not the session: a booking covers every session. Orders holds seats synchronously at checkout through `WorkshopCatalog::reserve()` and releases them on cancellation. Payment confirms them through the `OrderPaid` event. See [decision-log.md](../08-decisions/decision-log.md#2026-11-25--workshops).
 
 ---
 
@@ -443,6 +447,8 @@ Not every module must contain every directory.
 
 The structure should reflect actual complexity rather than enforce empty abstractions.
 
+> **In the code (2026-11-25).** Modules use `Domain/` (enums, rule classes, exceptions), `Application/{Contracts,Services,Listeners,Events}`, `Infrastructure/{Persistence,Providers}` (Eloquent models, factories and migrations live in `Persistence`) and `Presentation/Http/{Controllers,Resources,Routes}`. There are no repositories, commands or query classes yet. Services use Eloquent directly. Details in [backend.md](../06-development/backend.md).
+
 ---
 
 # 16. Module Communication
@@ -579,11 +585,15 @@ Events should be used where they provide meaningful decoupling.
 
 They should not be introduced merely to make the architecture appear more complex.
 
+> **In the code (2026-11-25).** One integration event exists: `Orders\Application\Events\OrderPaid`, dispatched after commit. Education grants course access and Workshops confirm bookings in response. Holding workshop seats is a synchronous contract call, because it must fail the checkout when seats are gone.
+
 ---
 
 # 21. Persistence
 
 PostgreSQL is the primary database.
+
+> **Current state (2026-11-25).** Development and tests run on PostgreSQL (tests use a separate `craft_woman_test` database). `phpunit.sqlite.xml` keeps a fast fallback on in-memory SQLite.
 
 Each module owns its persistence structures.
 
