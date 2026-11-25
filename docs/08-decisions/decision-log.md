@@ -7,6 +7,18 @@ Add an entry whenever a pull request settles an open question or departs from a 
 
 ---
 
+## 2026-11-25 — PostgreSQL for development and tests
+
+| Decision | Why |
+|---|---|
+| Development and the test suite run on PostgreSQL (databases `craft_woman` and `craft_woman_test`) | The design targets it. Row locks and case-insensitive search only behave correctly there |
+| `phpunit.sqlite.xml` stays as a fast fallback without a database server | Quick runs on any machine; one PostgreSQL-only test is skipped |
+| Search uses `whereLike()`, which becomes `ILIKE` on PostgreSQL | `LIKE` is case-sensitive there; searching "плед" must find "Плед" |
+| Translations are stored as readable JSON (`JSON_UNESCAPED_UNICODE`) | Ukrainian translations of English-source listings can be found by search |
+| No data migration from SQLite | Only demo data so far; `migrate:fresh --seed` rebuilds it |
+
+Verified: the full suite passes on PostgreSQL 16 (cloud workspace) and 19 (Windows dev machine). 12 parallel bookings for a 3-seat workshop produced exactly 3 bookings.
+
 ## 2026-11-25 — Workshops
 
 | Question | Decision | Why |

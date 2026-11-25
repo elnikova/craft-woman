@@ -23,7 +23,7 @@ class OrderController extends Controller
         return OrderResource::collection(
             Order::query()
                 ->when($request->string('status')->toString(), fn ($q, $s) => $q->where('status', $s))
-                ->when($request->string('q')->toString(), fn ($q, $t) => $q->where(fn ($w) => $w->where('order_number', 'like', "%{$t}%")->orWhere('billing_email', 'like', "%{$t}%")))
+                ->when($request->string('q')->toString(), fn ($q, $t) => $q->where(fn ($w) => $w->whereLike('order_number', "%{$t}%")->orWhereLike('billing_email', "%{$t}%")))
                 ->with('groups.items', 'groups.delivery')
                 ->latest('placed_at')
                 ->paginate(20)

@@ -2,6 +2,7 @@
 
 use App\Enums\Role;
 use App\Models\User;
+use Illuminate\Support\Facades\DB;
 use Modules\Identity\Infrastructure\Persistence\MakerProfile;
 use Modules\Marketplace\Infrastructure\Persistence\Category;
 use Modules\Marketplace\Infrastructure\Persistence\Product;
@@ -93,6 +94,21 @@ test('registration remembers the language of the request', function () {
 
 test('catalog search finds products by their English name', function () {
     $this->getJson('/api/v1/products?q=Morning', ['Accept-Language' => 'en'])->assertJsonCount(1, 'data');
+});
+
+test('search ignores letter case, Cyrillic included, and finds Ukrainian translations', function () {
+    // SQLite folds only ASCII letters, so the Cyrillic part needs PostgreSQL
+    if (DB::getDriverName() === 'sqlite') {
+        $this->markTestSkipped('Cyrillic case folding needs PostgreSQL');
+    }
+
+    $this->getJson('/api/v1/products?q=РАНОК')->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/products?q=morning')->assertJsonCount(1, 'data');
+    $this->getJson('/api/v1/makers?q='.urlencode(mb_strtoupper($this->maker->display_name)))->assertJsonCount(1, 'data');
+
+    // A maker writing in English with a Ukrainian translation is found by the Ukrainian words
+    $this->product->forceFill(['content_locale' => 'en', 'name' => 'Linen towel', 'translations' => ['uk' => ['name' => 'Лляний рушник']]])->save();
+    $this->getJson('/api/v1/products?q=рушник')->assertJsonCount(1, 'data');
 });
 
 test('owners see the reader language on public pages and the source text in the editor', function () {

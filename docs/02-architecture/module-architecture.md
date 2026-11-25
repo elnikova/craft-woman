@@ -593,7 +593,7 @@ They should not be introduced merely to make the architecture appear more comple
 
 PostgreSQL is the primary database.
 
-> **Current state (2026-11-25).** Development and tests run on SQLite. Row locks (`lockForUpdate`) are no-ops there, so concurrency guarantees are only proven once PostgreSQL is in place. See [roadmap.md](../07-status/roadmap.md#known-gaps).
+> **Current state (2026-11-25).** Development and tests run on PostgreSQL (tests use a separate `craft_woman_test` database). `phpunit.sqlite.xml` keeps a fast fallback on in-memory SQLite.
 
 Each module owns its persistence structures.
 
