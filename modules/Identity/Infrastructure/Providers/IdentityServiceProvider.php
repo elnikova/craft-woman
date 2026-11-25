@@ -16,6 +16,8 @@ class IdentityServiceProvider extends ServiceProvider
     public function register(): void
     {
         $this->app->singleton(MakerProfileService::class);
+        $this->app->singleton(\Modules\Identity\Application\Services\AccountService::class);
+        $this->app->singleton(\Modules\Identity\Application\Services\UserAdminService::class);
         $this->app->singleton(MakerDirectory::class, EloquentMakerDirectory::class);
     }
 
@@ -24,6 +26,7 @@ class IdentityServiceProvider extends ServiceProvider
         $this->loadMigrationsFrom(__DIR__.'/../Persistence/Migrations');
 
         Gate::policy(MakerProfile::class, MakerProfilePolicy::class);
+        Gate::define('manage-users', fn (\App\Models\User $user) => $user->isAdmin());
 
         Route::middleware('api')
             ->prefix('api/v1')

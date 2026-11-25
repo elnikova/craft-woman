@@ -32,7 +32,7 @@ watch(() => props.role, (role) => (registerForm.role = role));
 
 const submitting = ref(false);
 const errors = ref<FieldErrors>({});
-const formError = ref('');
+const formError = ref(route.query.blocked === '1' ? 'Акаунт заблоковано. Якщо це помилка, напишіть у підтримку.' : '');
 const errorSummary = ref<HTMLElement | null>(null);
 
 function switchTo(mode: 'login' | 'register') {

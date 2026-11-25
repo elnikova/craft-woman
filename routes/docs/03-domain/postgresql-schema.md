@@ -194,6 +194,8 @@ Allowed values should be enforced by application/domain rules and, where appropr
 
 ## 3.1 users
 
+> **Implementation notes (2026-11-25).** The code keeps a single `role` column (`buyer`, `master`, `admin`) instead of `roles`/`user_roles`, and `name` instead of first/last name. `status` (`active` | `blocked`), `blocked_at` and `blocked_reason` are implemented; `locale`, `avatar_url` and soft deletes are not yet.
+
 Stores authenticated users.
 
 ```text

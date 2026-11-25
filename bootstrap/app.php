@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
         // Bearer-токени й далі працюють для мобільних клієнтів.
         $middleware->statefulApi();
         $middleware->appendToGroup('api', \App\Http\Middleware\SetLocaleFromHeader::class);
+        $middleware->appendToGroup('api', \App\Http\Middleware\EnsureAccountIsActive::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
         // Порушення доменних правил (недозволений перехід статусу тощо) → 409 Conflict

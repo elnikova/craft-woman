@@ -12,6 +12,7 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Sanctum\HasApiTokens;
+use Modules\Identity\Domain\UserStatus;
 use Modules\Identity\Infrastructure\Persistence\MakerProfile;
 
 class User extends Authenticatable
@@ -44,12 +45,22 @@ class User extends Authenticatable
             'email_verified_at' => 'datetime',
             'password' => 'hashed',
             'role' => Role::class,
+            'status' => UserStatus::class,
+            'blocked_at' => 'datetime',
         ];
     }
 
     public function subscription(): BelongsTo
     {
         return $this->belongsTo(Subscription::class, 'subscription_uuid');
+    }
+
+    /** @var array<string, mixed> */
+    protected $attributes = ['status' => 'active'];
+
+    public function isBlocked(): bool
+    {
+        return $this->status === UserStatus::Blocked;
     }
 
     public function isAdmin(): bool

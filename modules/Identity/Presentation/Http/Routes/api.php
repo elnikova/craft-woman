@@ -3,7 +3,9 @@
 use Illuminate\Support\Facades\Route;
 use Modules\Identity\Infrastructure\Persistence\MakerProfile;
 use Modules\Identity\Presentation\Http\Controllers\Admin\MakerReviewController;
+use Modules\Identity\Presentation\Http\Controllers\Admin\UserController;
 use Modules\Identity\Presentation\Http\Controllers\MakerController;
+use Modules\Identity\Presentation\Http\Controllers\MyAccountController;
 use Modules\Identity\Presentation\Http\Controllers\MyMakerProfileController;
 
 // Prefix /api/v1 and the `api` middleware group are applied by IdentityServiceProvider.
@@ -12,6 +14,16 @@ Route::get('/makers', [MakerController::class, 'index'])->name('makers.index');
 Route::get('/makers/{slug}', [MakerController::class, 'show'])->name('makers.show');
 
 Route::middleware('auth:sanctum')->group(function () {
+    Route::patch('/me/account', [MyAccountController::class, 'update'])->middleware('throttle:10,1')->name('me.account.update');
+    Route::put('/me/password', [MyAccountController::class, 'password'])->middleware('throttle:6,1')->name('me.password.update');
+
+    Route::prefix('admin/users')->name('admin.users.')->middleware('can:manage-users')->group(function () {
+        Route::get('/', [UserController::class, 'index'])->name('index');
+        Route::post('/{user}/block', [UserController::class, 'block'])->name('block');
+        Route::post('/{user}/unblock', [UserController::class, 'unblock'])->name('unblock');
+        Route::patch('/{user}/role', [UserController::class, 'role'])->name('role');
+    });
+
     Route::get('/me/maker-profile', [MyMakerProfileController::class, 'show'])->name('me.maker-profile.show');
     Route::put('/me/maker-profile', [MyMakerProfileController::class, 'upsert'])->name('me.maker-profile.upsert');
     Route::post('/me/maker-profile/submit', [MyMakerProfileController::class, 'submit'])->name('me.maker-profile.submit');
