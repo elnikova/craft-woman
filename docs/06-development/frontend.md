@@ -165,6 +165,22 @@ Sections not built yet are marked "скоро" (soon) and lead to `/account/soon
 - Demo courses: Oksana "В’язання спицями з нуля" (lifetime, has an English version) and Iryna "Полтавська вишивка" (180 days).
 - Known quirk: a static attribute containing `//` (e.g. `placeholder="https://"`) inside a `v-if` chain breaks `vue-tsc` scope analysis; bind it as an expression instead.
 
+## Workshops
+
+| Route | Who | What |
+|---|---|---|
+| `/workshops`, `/workshops/:slug` | everyone | upcoming workshops (search, city, online / in person) and the workshop page: schedule, seats left, seat picker |
+| `/account/bookings` | participant | upcoming and past bookings with the meeting link or address, note from the maker, "Add to calendar" (.ics) |
+| `/account/workshops`, `/account/workshops/new`, `/account/workshops/:uuid` | maker | list by status; editor: details + translation, format and place, time zone, price and seats, schedule, cover, participants, cancellation |
+| `/account/admin/workshops` | admin | review queue like products and courses |
+
+- Format (online / in person) and capacity belong to the whole workshop: a booking covers every session. Buying N seats = cart quantity N, prepaid only.
+- Seats are held when the order is placed (row lock, so the last seat can't be sold twice), confirmed by `OrderPaid`, released when the order is cancelled. Booking closes when the first session starts.
+- Meeting link, exact address and the participant note are returned only to confirmed participants, the owner and admins (`private` in the API). The link can be added after review.
+- Sessions are entered as wall-clock time in the workshop's time zone (`starts_local`) and stored in UTC. Pages show the workshop's time; online workshops also show the visitor's time when it differs.
+- Only the maker can cancel, and only the whole workshop, with a reason that participants see. Refunds are a manual step until Stripe arrives.
+- Demo workshops: Marko (pottery, Опішня), Oksana (online socks, two evenings), Iryna (embroidery, Полтава).
+
 ## Makers
 
 | Route | Who | What |

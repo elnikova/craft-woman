@@ -38,6 +38,7 @@ export const useCartStore = defineStore('cart', () => {
 
     const add = async (product: string, variant: string | null, quantity = 1) => apply(await cartApi.add(product, variant, quantity));
     const addCourse = async (course: string) => apply(await cartApi.addCourse(course));
+    const addWorkshop = async (workshop: string, seats: number) => apply(await cartApi.addWorkshop(workshop, seats));
     const setQuantity = async (item: string, quantity: number) => apply(await cartApi.update(item, quantity));
     const remove = async (item: string) => apply(await cartApi.remove(item));
 
@@ -45,5 +46,5 @@ export const useCartStore = defineStore('cart', () => {
         cart.value = EMPTY;
     }
 
-    return { cart, loaded, count, isEmpty, load, sync, add, addCourse, setQuantity, remove, reset };
+    return { cart, loaded, count, isEmpty, load, sync, add, addCourse, addWorkshop, setQuantity, remove, reset };
 });

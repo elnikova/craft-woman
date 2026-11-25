@@ -11,9 +11,11 @@ import SectionHeader from '@/components/home/SectionHeader.vue';
 import MakerProfileCard from '@/components/makers/MakerProfileCard.vue';
 import ProductCard from '@/components/products/ProductCard.vue';
 import CourseCard from '@/components/courses/CourseCard.vue';
-import WorkshopRow from '@/components/home/WorkshopRow.vue';
+import WorkshopRow from '@/components/workshops/WorkshopRow.vue';
 import PostCard from '@/components/home/PostCard.vue';
-import { posts, workshops } from '@/mocks/home';
+import { posts } from '@/mocks/home';
+import { workshopsApi } from '@/api/workshops';
+import type { WorkshopCard } from '@/types/workshop';
 import { coursesApi } from '@/api/courses';
 import type { CourseCard as CourseCardData } from '@/types/course';
 import { productsApi } from '@/api/products';
@@ -30,7 +32,7 @@ const query = ref('');
 // Message keys under home.crafts
 const popularCrafts = ['knitting', 'ceramics', 'embroidery', 'leather', 'weaving', 'candles'];
 
-// Makers, products and courses are real (from the API); workshops and posts still use sample data
+// Everything but community posts comes from the API
 const makers = ref<MakerProfile[]>([]);
 const makersLoading = ref(true);
 onMounted(async () => {
@@ -76,6 +78,15 @@ onMounted(async () => {
         courses.value = (await coursesApi.list({ per_page: 3 })).data;
     } catch {
         courses.value = [];
+    }
+});
+
+const workshops = ref<WorkshopCard[]>([]);
+onMounted(async () => {
+    try {
+        workshops.value = (await workshopsApi.list({ per_page: 4 })).data;
+    } catch {
+        workshops.value = [];
     }
 });
 
@@ -215,9 +226,9 @@ const heroStitches = [
 
     <!-- Workshops -->
     <section id="workshops" aria-labelledby="workshops-title" class="mx-auto max-w-[1280px] px-6 pt-24 md:px-8">
-        <SectionHeader id="workshops-title" :title="t('home.workshopsTitle')" :link-label="t('home.calendar')" :link-to="{ name: 'home' }" />
+        <SectionHeader id="workshops-title" :title="t('home.workshopsTitle')" :link-label="t('home.calendar')" :link-to="{ name: 'workshops' }" />
         <ul class="mt-10 mb-0 list-none border-t border-line p-0">
-            <WorkshopRow v-for="workshop in workshops" :key="workshop.id" :workshop="workshop" />
+            <WorkshopRow v-for="workshop in workshops" :key="workshop.uuid" :workshop="workshop" />
         </ul>
     </section>
 

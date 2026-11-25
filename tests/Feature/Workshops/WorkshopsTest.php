@@ -163,7 +163,9 @@ test('capacity and format are protected once seats are booked; the maker can can
         ->assertJsonPath('data.0.status', 'cancelled')
         ->assertJsonPath('data.0.cancel_reason', 'Захворіла, перенесемо на весну')
         ->assertJsonPath('data.0.workshop.private', null);
-    $this->getJson("/api/v1/workshops/{$w->slug}")->assertNotFound();
+    // The former participant still sees the page with the reason, without private details
+    $this->getJson("/api/v1/workshops/{$w->slug}")->assertOk()->assertJsonPath('data.cancel_reason', 'Захворіла, перенесемо на весну')->assertJsonPath('data.private', null);
+    signIn($this, User::factory()->create())->getJson("/api/v1/workshops/{$w->slug}")->assertNotFound();
 });
 
 test('makers only manage their own workshops', function () {

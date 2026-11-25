@@ -9,6 +9,7 @@ import { ordersApi, type OrderWithDownloads } from '@/api/orders';
 import { toApiError } from '@/api/http';
 import { formatFileSize, formatPrice } from '@/utils/format';
 import { countryName, PAYMENT_LABELS, formatDate } from '@/utils/orderStatus';
+import { dayLabel } from '@/utils/workshop';
 
 const props = defineProps<{ number: string }>();
 const route = useRoute();
@@ -115,15 +116,15 @@ onMounted(load);
 
                 <ul class="m-0 list-none p-0">
                     <li v-for="i in g.items" :key="i.uuid" class="flex flex-wrap items-center gap-4 border-b border-line px-5 py-4 last:border-b-0">
-                        <ProductCover :uuid="i.product_uuid ?? i.course_uuid ?? i.uuid" :name="i.name" :src="i.image_url" class="!w-16 shrink-0" />
+                        <ProductCover :uuid="i.product_uuid ?? i.course_uuid ?? i.workshop_uuid ?? i.uuid" :name="i.name" :src="i.image_url" class="!w-16 shrink-0" />
                         <div class="min-w-0 flex-[1_1_200px]">
-                            <RouterLink v-if="i.slug" :to="{ name: i.is_course ? 'course' : 'product', params: { slug: i.slug } }" class="font-semibold text-ink no-underline hover:text-plum">
+                            <RouterLink v-if="i.slug" :to="{ name: i.is_workshop ? 'workshop' : i.is_course ? 'course' : 'product', params: { slug: i.slug } }" class="font-semibold text-ink no-underline hover:text-plum">
                                 {{ i.name }}
                             </RouterLink>
                             <span v-else class="font-semibold">{{ i.name }}</span>
                             <div class="text-sm text-ink-muted">
                                 {{
-                                    [i.is_course ? t('courses.onlineCourse') : i.is_digital ? t('common.digitalFile') : i.variant_name, `${i.quantity} × ${formatPrice(i.unit_price.amount_minor, i.unit_price.currency)}`]
+                                    [i.is_workshop ? t('cartWorkshop.line', { date: i.starts_at ? dayLabel(i.starts_at) : '' }) : i.is_course ? t('courses.onlineCourse') : i.is_digital ? t('common.digitalFile') : i.variant_name, `${i.quantity} × ${formatPrice(i.unit_price.amount_minor, i.unit_price.currency)}`]
                                         .filter(Boolean)
                                         .join(' · ')
                                 }}

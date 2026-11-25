@@ -67,7 +67,9 @@ class WorkshopController extends Controller
         $public = in_array($workshop->status, [WorkshopStatus::Published, WorkshopStatus::Cancelled, WorkshopStatus::Archived], true)
             && in_array($workshop->maker_profile_uuid, $this->makers->approvedMakerUuidsQuery()->pluck('uuid')->all(), true);
 
-        abort_unless(($public && $workshop->status === WorkshopStatus::Published) || $seats > 0 || $isOwner || $user?->isAdmin(), 404);
+        // Former participants still see a cancelled or archived workshop they booked
+        $hadBooking = $user !== null && $workshop->bookings()->where('user_uuid', $user->uuid)->whereNotNull('confirmed_at')->exists();
+        abort_unless(($public && ($workshop->status === WorkshopStatus::Published || $hadBooking)) || $isOwner || $user?->isAdmin(), 404);
 
         return response()->json(['data' => [
             ...$this->presenter->detail($workshop, $seats > 0 || $isOwner || (bool) $user?->isAdmin()),
