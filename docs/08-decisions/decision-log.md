@@ -17,7 +17,7 @@ Add an entry whenever a pull request settles an open question or departs from a 
 | Translations are stored as readable JSON (`JSON_UNESCAPED_UNICODE`) | Ukrainian translations of English-source listings can be found by search |
 | No data migration from SQLite | Only demo data so far; `migrate:fresh --seed` rebuilds it |
 
-Verified: the full suite passes on PostgreSQL 16. 12 parallel bookings for a 3-seat workshop produced exactly 3 bookings.
+Verified: the full suite passes on PostgreSQL 16 (CI workspace) and 19 (Windows dev machine). 12 parallel bookings for a 3-seat workshop produced exactly 3 bookings.
 
 ## 2026-11-25 — Workshops
 
