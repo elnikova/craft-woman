@@ -5,7 +5,7 @@ Authentication uses the Sanctum session cookie (same-domain SPA); no tokens are 
 
 ## Setup
 
-See [getting-started.md](getting-started.md). In short, run `npm install`, then `npm run dev` (development) or `npm run build` (type-check + build).
+See [getting-started.md](getting-started.md). The `vite` container runs `npm run dev`. Type-check with `.\dev tsc` and check translations with `.\dev i18n`.
 
 ## Structure
 
@@ -191,4 +191,4 @@ Open product questions and technical gaps are tracked in [roadmap.md](../07-stat
 
 ## Before a pull request
 
-`npx vue-tsc --noEmit`, `npm run i18n:check` and, for larger changes, a click-through of the affected pages in both languages.
+`.\dev check` (Pint, tests, type-check, translations) and, for larger changes, a click-through of the affected pages in both languages.

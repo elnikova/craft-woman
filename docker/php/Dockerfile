@@ -11,6 +11,9 @@ RUN apt-get update \
     && apt-get install -y --no-install-recommends git unzip postgresql-client \
     && rm -rf /var/lib/apt/lists/*
 
+# The project is mounted from Windows with a different owner; let git (Composer, Pint --dirty) trust it
+RUN git config --system --add safe.directory /var/www/html
+
 COPY php.ini /usr/local/etc/php/conf.d/zz-craft-woman.ini
 
 WORKDIR /var/www/html

@@ -111,9 +111,9 @@ These cross the rule above. Clean them up when the module is next touched:
 
 ## Testing
 
-- Pest. `tests/Unit/<Module>` covers pure Domain classes, and `tests/Feature/<Module>` covers HTTP flows against the PostgreSQL database `craft_woman_test` (`phpunit.xml`, rebuilt for every test). `phpunit.sqlite.xml` runs the same tests on in-memory SQLite when PostgreSQL isn't available.
+- Pest. `tests/Unit/<Module>` covers pure Domain classes, and `tests/Feature/<Module>` covers HTTP flows against the PostgreSQL database `craft_woman_test` (`phpunit.xml`, rebuilt for every test). In Docker that database is in the `db` container. `phpunit.sqlite.xml` runs the same tests on in-memory SQLite when PostgreSQL isn't available.
 - Text search uses `whereLike()` (case-insensitive: `ILIKE` on PostgreSQL). Don't write `where(col, 'like', …)`, because PostgreSQL `LIKE` is case-sensitive.
 - Factories live next to the models (`Infrastructure/Persistence/*Factory.php`). `published()`-style states build ready-to-sell records.
 - Switching users inside one test: Sanctum caches the user, so call `app('auth')->forgetGuards()` before the next `actingAs()` (see the `signIn()` helper in `tests/Feature/Workshops/WorkshopsTest.php`).
 - Every business invariant from [domain-rules.md](../02-architecture/domain-rules.md) §57 should have a test. The current coverage is listed in [roadmap.md](../07-status/roadmap.md).
-- Run `vendor/bin/pint` before committing.
+- Run `.\dev pint` (or `.\dev check` for everything) before committing.

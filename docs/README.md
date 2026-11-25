@@ -7,7 +7,7 @@ It's a Laravel 12 modular monolith with a Vue 3 SPA in the same repository.
 
 | You want to… | Read |
 |---|---|
-| Run the project locally | [06-development/getting-started.md](06-development/getting-started.md) (Herd) or [06-development/docker.md](06-development/docker.md) (Docker) |
+| Run the project locally | [06-development/getting-started.md](06-development/getting-started.md) (Docker) |
 | Know what's built and what's next | [07-status/roadmap.md](07-status/roadmap.md) |
 | Understand a business rule | [02-architecture/domain-rules.md](02-architecture/domain-rules.md), then [08-decisions/decision-log.md](08-decisions/decision-log.md) |
 | Add backend code to a module | [06-development/backend.md](06-development/backend.md) |
@@ -25,8 +25,9 @@ It's a Laravel 12 modular monolith with a Vue 3 SPA in the same repository.
 | 03 | [erd.md](03-domain/erd.md) | Entity relationships | Design reference written before the code |
 | 03 | [postgresql-schema.md](03-domain/postgresql-schema.md) | Tables and constraints | Design reference; *Implementation notes* list what the migrations actually do |
 | 05 | [api-reference.md](05-api/api-reference.md) | Every `/api/v1` endpoint, conventions, errors | Matches the code |
-| 06 | [getting-started.md](06-development/getting-started.md) | Setup on Windows + Herd, demo accounts, daily commands | Matches the code |
-| 06 | [docker.md](06-development/docker.md) | Running everything in containers next to Herd | Matches the code |
+| 06 | [getting-started.md](06-development/getting-started.md) | Setup with Docker, demo accounts, `dev` commands, PhpStorm | Matches the code |
+| 06 | [docker.md](06-development/docker.md) | How the containers are built, installing Docker on drive D:, troubleshooting | Matches the code |
+| 06 | [without-docker.md](06-development/without-docker.md) | Native setup with Herd and a local PostgreSQL | Alternative |
 | 06 | [backend.md](06-development/backend.md) | Module layout, conventions, cross-module contracts, testing | Matches the code |
 | 06 | [frontend.md](06-development/frontend.md) | SPA structure, design tokens, i18n, pages per area | Matches the code |
 | 07 | [roadmap.md](07-status/roadmap.md) | MVP status, known gaps, next steps | Update with every feature PR |
