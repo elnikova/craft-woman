@@ -81,13 +81,8 @@ async function logout() {
                 </RouterLink>
 
                 <template v-if="auth.isAuthenticated">
-                    <RouterLink v-if="auth.isAdmin" :to="{ name: 'admin-makers' }" class="px-2 text-[15px] font-medium whitespace-nowrap text-plum hover:text-violet">
-                        Перевірка майстрів
-                    </RouterLink>
-                    <RouterLink v-if="auth.hasStudio" :to="{ name: 'studio' }" class="px-2 text-[15px] font-medium whitespace-nowrap text-plum hover:text-violet">
-                        Моя майстерня
-                    </RouterLink>
-                    <BaseButton variant="secondary" :title="`Вийти з акаунта ${auth.user?.name ?? ''}`" @click="logout">Вийти</BaseButton>
+                    <BaseButton :to="{ name: 'account' }">Кабінет</BaseButton>
+                    <BaseButton variant="secondary" @click="logout">Вийти</BaseButton>
                 </template>
                 <BaseButton v-else :to="{ name: 'login' }">Увійти</BaseButton>
             </div>

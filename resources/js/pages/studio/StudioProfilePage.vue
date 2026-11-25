@@ -141,7 +141,7 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
 </script>
 
 <template>
-    <div class="mx-auto max-w-[880px] px-6 py-12 md:px-8">
+    <div class="max-w-[880px]">
         <div class="flex flex-wrap items-center justify-between gap-4">
             <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Моя майстерня</h1>
             <MakerStatusBadge v-if="status" :status="status" />
