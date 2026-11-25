@@ -147,6 +147,24 @@ Sections not built yet are marked "скоро" (soon) and lead to `/account/soon
 - Blocking sets `users.status = blocked`. Sessions and tokens are deleted at once, login returns "account blocked", and `EnsureAccountIsActive` answers `403 account_blocked` to older credentials.
 - Limits: no actions on yourself; at least one active administrator must remain; the maker role is not changed here (buyer ⇄ admin only).
 
+## Courses
+
+| Route | Who | What |
+|---|---|---|
+| `/courses`, `/courses/:slug` | everyone | catalog and course page: curriculum, free preview lessons, price; for a student — progress, "Continue", certificate |
+| `/courses/:slug/learn/:lesson` | student, owner, admin; anyone for preview lessons | lesson player: outline, materials (text, YouTube/Vimeo embed, file download, link), "Mark as done", previous/next |
+| `/certificates/:number` | everyone | printable certificate without site chrome; doubles as public verification by number |
+| `/account/learning` | buyer | bought courses with progress, access end date, certificate |
+| `/account/courses`, `/account/courses/new`, `/account/courses/:uuid` | maker | course list by status; editor: details + translation, price, access (lifetime or N days), certificate toggle, cover, curriculum builder (modules → lessons → materials) |
+| `/account/admin/courses` | admin | review queue like products: publish, return for changes, take off sale |
+
+- A course goes into the same cart as products (`POST /cart/items` with `course_uuid`); it needs no delivery address. After payment the `OrderPaid` event grants access (`GrantCourseAccess`). Buying a limited course again extends access from the later of today and the current end date.
+- A course is complete when all **required** lessons are done; then the student can issue a certificate (`CWC-YYYY-XXXXXX`) if the course has certificates enabled.
+- Curriculum changes are saved immediately and don't reset unsaved course details.
+- Videos are links, not uploads. Makers should mark them "unlisted"; the player uses `youtube-nocookie.com` or the Vimeo player.
+- Demo courses: Oksana "В’язання спицями з нуля" (lifetime, has an English version) and Iryna "Полтавська вишивка" (180 days).
+- Known quirk: a static attribute containing `//` (e.g. `placeholder="https://"`) inside a `v-if` chain breaks `vue-tsc` scope analysis; bind it as an expression instead.
+
 ## Makers
 
 | Route | Who | What |

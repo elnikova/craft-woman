@@ -10,10 +10,12 @@ import StitchLine from '@/components/ornament/StitchLine.vue';
 import SectionHeader from '@/components/home/SectionHeader.vue';
 import MakerProfileCard from '@/components/makers/MakerProfileCard.vue';
 import ProductCard from '@/components/products/ProductCard.vue';
-import CourseCard from '@/components/home/CourseCard.vue';
+import CourseCard from '@/components/courses/CourseCard.vue';
 import WorkshopRow from '@/components/home/WorkshopRow.vue';
 import PostCard from '@/components/home/PostCard.vue';
-import { courses, posts, workshops } from '@/mocks/home';
+import { posts, workshops } from '@/mocks/home';
+import { coursesApi } from '@/api/courses';
+import type { CourseCard as CourseCardData } from '@/types/course';
 import { productsApi } from '@/api/products';
 import type { Product } from '@/types/product';
 import { makersApi } from '@/api/makers';
@@ -28,7 +30,7 @@ const query = ref('');
 // Message keys under home.crafts
 const popularCrafts = ['knitting', 'ceramics', 'embroidery', 'leather', 'weaving', 'candles'];
 
-// Makers are real (from the API); other blocks still use sample data
+// Makers, products and courses are real (from the API); workshops and posts still use sample data
 const makers = ref<MakerProfile[]>([]);
 const makersLoading = ref(true);
 onMounted(async () => {
@@ -67,6 +69,15 @@ async function loadProducts() {
 }
 watch(productFilter, loadProducts);
 onMounted(loadProducts);
+
+const courses = ref<CourseCardData[]>([]);
+onMounted(async () => {
+    try {
+        courses.value = (await coursesApi.list({ per_page: 3 })).data;
+    } catch {
+        courses.value = [];
+    }
+});
 
 function search() {
     void router.push({ name: 'catalog', query: query.value ? { q: query.value } : {} });
@@ -194,10 +205,10 @@ const heroStitches = [
                 :title="t('home.coursesTitle')"
                 :lead="t('home.coursesLead')"
                 :link-label="t('home.allCourses')"
-                :link-to="{ name: 'home' }"
+                :link-to="{ name: 'courses' }"
             />
             <div class="mt-10 grid grid-cols-[repeat(auto-fill,minmax(min(340px,100%),1fr))] gap-6">
-                <CourseCard v-for="course in courses" :key="course.id" :course="course" />
+                <CourseCard v-for="course in courses" :key="course.uuid" :course="course" />
             </div>
         </div>
     </section>

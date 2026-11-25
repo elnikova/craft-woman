@@ -36,6 +36,7 @@ export const cartApi = {
     show: () => unwrap<Cart>(http.get('/cart', withToken())),
     add: (product_uuid: string, variant_uuid: string | null, quantity: number) =>
         unwrap<Cart>(http.post('/cart/items', { product_uuid, variant_uuid, quantity }, withToken())),
+    addCourse: (course_uuid: string) => unwrap<Cart>(http.post('/cart/items', { course_uuid }, withToken())),
     update: (item: string, quantity: number) => unwrap<Cart>(http.patch(`/cart/items/${item}`, { quantity }, withToken())),
     remove: (item: string) => unwrap<Cart>(http.delete(`/cart/items/${item}`, withToken())),
     claim: () => unwrap<Cart>(http.post('/cart/claim', {}, withToken())),
