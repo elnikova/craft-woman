@@ -24,8 +24,10 @@ return Application::configure(basePath: dirname(__DIR__))
         $exceptions->render(function (DomainException $e, Request $request) {
             if ($request->expectsJson()) {
                 // Доменні винятки несуть ключ перекладу (lang/*/domain.php); інакше — технічне повідомлення
+                // Значення параметрів (статуси, вимоги) теж перекладаємо; списки — через кому
+                $translate = fn (string $v) => trans()->has("domain.values.{$v}") ? __("domain.values.{$v}") : $v;
                 $params = array_map(
-                    fn ($v) => is_string($v) && trans()->has("domain.statuses.{$v}") ? __("domain.statuses.{$v}") : $v,
+                    fn ($v) => is_string($v) ? implode(', ', array_map($translate, explode(',', $v))) : $v,
                     property_exists($e, 'params') ? $e->params : [],
                 );
                 $message = property_exists($e, 'key') && trans()->has('domain.'.$e->key)

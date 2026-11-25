@@ -64,6 +64,8 @@ return [
         'note' => 'коментар',
         'parent_uuid' => 'батьківська категорія',
         'category_name' => 'назва категорії',
+        'product_name' => 'назва товару',
+        'variant_name' => 'назва варіанта',
         'description' => 'опис',
         'price_amount_minor' => 'ціна',
         'currency' => 'валюта',

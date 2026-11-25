@@ -6,6 +6,9 @@ import MakerStatusBadge from '@/components/makers/MakerStatusBadge.vue';
 import OrnamentBand from '@/components/ornament/OrnamentBand.vue';
 import StarOrnament from '@/components/ornament/StarOrnament.vue';
 import { makersApi } from '@/api/makers';
+import { productsApi } from '@/api/products';
+import ProductCard from '@/components/products/ProductCard.vue';
+import type { Product } from '@/types/product';
 import { toApiError } from '@/api/http';
 import { useAuthStore } from '@/stores/auth';
 import type { MakerProfile } from '@/types/maker';
@@ -14,6 +17,7 @@ const props = defineProps<{ slug: string }>();
 const auth = useAuthStore();
 
 const maker = ref<MakerProfile | null>(null);
+const products = ref<Product[]>([]);
 const loading = ref(true);
 const notFound = ref(false);
 const error = ref('');
@@ -32,6 +36,7 @@ async function load() {
     try {
         maker.value = await makersApi.show(props.slug);
         document.title = `${maker.value.display_name} — Craft Woman`;
+        products.value = maker.value.status && maker.value.status !== 'approved' ? [] : (await productsApi.list({ maker: props.slug, per_page: 12 })).data;
     } catch (e) {
         const err = toApiError(e);
         if (err.status === 404) notFound.value = true;
@@ -110,8 +115,16 @@ watch(() => props.slug, load, { immediate: true });
 
             <aside class="flex flex-col gap-4 self-start rounded-card bg-lavender-50 p-6">
                 <h2 class="m-0 text-lg font-semibold text-plum">Скоро тут</h2>
-                <p class="m-0 text-ink-muted">Товари, курси й майстер-класи цього майстра з’являться, щойно відкриється каталог.</p>
+                <p class="m-0 text-ink-muted">Курси й майстер-класи цього майстра зʼявляться наступними.</p>
             </aside>
         </div>
+
+        <section class="mx-auto max-w-[1280px] px-6 pb-20 md:px-8" aria-labelledby="maker-products">
+            <h2 id="maker-products" class="font-flair m-0 text-3xl font-bold text-plum">Роботи майстра</h2>
+            <div v-if="products.length" class="mt-8 grid grid-cols-[repeat(auto-fill,minmax(220px,1fr))] gap-x-6 gap-y-10">
+                <ProductCard v-for="p in products" :key="p.uuid" :product="p" />
+            </div>
+            <p v-else class="mt-5 mb-0 text-ink-muted">Товарів поки немає.</p>
+        </section>
     </template>
 </template>

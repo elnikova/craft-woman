@@ -5,16 +5,6 @@
  */
 export type Placeholder = { color: string; pattern: 'ph-knit' | 'ph-weave' | 'ph-stitch' };
 
-export interface ProductCardData {
-    id: number;
-    name: string;
-    makerName: string;
-    priceCents: number;
-    currency: 'EUR' | 'USD' | 'UAH';
-    isDigital: boolean;
-    cover: Placeholder;
-}
-
 export interface CourseCardData {
     id: number;
     title: string;

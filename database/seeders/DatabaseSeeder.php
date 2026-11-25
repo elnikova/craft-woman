@@ -27,6 +27,9 @@ class DatabaseSeeder extends Seeder
         // Demo makers (approved + one pending review)
         $this->call(MakerSeeder::class);
 
+        // Demo products for the approved makers
+        $this->call(ProductSeeder::class);
+
         // Create test users
         User::factory(10)->create();
     }

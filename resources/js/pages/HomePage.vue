@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, onMounted, ref } from 'vue';
+import { computed, onMounted, ref, watch } from 'vue';
 import { useRouter } from 'vue-router';
 import AppHeader from '@/components/layout/AppHeader.vue';
 import BaseButton from '@/components/ui/BaseButton.vue';
@@ -8,11 +8,13 @@ import StarOrnament from '@/components/ornament/StarOrnament.vue';
 import StitchLine from '@/components/ornament/StitchLine.vue';
 import SectionHeader from '@/components/home/SectionHeader.vue';
 import MakerProfileCard from '@/components/makers/MakerProfileCard.vue';
-import ProductCard from '@/components/home/ProductCard.vue';
+import ProductCard from '@/components/products/ProductCard.vue';
 import CourseCard from '@/components/home/CourseCard.vue';
 import WorkshopRow from '@/components/home/WorkshopRow.vue';
 import PostCard from '@/components/home/PostCard.vue';
-import { courses, popularCrafts, posts, products, workshops } from '@/mocks/home';
+import { courses, popularCrafts, posts, workshops } from '@/mocks/home';
+import { productsApi } from '@/api/products';
+import type { Product } from '@/types/product';
 import { makersApi } from '@/api/makers';
 import { useAuthStore } from '@/stores/auth';
 import type { MakerProfile } from '@/types/maker';
@@ -45,10 +47,21 @@ const productFilters: { id: ProductFilter; label: string }[] = [
     { id: 'physical', label: 'Фізичні' },
     { id: 'digital', label: 'Цифрові' },
 ];
-const visibleProducts = () =>
-    products.filter((p) =>
-        productFilter.value === 'all' ? true : productFilter.value === 'digital' ? p.isDigital : !p.isDigital,
-    );
+const newProducts = ref<Product[]>([]);
+const productsLoading = ref(true);
+async function loadProducts() {
+    productsLoading.value = true;
+    try {
+        const type = productFilter.value === 'all' ? undefined : productFilter.value;
+        newProducts.value = (await productsApi.list({ type, per_page: 4 })).data;
+    } catch {
+        newProducts.value = [];
+    } finally {
+        productsLoading.value = false;
+    }
+}
+watch(productFilter, loadProducts);
+onMounted(loadProducts);
 
 function search() {
     // TODO: сторінка пошуку /search?q=…
@@ -156,8 +169,15 @@ const heroStitches = [
                 </div>
             </template>
         </SectionHeader>
-        <div class="mt-10 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-8">
-            <ProductCard v-for="product in visibleProducts()" :key="product.id" :product="product" />
+        <div v-if="productsLoading" class="mt-10 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-6" aria-busy="true" aria-label="Завантаження">
+            <div v-for="i in 4" :key="i" class="aspect-square animate-pulse rounded-card bg-lavender-50" />
+        </div>
+        <div v-else-if="newProducts.length" class="mt-10 grid grid-cols-[repeat(auto-fill,minmax(260px,1fr))] gap-x-6 gap-y-8">
+            <ProductCard v-for="product in newProducts" :key="product.uuid" :product="product" />
+        </div>
+        <p v-else class="mt-8 mb-0 text-lg text-ink-muted">Нові товари зʼявляться тут, щойно майстри їх опублікують.</p>
+        <div class="mt-10">
+            <BaseButton variant="secondary" :to="{ name: 'catalog', query: productFilter === 'all' ? {} : { type: productFilter } }">Увесь каталог</BaseButton>
         </div>
     </section>
 
