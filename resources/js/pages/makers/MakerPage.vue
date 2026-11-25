@@ -67,7 +67,7 @@ watch(() => props.slug, load, { immediate: true });
     </div>
 
     <template v-else-if="maker">
-        <!-- Власник або адміністратор бачить, що профіль ще не публічний -->
+        <!-- The owner or an administrator sees that the profile is not public yet -->
         <div v-if="maker.status && maker.status !== 'approved'" class="bg-notice-bg">
             <div class="mx-auto flex max-w-[1280px] flex-wrap items-center gap-3 px-6 py-3 text-notice-ink md:px-8">
                 <MakerStatusBadge :status="maker.status" />

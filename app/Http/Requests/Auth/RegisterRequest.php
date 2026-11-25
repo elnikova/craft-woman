@@ -23,7 +23,7 @@ class RegisterRequest extends FormRequest
             'name' => ['required', 'string', 'max:255'],
             'email' => ['required', 'string', 'email', 'max:255', 'unique:users,email'],
             'password' => ['required', 'confirmed', Password::defaults()],
-            // Адміністратора через реєстрацію створити не можна
+            // An administrator cannot be created through registration
             'role' => ['sometimes', Rule::enum(Role::class)->only([Role::Buyer, Role::Master])],
         ];
     }

@@ -2,7 +2,7 @@
 
 use Illuminate\Support\Facades\Route;
 
-// Усі не-API маршрути віддають SPA-оболонку; маршрутизацією займається Vue Router.
+// Every non-API route serves the SPA shell; Vue Router handles routing.
 Route::view('/{any?}', 'app')
     ->where('any', '^(?!api|sanctum|up).*$')
     ->name('spa');

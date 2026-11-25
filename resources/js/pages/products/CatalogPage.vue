@@ -24,7 +24,7 @@ const loadingMore = ref(false);
 const error = ref('');
 const search = ref('');
 
-/** Фільтри живуть в URL: посилання можна скопіювати, «Назад» працює */
+/** Filters live in the URL: links can be shared and Back works */
 const filters = computed<ProductFilters>(() => ({
     category: typeof route.query.category === 'string' ? route.query.category : undefined,
     type: route.query.type === 'physical' || route.query.type === 'digital' ? (route.query.type as ProductType) : undefined,
@@ -78,7 +78,7 @@ onMounted(async () => {
     try {
         categories.value = await taxonomyApi.categories();
     } catch {
-        /* без бічного меню каталог усе одно працює */
+        /* the catalog still works without the sidebar */
     }
 });
 </script>
@@ -108,7 +108,7 @@ onMounted(async () => {
     </section>
 
     <div class="mx-auto grid max-w-[1280px] gap-10 px-6 py-12 md:px-8 lg:grid-cols-[240px_minmax(0,1fr)]">
-        <!-- Категорії -->
+        <!-- Categories -->
         <aside aria-label="Категорії">
             <h2 class="m-0 mb-3 text-[15px] font-semibold text-ink-soft">Категорії</h2>
             <ul class="m-0 flex list-none flex-col gap-0.5 p-0 text-[15px]">
@@ -152,7 +152,7 @@ onMounted(async () => {
         </aside>
 
         <section aria-live="polite" :aria-busy="loading">
-            <!-- Тип і сортування -->
+            <!-- Type and sorting -->
             <div class="flex flex-wrap items-center justify-between gap-4">
                 <div class="flex flex-wrap gap-2" role="group" aria-label="Тип товару">
                     <button

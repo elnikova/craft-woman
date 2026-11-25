@@ -1,6 +1,6 @@
 import type { Money } from './product';
 
-/** Короткі дані майстра (MakerSummary::toArray) */
+/** Short maker data (MakerSummary::toArray) */
 export interface MakerBrief {
     uuid: string;
     display_name: string;
@@ -9,7 +9,7 @@ export interface MakerBrief {
     avatar_url: string | null;
 }
 
-// ---------- Кошик (CartService::view) ----------
+// ---------- Cart (CartService::view) ----------
 
 export type CartIssue = 'unavailable' | 'sold_out' | 'insufficient_stock';
 
@@ -36,11 +36,11 @@ export interface Cart {
     subtotal_minor: number;
     groups: { maker: MakerBrief | null; items: CartItem[] }[];
     has_issues: boolean;
-    /** UUID гостьового кошика; null для авторизованих */
+    /** Guest cart UUID; null for signed-in users */
     token: string | null;
 }
 
-// ---------- Оформлення ----------
+// ---------- Checkout ----------
 
 export type PaymentMethod = 'online' | 'cash_on_delivery';
 
@@ -71,11 +71,11 @@ export interface DeliveryAddress {
     postal_code: string;
 }
 
-// ---------- Замовлення ----------
+// ---------- Orders ----------
 
-/** Дзеркало Modules\Orders\Domain\OrderStatus */
+/** Mirrors Modules\Orders\Domain\OrderStatus */
 export type OrderStatus = 'pending_payment' | 'processing' | 'partially_shipped' | 'shipped' | 'completed' | 'cancelled';
-/** Дзеркало Modules\Orders\Domain\GroupStatus */
+/** Mirrors Modules\Orders\Domain\GroupStatus */
 export type GroupStatus = 'pending_payment' | 'awaiting_shipment' | 'shipped' | 'delivered' | 'completed' | 'cancelled';
 
 export interface OrderItem {
@@ -137,7 +137,7 @@ export interface DownloadFile {
     size: number;
 }
 
-/** Частина замовлення, як її бачить майстер */
+/** An order part as the maker sees it */
 export interface Sale extends OrderGroup {
     order_number: string;
     placed_at: string;

@@ -2,10 +2,10 @@
 import { computed } from 'vue';
 
 /**
- * Рушникова смуга вишитих хрестиків.
- * Чотири мотиви плавно змінюють один одного (~5 с показ, 2 с перехід).
- * `start` — з якого мотиву почати, щоб сусідні смуги не збігались.
- * При prefers-reduced-motion показується тільки стартовий мотив.
+ * Rushnyk band of cross-stitches.
+ * Four motifs crossfade in turn (~5 s hold, 2 s transition).
+ * `start` picks the first motif so neighbouring bands don't match.
+ * With prefers-reduced-motion only the starting motif is shown.
  */
 export type OrnamentMotif = 'rhombus' | 'tree' | 'barvinok' | 'mountains';
 

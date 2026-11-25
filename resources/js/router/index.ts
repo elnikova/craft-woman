@@ -4,13 +4,13 @@ import { useAuthStore } from '@/stores/auth';
 declare module 'vue-router' {
     interface RouteMeta {
         title?: string;
-        /** Сторінка тільки для гостей (вхід, реєстрація) */
+        /** Guest-only page (login, register) */
         guestOnly?: boolean;
-        /** Потрібна автентифікація */
+        /** Requires authentication */
         requiresAuth?: boolean;
-        /** Тільки для адміністратора */
+        /** Administrators only */
         requiresAdmin?: boolean;
-        /** Сторінка сама малює шапку (головна: шапка всередині першого екрана) */
+        /** The page draws its own header (home: header inside the hero) */
         ownHeader?: boolean;
     }
 }
@@ -179,7 +179,7 @@ export const router = createRouter({
                 },
             ],
         },
-        // Старі адреси
+        // Old URLs
         { path: '/studio', redirect: { name: 'studio' } },
         { path: '/admin/makers', redirect: { name: 'admin-makers' } },
         {

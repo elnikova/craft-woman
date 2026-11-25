@@ -21,7 +21,7 @@ onMounted(async () => {
         if (isAdmin.value) pendingMakers.value = (await makersApi.reviewQueue('pending_review')).meta.total;
         if (isMaker.value) myProfile.value = await makersApi.mine();
     } catch {
-        /* картки просто покажуть дефолтний стан */
+        /* the cards just show their default state */
     }
 });
 </script>
@@ -30,7 +30,7 @@ onMounted(async () => {
     <div class="max-w-[1080px]">
         <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum md:text-[44px]">Вітаємо, {{ firstName }}</h1>
 
-        <!-- Адміністратор -->
+        <!-- Administrator -->
         <div v-if="isAdmin" class="mt-8 grid gap-5 md:grid-cols-2 xl:grid-cols-3">
             <RouterLink :to="{ name: 'admin-makers' }" class="group flex flex-col gap-3 rounded-card border border-line p-6 text-inherit no-underline hover:border-plum">
                 <span class="grid h-11 w-11 place-items-center rounded-full bg-lavender-50 text-plum"><AppIcon name="check" /></span>
@@ -44,7 +44,7 @@ onMounted(async () => {
             </div>
         </div>
 
-        <!-- Майстер -->
+        <!-- Maker -->
         <template v-else-if="isMaker">
             <div class="mt-8 flex flex-wrap items-center justify-between gap-6 rounded-card bg-lavender-50 p-6">
                 <div>
@@ -75,7 +75,7 @@ onMounted(async () => {
             </div>
         </template>
 
-        <!-- Покупець -->
+        <!-- Buyer -->
         <template v-else>
             <div class="mt-8 grid gap-5 md:grid-cols-3">
                 <div v-for="c in [

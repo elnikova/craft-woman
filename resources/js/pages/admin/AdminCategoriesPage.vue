@@ -12,7 +12,7 @@ const loadError = ref('');
 const flash = ref('');
 const rowError = ref<{ uuid: string; message: string } | null>(null);
 
-/** Яка форма відкрита: нова кореневa, нова підкатегорія (parent) або редагування (edit) */
+/** Which form is open: new root, new subcategory (parent) or edit */
 const editing = ref<{ mode: 'root' } | { mode: 'child'; parent: Category } | { mode: 'edit'; category: Category } | null>(null);
 const name = ref('');
 const nameError = ref('');
@@ -70,7 +70,7 @@ async function save() {
 async function toggleVisible(c: Category) {
     rowError.value = null;
     const next = !c.is_visible;
-    c.is_visible = next; // оптимістично
+    c.is_visible = next; // optimistic
     try {
         await taxonomyApi.updateCategory(c.uuid, { is_visible: next });
         flash.value = next ? `«${c.name}» тепер видно в каталозі` : `«${c.name}» приховано з каталогу`;
@@ -108,7 +108,7 @@ onMounted(load);
 
         <p v-if="flash" role="status" class="mt-6 mb-0 rounded-[10px] bg-lavender-50 px-4 py-3 text-[15px] text-plum">{{ flash }}</p>
 
-        <!-- Форма (нова / перейменування) -->
+        <!-- Form (new / rename) -->
         <form
             v-if="editing"
             class="mt-6 flex flex-wrap items-start gap-3 rounded-card border border-plum/30 bg-lavender-50 p-5"

@@ -14,7 +14,7 @@ export const useCartStore = defineStore('cart', () => {
 
     function apply(next: Cart): Cart {
         cart.value = next;
-        // Гість зберігає токен; після входу кошик належить акаунту і токен не потрібен
+        // Guests keep the token; after login the cart belongs to the account and needs no token
         cartToken.set(next.token);
         loaded.value = true;
         return next;
@@ -24,7 +24,7 @@ export const useCartStore = defineStore('cart', () => {
         return apply(await cartApi.show());
     }
 
-    /** Після входу: переносимо гостьовий кошик в акаунт (якщо був) і завантажуємо */
+    /** After login: move the guest cart (if any) into the account, then load it */
     async function sync(isAuthenticated: boolean) {
         try {
             if (isAuthenticated && cartToken.get()) return apply(await cartApi.claim());

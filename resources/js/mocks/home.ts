@@ -1,6 +1,6 @@
 import type { CourseCardData, PostCardData, WorkshopRowData } from '@/types/catalog';
 
-/** Приклад даних для головної. Видалити, коли з'явиться API каталогу. */
+/** Sample data for the home page. Remove once the catalog API exists. */
 
 export const popularCrafts = ['В’язання', 'Кераміка', 'Вишивка', 'Вироби зі шкіри', 'Ткацтво', 'Свічки'];
 

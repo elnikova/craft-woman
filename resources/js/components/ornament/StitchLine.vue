@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** Пунктирний «шов», що проходить крізь перший екран. Декоративний. */
+/** Dashed "stitch" line running through the hero. Decorative. */
 defineProps<{ paths: string[]; viewBox: string }>();
 </script>
 

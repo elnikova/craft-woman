@@ -1,9 +1,9 @@
 import type { Currency } from './product';
 
-/** Дзеркало Modules\Identity\Domain\MakerStatus */
+/** Mirrors Modules\Identity\Domain\MakerStatus */
 export type MakerStatus = 'draft' | 'pending_review' | 'approved' | 'rejected' | 'suspended';
 
-/** Дзеркало MakerProfileResource. Приватні поля приходять тільки власнику й адміністратору. */
+/** Mirrors MakerProfileResource. Private fields are sent only to the owner and administrators. */
 export interface MakerProfile {
     uuid: string;
     slug: string;
@@ -15,7 +15,7 @@ export interface MakerProfile {
     city: string | null;
     follow_enabled: boolean;
     approved_at: string | null;
-    // приватні
+    // private
     address?: string | null;
     status?: MakerStatus;
     review_note?: string | null;
@@ -23,7 +23,7 @@ export interface MakerProfile {
     checkout?: MakerCheckout;
     created_at?: string;
     updated_at?: string;
-    // тільки для адміністратора
+    // administrators only
     owner?: { uuid: string; name: string; email: string };
 }
 
@@ -39,11 +39,11 @@ export interface MakerProfilePayload {
     cod_enabled?: boolean;
     delivery_currency?: Currency;
     delivery_domestic_minor?: number;
-    /** null — майстер не відправляє за кордон */
+    /** null means the maker does not ship abroad */
     delivery_international_minor?: number | null;
 }
 
-/** Налаштування доставки й оплати майстра (бачить лише власник) */
+/** Maker delivery and payment settings (visible to the owner only) */
 export interface MakerCheckout {
     cod_enabled: boolean;
     delivery_currency: Currency;

@@ -15,7 +15,7 @@ const failed = ref(false);
 const active = computed(() => favorites.has(props.uuid));
 
 async function toggle() {
-    // Гостя ведемо на вхід і повертаємо на ту саму сторінку
+    // Send guests to login and bring them back to the same page
     if (!auth.isAuthenticated) {
         await router.push({ name: 'login', query: { redirect: route.fullPath } });
         return;

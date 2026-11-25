@@ -14,18 +14,18 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        // SPA на тому ж домені автентифікується через сесійну cookie Sanctum.
-        // Bearer-токени й далі працюють для мобільних клієнтів.
+        // The same-domain SPA authenticates with the Sanctum session cookie.
+        // Bearer tokens still work for mobile clients.
         $middleware->statefulApi();
         $middleware->appendToGroup('api', \App\Http\Middleware\SetLocaleFromHeader::class);
         $middleware->appendToGroup('api', \App\Http\Middleware\EnsureAccountIsActive::class);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        // Порушення доменних правил (недозволений перехід статусу тощо) → 409 Conflict
+        // Domain rule violations (disallowed status transition, etc.) → 409 Conflict
         $exceptions->render(function (DomainException $e, Request $request) {
             if ($request->expectsJson()) {
-                // Доменні винятки несуть ключ перекладу (lang/*/domain.php); інакше — технічне повідомлення
-                // Значення параметрів (статуси, вимоги) теж перекладаємо; списки — через кому
+                // Domain exceptions carry a translation key (lang/*/domain.php); otherwise use the technical message
+                // Parameter values (statuses, requirements) are translated too; lists are comma-separated
                 $translate = fn (string $v) => trans()->has("domain.values.{$v}") ? __("domain.values.{$v}") : $v;
                 $params = array_map(
                     fn ($v) => is_string($v) ? implode(', ', array_map($translate, explode(',', $v))) : $v,

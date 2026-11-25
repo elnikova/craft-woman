@@ -6,7 +6,7 @@ import { favoritesApi } from '@/api/favorites';
 import { toApiError } from '@/api/http';
 import type { Product } from '@/types/product';
 
-// Товари, з яких зняли сердечко, лишаються на сторінці до перезавантаження — так легко повернути випадково прибране
+// Un-hearted products stay on the page until reload, so an accidental removal is easy to undo
 const products = ref<Product[]>([]);
 const page = ref(1);
 const lastPage = ref(1);

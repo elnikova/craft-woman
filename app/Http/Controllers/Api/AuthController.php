@@ -38,7 +38,7 @@ class AuthController extends Controller
             'role' => $request->role(),
         ]);
 
-        // Майстер починає з чернетки профілю; публічним він стане після схвалення адміністратором
+        // A maker starts with a draft profile; it becomes public once an administrator approves it
         if ($user->role === Role::Master) {
             $makers->createDraft($user, new MakerProfileData(displayName: $user->name));
         }
@@ -51,7 +51,7 @@ class AuthController extends Controller
 
     public function login(LoginRequest $request): UserResource
     {
-        // Облікові дані вже перевірені й користувача авторизовано в LoginRequest::after()
+        // Credentials are already checked and the user is signed in by LoginRequest::after()
         $this->regenerateSession($request);
 
         return UserResource::make(Auth::user());
@@ -129,8 +129,8 @@ class AuthController extends Controller
 
     public function logout(Request $request): JsonResponse
     {
-        // Під auth:sanctum guard за замовчуванням — RequestGuard без logout(),
-        // тому явно виходимо із сесійного guard'а
+        // Under auth:sanctum the default guard is a RequestGuard without logout(),
+        // so sign out of the session guard explicitly
         Auth::guard('web')->logout();
 
         if ($request->hasSession()) {

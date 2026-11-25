@@ -12,10 +12,10 @@ export interface ProductVariant {
     name: string;
     price: Money;
     in_stock: boolean;
-    /** Публічно: тільки коли залишок малий (≤3); у кабінеті — завжди */
+    /** Public: only when stock is low (≤3); always in the account area */
     stock: number | null;
     is_default: boolean;
-    // кабінет майстра
+    // maker account
     sku?: string | null;
     price_override_minor?: number | null;
     weight_grams?: number | null;
@@ -35,7 +35,7 @@ export interface ProductFile {
     mime_type: string | null;
 }
 
-/** Дзеркало ProductResource */
+/** Mirrors ProductResource */
 export interface Product {
     uuid: string;
     slug: string;
@@ -52,7 +52,7 @@ export interface Product {
     images: ProductImage[];
     variants: ProductVariant[];
     maker: { uuid: string; display_name: string; slug: string; city: string | null; avatar_url: string | null } | null;
-    // кабінет майстра / адмін
+    // maker account / admin
     status?: ProductStatus;
     review_note?: string | null;
     is_editable?: boolean;

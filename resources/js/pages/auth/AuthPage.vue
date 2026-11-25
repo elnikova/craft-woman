@@ -42,7 +42,7 @@ function switchTo(mode: 'login' | 'register') {
 }
 
 async function afterSuccess() {
-    // Після входу — у кабінет; нова майстриня одразу в профіль майстерні
+    // After login go to the account; a new maker goes straight to the studio profile
     const fallback = !isLogin.value && registerForm.role === 'master' ? '/account/studio' : '/account';
     const redirect = typeof route.query.redirect === 'string' ? route.query.redirect : fallback;
     await router.push(redirect);
@@ -59,7 +59,7 @@ async function submit() {
     } catch (e) {
         const err = toApiError(e);
         errors.value = err.fields;
-        // Якщо немає помилок по полях — показуємо загальну
+        // With no field errors, show the general message
         formError.value = Object.keys(err.fields).length ? '' : err.message;
         await nextTick();
         errorSummary.value?.focus();
@@ -71,7 +71,7 @@ async function submit() {
 
 <template>
     <div class="flex min-h-screen flex-wrap">
-        <!-- Форма -->
+        <!-- Form -->
         <main class="flex min-w-0 flex-[1_1_520px] flex-col px-6 pt-8 pb-12 md:px-10">
             <AppLogo class="self-start" />
 
@@ -107,7 +107,7 @@ async function submit() {
                         </button>
                     </div>
 
-                    <!-- Google OAuth: бекенд уже має googleRedirect/googleCallback, роути закоментовані -->
+                    <!-- Google OAuth: the backend has googleRedirect/googleCallback, the routes are commented out -->
                     <button
                         type="button"
                         disabled
@@ -133,7 +133,7 @@ async function submit() {
                         {{ formError }}
                     </div>
 
-                    <!-- Вхід -->
+                    <!-- Sign in -->
                     <form v-if="isLogin" class="flex flex-col gap-[18px]" novalidate @submit.prevent="submit">
                         <BaseInput
                             v-model="loginForm.email"
@@ -165,7 +165,7 @@ async function submit() {
                         </BaseButton>
                     </form>
 
-                    <!-- Реєстрація -->
+                    <!-- Register -->
                     <form v-else class="flex flex-col gap-[18px]" novalidate @submit.prevent="submit">
                         <fieldset class="m-0 border-0 p-0">
                             <legend class="mb-2 text-[15px] font-semibold text-ink">Я хочу</legend>
@@ -231,7 +231,7 @@ async function submit() {
             </div>
         </main>
 
-        <!-- Панель бренду -->
+        <!-- Brand panel -->
         <aside class="tx-knit relative flex min-h-[360px] flex-[1_1_480px] items-end overflow-hidden bg-lavender-100 p-10 md:p-14">
             <OrnamentBand start="tree" class="!absolute inset-x-0 top-0" />
             <StarOrnament :size="260" class="absolute top-[140px] right-14 hidden md:block" />

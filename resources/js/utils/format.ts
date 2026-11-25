@@ -12,7 +12,7 @@ export function formatRating(value: number): string {
     return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 }
 
-/** Українські форми множини: plural(3, ['урок', 'уроки', 'уроків']) → «3 уроки» */
+/** Ukrainian plural forms: plural(3, ['урок', 'уроки', 'уроків']) → "3 уроки" */
 export function plural(n: number, forms: [string, string, string]): string {
     const rule = new Intl.PluralRules(locale).select(n);
     const word = rule === 'one' ? forms[0] : rule === 'few' ? forms[1] : forms[2];
@@ -28,13 +28,13 @@ export function formatDay(iso: string): { day: string; month: string; time: stri
     };
 }
 
-/** Мінорні одиниці → рядок для поля вводу: 2800 → "28", 2850 → "28.50" */
+/** Minor units → input string: 2800 → "28", 2850 → "28.50" */
 export function minorToInput(minor: number | null | undefined): string {
     if (minor === null || minor === undefined) return '';
     return minor % 100 === 0 ? String(minor / 100) : (minor / 100).toFixed(2);
 }
 
-/** Рядок з поля вводу → мінорні одиниці без float-помилок: "28,5" → 2850 */
+/** Input string → minor units without float errors: "28,5" → 2850 */
 export function inputToMinor(value: string): number | null {
     const v = value.trim().replace(',', '.').replace(/\s/g, '');
     if (!v) return null;

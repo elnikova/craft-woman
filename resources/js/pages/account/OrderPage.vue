@@ -19,7 +19,7 @@ const actionError = ref('');
 const busy = ref<'pay' | 'cancel' | null>(null);
 const justPlaced = computed(() => route.query.placed === '1');
 
-/** Тестова оплата — тільки в локальній розробці, доки не підключено Stripe */
+/** Test payment: local development only, until Stripe is connected */
 const canTestPay = import.meta.env.DEV;
 
 const canCancel = computed(() => {

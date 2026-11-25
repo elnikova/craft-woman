@@ -30,7 +30,7 @@ async function logout() {
 
 <template>
     <div class="relative">
-        <!-- Рушник як фон меню: приглушений, щоб текст навігації лишався читабельним -->
+        <!-- Rushnyk as the menu background, muted so the navigation text stays readable -->
         <OrnamentBand start="barvinok" class="!absolute inset-x-0 top-1/2 -translate-y-1/2 opacity-25" />
         <header class="relative mx-auto flex max-w-[1280px] flex-wrap items-center gap-6 px-6 py-5 md:px-8">
             <AppLogo />

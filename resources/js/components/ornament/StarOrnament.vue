@@ -1,5 +1,5 @@
 <script setup lang="ts">
-/** Восьмикутна зірка (Алатир) з вишитих хрестиків. Декоративна. */
+/** Eight-pointed star (Alatyr) made of cross-stitches. Decorative. */
 withDefaults(defineProps<{ size?: number; variant?: 'deco' | 'logo' }>(), {
     size: 280,
     variant: 'deco',

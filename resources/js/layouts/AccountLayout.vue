@@ -14,13 +14,13 @@ const router = useRouter();
 const sections = computed(() => (auth.user ? accountNav(auth.user.role, auth.hasStudio) : []));
 const menuOpen = ref(false);
 
-// Закриваємо мобільне меню після переходу
+// Close the mobile menu after navigating
 watch(() => route.fullPath, () => (menuOpen.value = false));
 
 function isActive(to: unknown): boolean {
     const target = router.resolve(to as Parameters<typeof router.resolve>[0]);
     if (target.name === 'account') return route.name === 'account';
-    // Вкладені сторінки (редактор товару) підсвічують свій розділ
+    // Nested pages (product editor) highlight their section
     return route.path === target.path || route.path.startsWith(`${target.path}/`);
 }
 
@@ -32,7 +32,7 @@ async function logout() {
 
 <template>
     <div class="min-h-screen bg-white lg:grid lg:grid-cols-[288px_minmax(0,1fr)]">
-        <!-- Бічне меню -->
+        <!-- Sidebar -->
         <aside
             id="account-nav"
             class="tx-linen fixed inset-y-0 left-0 z-40 flex w-72 flex-col overflow-y-auto bg-lavender-100 transition-transform lg:sticky lg:top-0 lg:h-screen lg:translate-x-0"
@@ -85,10 +85,10 @@ async function logout() {
             </div>
         </aside>
 
-        <!-- Затемнення під мобільним меню -->
+        <!-- Backdrop under the mobile menu -->
         <div v-if="menuOpen" class="fixed inset-0 z-30 bg-plum/30 lg:hidden" aria-hidden="true" @click="menuOpen = false" />
 
-        <!-- Робоча область -->
+        <!-- Main area -->
         <div class="flex min-w-0 flex-col">
             <header class="sticky top-0 z-20 flex h-[72px] items-center gap-4 border-b border-line bg-white/95 px-6 backdrop-blur md:px-10">
                 <button

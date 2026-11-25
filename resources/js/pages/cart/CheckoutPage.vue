@@ -39,10 +39,10 @@ async function loadQuote() {
     quoteError.value = '';
     try {
         quote.value = await checkoutApi.quote(address.country_code);
-        // Якщо обраний спосіб став недоступним (наприклад, змінили країну) — повертаємось до онлайн-оплати
+        // If the chosen method became unavailable (e.g. the country changed), fall back to online payment
         if (!methods.value.find((m) => m.method === payment.value)?.available) payment.value = 'online';
     } catch (e) {
-        // Попередній розрахунок лишаємо на екрані, але оформити не дамо, доки помилка не зникне
+        // Keep the previous quote on screen but block checkout until the error clears
         quoteError.value = toApiError(e).message;
     } finally {
         quoting.value = false;

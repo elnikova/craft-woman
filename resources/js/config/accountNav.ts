@@ -20,7 +20,7 @@ export interface NavItem {
     label: string;
     to: RouteLocationRaw;
     icon: IconName;
-    /** Розділ ще не реалізовано — показуємо з позначкою «скоро» */
+    /** Section not built yet: shown with a "скоро" (soon) badge */
     soon?: boolean;
 }
 
@@ -72,7 +72,7 @@ const admin: NavSection = {
 
 const settings: NavSection = { items: [{ label: 'Налаштування', to: { name: 'account-settings' }, icon: 'settings' }] };
 
-/** Пункти меню кабінету за роллю. Майстер — це ще й покупець (domain-model.md §4.1). */
+/** Account menu items by role. A maker is also a buyer (domain-model.md §4.1). */
 export function accountNav(role: Role, hasStudio: boolean): NavSection[] {
     if (role === 'admin') return [{ items: [overview] }, admin, settings];
     if (role === 'master' || hasStudio) return [{ items: [overview] }, maker, customer, settings];

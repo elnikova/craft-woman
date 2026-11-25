@@ -84,7 +84,7 @@ onMounted(() => load());
     </section>
 
     <section class="mx-auto max-w-[1280px] px-6 py-16 md:px-8" aria-live="polite" :aria-busy="loading">
-        <!-- Завантаження -->
+        <!-- Loading -->
         <div v-if="loading" class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-6" aria-label="Завантаження">
             <div v-for="i in 8" :key="i" class="flex animate-pulse flex-col gap-3">
                 <div class="aspect-[4/5] rounded-card bg-lavender-50" />
@@ -93,13 +93,13 @@ onMounted(() => load());
             </div>
         </div>
 
-        <!-- Помилка -->
+        <!-- Error -->
         <div v-else-if="error" role="alert" class="flex flex-col items-start gap-4 rounded-card border border-kalyna/30 bg-kalyna/5 p-6">
             <p class="m-0 text-kalyna">{{ error }}</p>
             <BaseButton variant="secondary" @click="load()">Спробувати ще раз</BaseButton>
         </div>
 
-        <!-- Порожньо -->
+        <!-- Empty -->
         <div v-else-if="makers.length === 0" class="flex flex-col items-start gap-4">
             <h2 class="font-flair m-0 text-2xl font-bold text-plum">
                 {{ query ? `За запитом «${query}» нікого не знайшлося` : 'Тут скоро з’являться майстри' }}
@@ -111,7 +111,7 @@ onMounted(() => load());
             <BaseButton v-else :to="{ name: 'register', query: { role: 'master' } }">Відкрити майстерню</BaseButton>
         </div>
 
-        <!-- Список -->
+        <!-- List -->
         <template v-else>
             <p class="mt-0 mb-8 text-ink-muted">{{ plural(total, ['майстер', 'майстри', 'майстрів']) }}</p>
             <div class="grid grid-cols-[repeat(auto-fill,minmax(240px,1fr))] gap-x-6 gap-y-10">
