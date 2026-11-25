@@ -78,6 +78,17 @@ export const router = createRouter({
                             props: true,
                         },
                         {
+                            path: 'workshops',
+                            name: 'workshops',
+                            component: () => import('@/pages/workshops/WorkshopsPage.vue'),
+                        },
+                        {
+                            path: 'workshops/:slug',
+                            name: 'workshop',
+                            component: () => import('@/pages/workshops/WorkshopPage.vue'),
+                            props: true,
+                        },
+                        {
                             path: 'cart',
                             name: 'cart',
                             component: () => import('@/pages/cart/CartPage.vue'),
@@ -216,6 +227,37 @@ export const router = createRouter({
                             path: 'admin/courses',
                             name: 'admin-courses',
                             component: () => import('@/pages/admin/AdminCoursesPage.vue'),
+                            meta: { requiresAuth: true, requiresAdmin: true },
+                        },
+                        {
+                            path: 'bookings',
+                            name: 'account-bookings',
+                            component: () => import('@/pages/account/BookingsPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'workshops',
+                            name: 'studio-workshops',
+                            component: () => import('@/pages/studio/MyWorkshopsPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'workshops/new',
+                            name: 'studio-workshop-new',
+                            component: () => import('@/pages/studio/WorkshopEditorPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'workshops/:uuid',
+                            name: 'studio-workshop',
+                            component: () => import('@/pages/studio/WorkshopEditorPage.vue'),
+                            props: true,
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'admin/workshops',
+                            name: 'admin-workshops',
+                            component: () => import('@/pages/admin/AdminWorkshopsPage.vue'),
                             meta: { requiresAuth: true, requiresAdmin: true },
                         },
                         {

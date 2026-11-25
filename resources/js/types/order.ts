@@ -15,7 +15,7 @@ export type CartIssue = 'unavailable' | 'sold_out' | 'insufficient_stock';
 
 export interface CartItem {
     uuid: string;
-    kind: 'product' | 'course';
+    kind: 'product' | 'course' | 'workshop';
     product_uuid: string;
     variant_uuid: string | null;
     name: string;
@@ -23,6 +23,10 @@ export interface CartItem {
     slug: string | null;
     image_url: string | null;
     is_digital: boolean;
+    /** digital product or course: quantity is always 1 */
+    is_single_unit: boolean;
+    /** workshops: first session start */
+    starts_at: string | null;
     quantity: number;
     available_stock: number | null;
     unit_price: Money;
@@ -84,6 +88,9 @@ export interface OrderItem {
     product_uuid: string | null;
     is_course: boolean;
     course_uuid: string | null;
+    is_workshop: boolean;
+    workshop_uuid: string | null;
+    starts_at: string | null;
     name: string;
     variant_name: string | null;
     is_digital: boolean;

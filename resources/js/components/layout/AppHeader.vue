@@ -21,7 +21,7 @@ const nav = computed(() => [
     { label: t('nav.makers'), to: { name: 'makers' } },
     { label: t('nav.products'), to: { name: 'catalog' } },
     { label: t('nav.courses'), to: { name: 'courses' } },
-    { label: t('nav.workshops'), to: { name: 'home', hash: '#workshops' } },
+    { label: t('nav.workshops'), to: { name: 'workshops' } },
     { label: t('nav.community'), to: { name: 'home', hash: '#community' } },
 ]);
 

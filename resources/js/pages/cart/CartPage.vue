@@ -2,6 +2,7 @@
 import { computed, onMounted, ref } from 'vue';
 import { useI18n } from 'vue-i18n';
 import { labelMap, localePath } from '@/i18n';
+import { dayLabel } from '@/utils/workshop';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import ProductCover from '@/components/products/ProductCover.vue';
 import { toApiError } from '@/api/http';
@@ -82,25 +83,25 @@ onMounted(() => store.load().catch(() => undefined));
                             class="flex flex-wrap items-center gap-4 border-b border-line px-5 py-4 last:border-b-0"
                             :class="item.issue ? 'bg-kalyna/5' : ''"
                         >
-                            <RouterLink v-if="item.slug" :to="{ name: item.kind === 'course' ? 'course' : 'product', params: { slug: item.slug } }" class="shrink-0" tabindex="-1">
+                            <RouterLink v-if="item.slug" :to="{ name: item.kind, params: { slug: item.slug } }" class="shrink-0" tabindex="-1">
                                 <ProductCover :uuid="item.product_uuid" :name="item.name" :src="item.image_url" class="!w-20" />
                             </RouterLink>
                             <div class="min-w-0 flex-[1_1_200px]">
                                 <RouterLink
                                     v-if="item.slug"
-                                    :to="{ name: item.kind === 'course' ? 'course' : 'product', params: { slug: item.slug } }"
+                                    :to="{ name: item.kind, params: { slug: item.slug } }"
                                     class="font-semibold text-ink no-underline hover:text-plum"
                                     >{{ item.name }}</RouterLink
                                 >
                                 <span v-else class="font-semibold">{{ item.name }}</span>
                                 <div class="mt-0.5 text-sm text-ink-muted">
-                                    {{ item.kind === 'course' ? t('courses.onlineCourse') : item.is_digital ? t('common.digitalFile') : item.variant_name }}
+                                    {{ item.kind === 'workshop' ? t('cartWorkshop.line', { date: item.starts_at ? dayLabel(item.starts_at) : '' }) : item.kind === 'course' ? t('courses.onlineCourse') : item.is_digital ? t('common.digitalFile') : item.variant_name }}
                                 </div>
                                 <p v-if="item.issue" class="mt-1 mb-0 text-sm font-semibold text-kalyna">{{ ISSUES[item.issue] }}</p>
                                 <p v-else-if="item.price_changed" class="mt-1 mb-0 text-sm text-warning-ink">{{ t('cart.priceChanged') }}</p>
                             </div>
 
-                            <div v-if="!item.is_digital" class="flex h-10 items-center rounded-full border border-line-strong" role="group" :aria-label="t('common.quantityOf', { name: item.name })">
+                            <div v-if="!item.is_single_unit" class="flex h-10 items-center rounded-full border border-line-strong" role="group" :aria-label="t('common.quantityOf', { name: item.name })">
                                 <button
                                     type="button"
                                     class="h-full w-10 text-lg text-plum disabled:opacity-40"

@@ -46,7 +46,7 @@ const customer: NavSection = {
     items: [
         { label: 'accountNav.orders', to: { name: 'account-orders' }, icon: 'bag' },
         { label: 'accountNav.learning', to: { name: 'account-learning' }, icon: 'book' },
-        soon('bookings', 'accountNav.bookings', 'calendar'),
+        { label: 'accountNav.bookings', to: { name: 'account-bookings' }, icon: 'calendar' },
         { label: 'accountNav.favorites', to: { name: 'account-favorites' }, icon: 'heart' },
     ],
 };
@@ -58,7 +58,7 @@ const maker: NavSection = {
         { label: 'accountNav.products', to: { name: 'studio-products' }, icon: 'box' },
         { label: 'accountNav.sales', to: { name: 'studio-sales' }, icon: 'chart' },
         { label: 'accountNav.teaching', to: { name: 'studio-courses' }, icon: 'book' },
-        soon('workshops', 'accountNav.workshops', 'calendar'),
+        { label: 'accountNav.workshops', to: { name: 'studio-workshops' }, icon: 'calendar' },
     ],
 };
 
@@ -70,6 +70,7 @@ const admin: NavSection = {
         { label: 'accountNav.categories', to: { name: 'admin-categories' }, icon: 'tag' },
         { label: 'accountNav.adminProducts', to: { name: 'admin-products' }, icon: 'flag' },
         { label: 'accountNav.adminCourses', to: { name: 'admin-courses' }, icon: 'book' },
+        { label: 'accountNav.adminWorkshops', to: { name: 'admin-workshops' }, icon: 'calendar' },
         { label: 'accountNav.allOrders', to: { name: 'admin-orders' }, icon: 'bag' },
     ],
 };

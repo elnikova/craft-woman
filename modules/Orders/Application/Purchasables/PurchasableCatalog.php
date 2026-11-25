@@ -7,13 +7,16 @@ use Modules\Education\Application\Contracts\CourseLine;
 use Modules\Marketplace\Application\Contracts\ProductCatalog;
 use Modules\Marketplace\Application\Contracts\PurchasableLine;
 use Modules\Orders\Infrastructure\Persistence\CartItem;
+use Modules\Workshops\Application\Contracts\WorkshopCatalog;
+use Modules\Workshops\Application\Contracts\WorkshopLine;
 
-/** One door for Orders to the catalogs of other modules (products, courses). */
+/** One door for Orders to the catalogs of other modules (products, courses, workshops). */
 final class PurchasableCatalog
 {
     public function __construct(
         private readonly ProductCatalog $products,
         private readonly CourseCatalog $courses,
+        private readonly WorkshopCatalog $workshops,
     ) {}
 
     public function product(string $productUuid, ?string $variantUuid): ?Purchasable
@@ -30,9 +33,32 @@ final class PurchasableCatalog
         return $line ? $this->fromCourse($line) : null;
     }
 
+    public function workshop(string $workshopUuid): ?Purchasable
+    {
+        $line = $this->workshops->line($workshopUuid);
+
+        return $line ? $this->fromWorkshop($line) : null;
+    }
+
     public function forItem(CartItem $item): ?Purchasable
     {
-        return $item->course_uuid ? $this->course($item->course_uuid) : $this->product((string) $item->product_uuid, $item->product_variant_uuid);
+        return match (true) {
+            $item->course_uuid !== null => $this->course($item->course_uuid),
+            $item->workshop_uuid !== null => $this->workshop($item->workshop_uuid),
+            default => $this->product((string) $item->product_uuid, $item->product_variant_uuid),
+        };
+    }
+
+    /** Hold workshop seats for a placed order line (inside the checkout transaction). */
+    public function reserveSeats(string $workshopUuid, string $userUuid, string $orderItemUuid, int $seats): void
+    {
+        $this->workshops->reserve($workshopUuid, $userUuid, $orderItemUuid, $seats);
+    }
+
+    /** @param list<string> $orderItemUuids */
+    public function releaseSeats(array $orderItemUuids, string $reason): void
+    {
+        $this->workshops->release($orderItemUuids, $reason);
     }
 
     public function hasLifetimeAccess(string $userUuid, string $courseUuid): bool
@@ -48,9 +74,12 @@ final class PurchasableCatalog
     {
         $pairs = [];
         $courseUuids = [];
+        $workshopUuids = [];
         foreach ($items as $item) {
             if ($item->course_uuid) {
                 $courseUuids[] = $item->course_uuid;
+            } elseif ($item->workshop_uuid) {
+                $workshopUuids[] = $item->workshop_uuid;
             } else {
                 $pairs[] = [(string) $item->product_uuid, $item->product_variant_uuid];
             }
@@ -63,6 +92,10 @@ final class PurchasableCatalog
         }
         foreach ($this->courses->lines($courseUuids) as $line) {
             $p = $this->fromCourse($line);
+            $result[Purchasable::key($p->kind, $p->itemUuid)] = $p;
+        }
+        foreach ($this->workshops->lines($workshopUuids) as $line) {
+            $p = $this->fromWorkshop($line);
             $result[Purchasable::key($p->kind, $p->itemUuid)] = $p;
         }
 
@@ -85,6 +118,26 @@ final class PurchasableCatalog
             currency: $l->currency,
             availableStock: $l->availableStock,
             isPurchasable: $l->isPurchasable,
+        );
+    }
+
+    private function fromWorkshop(WorkshopLine $l): Purchasable
+    {
+        return new Purchasable(
+            kind: Purchasable::WORKSHOP,
+            itemUuid: $l->workshopUuid,
+            variantUuid: null,
+            makerUuid: $l->makerUuid,
+            isDigital: true,
+            name: $l->name,
+            variantName: null,
+            slug: $l->slug,
+            imageUrl: $l->imageUrl,
+            unitPriceMinor: $l->priceMinor,
+            currency: $l->currency,
+            availableStock: $l->seatsLeft,
+            isPurchasable: $l->isPurchasable,
+            startsAt: $l->startsAt,
         );
     }
 

@@ -11,6 +11,7 @@ use Modules\Orders\Application\Purchasables\PurchasableCatalog;
 use Modules\Orders\Domain\Exceptions\OrderRuleViolation;
 use Modules\Orders\Infrastructure\Persistence\Cart;
 use Modules\Orders\Infrastructure\Persistence\CartItem;
+use Modules\Workshops\Domain\Exceptions\WorkshopRuleViolation;
 
 /**
  * The cart is a working list, not a commercial record (domain-rules.md §19).
@@ -54,6 +55,11 @@ final class CartService
         return $this->addLine($cart, $this->catalog->course($courseUuid), 1);
     }
 
+    public function addWorkshop(Cart $cart, string $workshopUuid, int $seats): CartItem
+    {
+        return $this->addLine($cart, $this->catalog->workshop($workshopUuid), $seats);
+    }
+
     private function addLine(Cart $cart, ?Purchasable $line, int $quantity): CartItem
     {
         $maker = $line ? ($this->makers->summaries([$line->makerUuid])[$line->makerUuid] ?? null) : null;
@@ -73,34 +79,45 @@ final class CartService
                 $cart->update(['currency' => $line->currency]);
             }
 
-            $item = $line->isCourse()
-                ? $cart->items()->where('course_uuid', $line->itemUuid)->first()
-                : $cart->items()->where('product_uuid', $line->itemUuid)->where('product_variant_uuid', $line->variantUuid)->first();
+            $item = match ($line->kind) {
+                Purchasable::COURSE => $cart->items()->where('course_uuid', $line->itemUuid)->first(),
+                Purchasable::WORKSHOP => $cart->items()->where('workshop_uuid', $line->itemUuid)->first(),
+                default => $cart->items()->where('product_uuid', $line->itemUuid)->where('product_variant_uuid', $line->variantUuid)->first(),
+            };
 
-            // Digital goods are bought once; physical quantity is capped by stock
-            $qty = $line->isDigital ? 1 : min(($item?->quantity ?? 0) + $quantity, self::MAX_QUANTITY);
-            if (! $line->isDigital && $qty > (int) $line->availableStock) {
-                throw OrderRuleViolation::insufficientStock($line->name, (int) $line->availableStock);
-            }
+            // Digital goods and courses are bought once; goods and seats are capped by what's left
+            $qty = $line->isSingleUnit() ? 1 : min(($item?->quantity ?? 0) + $quantity, self::MAX_QUANTITY);
+            $this->assertAvailable($line, $qty);
 
             $attributes = ['quantity' => $qty, 'unit_price_amount_minor' => $line->unitPriceMinor, 'currency' => $line->currency];
 
             return $item
                 ? tap($item)->update($attributes)
-                : $cart->items()->create([...$attributes, ...($line->isCourse()
-                    ? ['course_uuid' => $line->itemUuid]
-                    : ['product_uuid' => $line->itemUuid, 'product_variant_uuid' => $line->variantUuid])]);
+                : $cart->items()->create([...$attributes, ...match ($line->kind) {
+                    Purchasable::COURSE => ['course_uuid' => $line->itemUuid],
+                    Purchasable::WORKSHOP => ['workshop_uuid' => $line->itemUuid],
+                    default => ['product_uuid' => $line->itemUuid, 'product_variant_uuid' => $line->variantUuid],
+                }]);
         });
+    }
+
+    private function assertAvailable(Purchasable $line, int $quantity): void
+    {
+        if ($line->availableStock !== null && $quantity > $line->availableStock) {
+            throw $line->isWorkshop()
+                ? WorkshopRuleViolation::notEnoughSeats($line->availableStock)
+                : OrderRuleViolation::insufficientStock($line->name, $line->availableStock);
+        }
     }
 
     public function setQuantity(Cart $cart, CartItem $item, int $quantity): void
     {
         $line = $this->catalog->forItem($item);
-        if ($line && ! $line->isDigital && $quantity > (int) $line->availableStock) {
-            throw OrderRuleViolation::insufficientStock($line->name, (int) $line->availableStock);
+        if ($line) {
+            $this->assertAvailable($line, $quantity);
         }
 
-        $item->update(['quantity' => $line?->isDigital ? 1 : min(max($quantity, 1), self::MAX_QUANTITY)]);
+        $item->update(['quantity' => $line?->isSingleUnit() ? 1 : min(max($quantity, 1), self::MAX_QUANTITY)]);
     }
 
     public function remove(Cart $cart, CartItem $item): void
@@ -127,10 +144,12 @@ final class CartService
 
         foreach ($guest->items as $item) {
             try {
-                $item->course_uuid
-                    ? $this->addCourse($target, $item->course_uuid, $user)
-                    : $this->add($target, (string) $item->product_uuid, $item->product_variant_uuid, $item->quantity);
-            } catch (OrderRuleViolation|CourseRuleViolation) {
+                match (true) {
+                    $item->course_uuid !== null => $this->addCourse($target, $item->course_uuid, $user),
+                    $item->workshop_uuid !== null => $this->addWorkshop($target, $item->workshop_uuid, $item->quantity),
+                    default => $this->add($target, (string) $item->product_uuid, $item->product_variant_uuid, $item->quantity),
+                };
+            } catch (OrderRuleViolation|CourseRuleViolation|WorkshopRuleViolation) {
                 // skipped silently: the cart view will show what's there
             }
         }
@@ -160,8 +179,8 @@ final class CartService
 
             $issue = match (true) {
                 ! $line, ! $line->isPurchasable, ! ($maker?->isApproved ?? false) => 'unavailable',
-                ! $line->isDigital && (int) $line->availableStock < 1 => 'sold_out',
-                ! $line->isDigital && $item->quantity > (int) $line->availableStock => 'insufficient_stock',
+                $line->availableStock !== null && $line->availableStock < 1 => 'sold_out',
+                $line->availableStock !== null && $item->quantity > $line->availableStock => 'insufficient_stock',
                 default => null,
             };
 
@@ -180,14 +199,16 @@ final class CartService
             $groups[$key] ??= ['maker' => $maker?->toArray(), 'items' => []];
             $groups[$key]['items'][] = [
                 'uuid' => $item->uuid,
-                'kind' => $item->course_uuid ? 'course' : 'product',
-                'product_uuid' => $item->product_uuid ?? $item->course_uuid,
+                'kind' => $line?->kind ?? ($item->course_uuid ? 'course' : ($item->workshop_uuid ? 'workshop' : 'product')),
+                'product_uuid' => $item->product_uuid ?? $item->course_uuid ?? $item->workshop_uuid,
                 'variant_uuid' => $item->product_variant_uuid,
                 'name' => $line?->name ?? '—',
                 'variant_name' => $line?->variantName,
                 'slug' => $line?->slug,
                 'image_url' => $line?->imageUrl,
                 'is_digital' => $line?->isDigital ?? false,
+                'is_single_unit' => $line?->isSingleUnit() ?? false,
+                'starts_at' => $line?->startsAt,
                 'quantity' => $item->quantity,
                 'available_stock' => $line?->availableStock,
                 'unit_price' => ['amount_minor' => $item->unit_price_amount_minor, 'currency' => $item->currency],
