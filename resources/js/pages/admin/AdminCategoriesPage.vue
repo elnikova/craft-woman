@@ -1,11 +1,13 @@
 <script setup lang="ts">
 import { nextTick, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import { taxonomyApi } from '@/api/taxonomy';
 import { toApiError } from '@/api/http';
 import type { Category } from '@/types/taxonomy';
 import { plural } from '@/utils/format';
 
+const { t } = useI18n();
 const tree = ref<Category[]>([]);
 const loading = ref(true);
 const loadError = ref('');
@@ -14,7 +16,9 @@ const rowError = ref<{ uuid: string; message: string } | null>(null);
 
 /** Which form is open: new root, new subcategory (parent) or edit */
 const editing = ref<{ mode: 'root' } | { mode: 'child'; parent: Category } | { mode: 'edit'; category: Category } | null>(null);
+// Categories are written in Ukrainian with an English translation (domain-rules.md §42)
 const name = ref('');
+const nameEn = ref('');
 const nameError = ref('');
 const saving = ref(false);
 const confirmDelete = ref<string | null>(null);
@@ -33,7 +37,8 @@ async function load() {
 
 async function open(state: NonNullable<typeof editing.value>) {
     editing.value = state;
-    name.value = state.mode === 'edit' ? state.category.name : '';
+    name.value = state.mode === 'edit' ? (state.category.source?.name ?? state.category.name) : '';
+    nameEn.value = state.mode === 'edit' ? (state.category.translations?.en?.name ?? '') : '';
     nameError.value = '';
     rowError.value = null;
     await nextTick();
@@ -43,7 +48,7 @@ async function open(state: NonNullable<typeof editing.value>) {
 async function save() {
     if (!editing.value) return;
     if (name.value.trim().length < 2) {
-        nameError.value = 'Назва — щонайменше 2 символи';
+        nameError.value = t('adminCategories.nameTooShort');
         return;
     }
     saving.value = true;
@@ -51,11 +56,16 @@ async function save() {
     try {
         const e = editing.value;
         if (e.mode === 'edit') {
-            await taxonomyApi.updateCategory(e.category.uuid, { name: name.value.trim() });
-            flash.value = `Категорію перейменовано на «${name.value.trim()}»`;
+            await taxonomyApi.updateCategory(e.category.uuid, { name: name.value.trim(), content_locale: 'uk', translations: english() });
+            flash.value = t('adminCategories.renamed', { name: name.value.trim() });
         } else {
-            await taxonomyApi.createCategory({ name: name.value.trim(), parent_uuid: e.mode === 'child' ? e.parent.uuid : null });
-            flash.value = `Категорію «${name.value.trim()}» додано`;
+            await taxonomyApi.createCategory({
+                name: name.value.trim(),
+                parent_uuid: e.mode === 'child' ? e.parent.uuid : null,
+                content_locale: 'uk',
+                translations: english(),
+            });
+            flash.value = t('adminCategories.added', { name: name.value.trim() });
         }
         editing.value = null;
         await load();
@@ -67,13 +77,15 @@ async function save() {
     }
 }
 
+const english = () => ({ en: { name: nameEn.value.trim() || null } });
+
 async function toggleVisible(c: Category) {
     rowError.value = null;
     const next = !c.is_visible;
     c.is_visible = next; // optimistic
     try {
         await taxonomyApi.updateCategory(c.uuid, { is_visible: next });
-        flash.value = next ? `«${c.name}» тепер видно в каталозі` : `«${c.name}» приховано з каталогу`;
+        flash.value = next ? t('adminCategories.nowVisible', { name: c.name }) : t('adminCategories.nowHidden', { name: c.name });
     } catch (e) {
         c.is_visible = !next;
         rowError.value = { uuid: c.uuid, message: toApiError(e).message };
@@ -85,7 +97,7 @@ async function remove(c: Category) {
     try {
         await taxonomyApi.deleteCategory(c.uuid);
         confirmDelete.value = null;
-        flash.value = `Категорію «${c.name}» видалено`;
+        flash.value = t('adminCategories.deleted', { name: c.name });
         await load();
     } catch (e) {
         confirmDelete.value = null;
@@ -100,10 +112,10 @@ onMounted(load);
     <div class="max-w-[960px]">
         <div class="flex flex-wrap items-end justify-between gap-4">
             <div>
-                <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Категорії</h1>
-                <p class="mt-2 mb-0 text-ink-muted">Два рівні: категорія й підкатегорія. Приховані не показуються в каталозі.</p>
+                <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ t('adminCategories.title') }}</h1>
+                <p class="mt-2 mb-0 text-ink-muted">{{ t('adminCategories.lead') }}</p>
             </div>
-            <BaseButton @click="open({ mode: 'root' })">Додати категорію</BaseButton>
+            <BaseButton @click="open({ mode: 'root' })">{{ t('adminCategories.add') }}</BaseButton>
         </div>
 
         <p v-if="flash" role="status" class="mt-6 mb-0 rounded-[10px] bg-lavender-50 px-4 py-3 text-[15px] text-plum">{{ flash }}</p>
@@ -118,9 +130,10 @@ onMounted(load);
         >
             <div class="flex min-w-0 flex-[1_1_320px] flex-col gap-2">
                 <label for="category-name" class="text-[15px] font-semibold text-ink">
-                    <template v-if="editing.mode === 'root'">Нова категорія</template>
-                    <template v-else-if="editing.mode === 'child'">Нова підкатегорія в «{{ editing.parent.name }}»</template>
-                    <template v-else>Перейменувати «{{ editing.category.name }}»</template>
+                    <template v-if="editing.mode === 'root'">{{ t('adminCategories.new') }}</template>
+                    <template v-else-if="editing.mode === 'child'">{{ t('adminCategories.newChild', { name: editing.parent.name }) }}</template>
+                    <template v-else>{{ t('adminCategories.rename', { name: editing.category.name }) }}</template>
+                    · {{ t('adminCategories.nameUk') }}
                 </label>
                 <input
                     id="category-name"
@@ -133,22 +146,33 @@ onMounted(load);
                 />
                 <p v-if="nameError" id="category-name-error" class="m-0 text-sm font-medium text-kalyna">{{ nameError }}</p>
             </div>
-            <div class="flex gap-2 pt-[30px]">
-                <BaseButton type="submit" :loading="saving">{{ editing.mode === 'edit' ? 'Зберегти' : 'Додати' }}</BaseButton>
-                <BaseButton variant="ghost" @click="editing = null">Скасувати</BaseButton>
+            <div class="flex min-w-0 flex-[1_1_320px] flex-col gap-2" lang="en">
+                <label for="category-name-en" class="text-[15px] font-semibold text-ink">{{ t('adminCategories.nameEn') }}</label>
+                <input
+                    id="category-name-en"
+                    v-model="nameEn"
+                    maxlength="80"
+                    aria-describedby="category-name-en-hint"
+                    class="h-[52px] rounded-control border-[1.5px] border-line-strong bg-white px-4 text-base text-ink focus:border-plum focus:outline-none"
+                />
+                <p id="category-name-en-hint" class="m-0 text-[13px] text-ink-muted">{{ t('adminCategories.nameEnHint') }}</p>
+            </div>
+            <div class="flex w-full gap-2">
+                <BaseButton type="submit" :loading="saving">{{ editing.mode === 'edit' ? t('adminCategories.save') : t('adminCategories.addBtn') }}</BaseButton>
+                <BaseButton variant="ghost" @click="editing = null">{{ t('adminCategories.cancel') }}</BaseButton>
             </div>
         </form>
 
-        <div v-if="loading" class="mt-8 space-y-3" aria-busy="true" aria-label="Завантаження">
+        <div v-if="loading" class="mt-8 space-y-3" aria-busy="true" :aria-label="t('common.loading')">
             <div v-for="i in 5" :key="i" class="h-16 animate-pulse rounded-card bg-lavender-50" />
         </div>
 
         <div v-else-if="loadError" role="alert" class="mt-8 flex flex-col items-start gap-4 rounded-card border border-kalyna/30 bg-kalyna/5 p-6">
             <p class="m-0 text-kalyna">{{ loadError }}</p>
-            <BaseButton variant="secondary" @click="load">Спробувати ще раз</BaseButton>
+            <BaseButton variant="secondary" @click="load">{{ t('common.retry') }}</BaseButton>
         </div>
 
-        <p v-else-if="tree.length === 0" class="mt-10 text-lg text-ink-muted">Категорій ще немає. Додайте першу — майстри обиратимуть її для товарів.</p>
+        <p v-else-if="tree.length === 0" class="mt-10 text-lg text-ink-muted">{{ t('adminCategories.empty') }}</p>
 
         <ul v-else class="mt-8 mb-0 flex list-none flex-col gap-3 p-0">
             <li v-for="root in tree" :key="root.uuid" class="rounded-card border border-line">
@@ -159,25 +183,24 @@ onMounted(load);
                     >
                         <div class="min-w-0 flex-[1_1_220px]">
                             <span :class="i === 0 ? 'text-lg font-semibold text-plum' : 'text-[16px] text-ink'">{{ c.name }}</span>
-                            <span v-if="!c.is_visible" class="ml-2 rounded-full bg-ink/10 px-2 py-0.5 text-[12px] font-semibold text-ink">приховано</span>
+                            <span v-if="!c.is_visible" class="ml-2 rounded-full bg-ink/10 px-2 py-0.5 text-[12px] font-semibold text-ink">{{ t('adminCategories.hidden') }}</span>
                             <div class="text-[13px] text-ink-muted">
                                 /{{ c.slug }} · {{ plural(c.usage_count ?? 0, 'products') }}
+                                <template v-if="!c.translations?.en?.name"> · <span class="text-kalyna">{{ t('adminCategories.noEnglish') }}</span></template>
                             </div>
                         </div>
 
                         <label class="flex items-center gap-2 text-sm text-ink">
-                            <input type="checkbox" class="h-5 w-5 accent-plum" :checked="c.is_visible" @change="toggleVisible(c)" />
-                            У каталозі
-                        </label>
+                            <input type="checkbox" class="h-5 w-5 accent-plum" :checked="c.is_visible" @change="toggleVisible(c)" />{{ t('adminCategories.inCatalog') }}</label>
 
                         <div class="flex flex-wrap gap-1">
-                            <BaseButton v-if="i === 0" variant="ghost" @click="open({ mode: 'child', parent: c })">+ Підкатегорія</BaseButton>
-                            <BaseButton variant="ghost" @click="open({ mode: 'edit', category: c })">Перейменувати</BaseButton>
+                            <BaseButton v-if="i === 0" variant="ghost" @click="open({ mode: 'child', parent: c })">{{ t('adminCategories.addChild') }}</BaseButton>
+                            <BaseButton variant="ghost" @click="open({ mode: 'edit', category: c })">{{ t('adminCategories.renameBtn') }}</BaseButton>
                             <template v-if="confirmDelete === c.uuid">
-                                <BaseButton variant="secondary" @click="remove(c)">Так, видалити</BaseButton>
-                                <BaseButton variant="ghost" @click="confirmDelete = null">Ні</BaseButton>
+                                <BaseButton variant="secondary" @click="remove(c)">{{ t('adminCategories.yesDelete') }}</BaseButton>
+                                <BaseButton variant="ghost" @click="confirmDelete = null">{{ t('adminCategories.no') }}</BaseButton>
                             </template>
-                            <BaseButton v-else variant="ghost" @click="confirmDelete = c.uuid">Видалити</BaseButton>
+                            <BaseButton v-else variant="ghost" @click="confirmDelete = c.uuid">{{ t('adminCategories.delete') }}</BaseButton>
                         </div>
                     </div>
                     <p v-if="rowError?.uuid === c.uuid" role="alert" class="m-0 px-5 pb-3 text-sm text-kalyna" :class="i > 0 ? 'pl-12' : ''">

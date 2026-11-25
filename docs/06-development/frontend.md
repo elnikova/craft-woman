@@ -87,7 +87,9 @@ Utilities: `font-flair`, `tx-linen`, `tx-weave`, `tx-knit`, `ph-knit`, `ph-weave
 - Status labels (`MAKER_STATUS_LABELS`, `ORDER_STATUS_LABELS`, …) are built with `labelMap()` and follow the current language.
 - Country names come from `Intl.DisplayNames` (`countries()`, `countryName()`).
 - Maker content: the API returns `content_locale`. When it differs from the interface language, pages mark the text with `lang` and show a short note.
-- Not translated yet: studio and admin pages (next PR) and the sample home blocks in `mocks/home.ts`.
+- Editing translations: `components/ui/ContentLanguage.vue` picks the source language. The product editor and the studio profile have an optional block for the other language, and admin categories take names in both languages.
+- Edit endpoints (`me.*`, `admin.*`) return the source text plus `translations`; public endpoints return the reader's language, even to the owner.
+- Not translated: the sample home blocks in `mocks/home.ts`.
 
 ## Account area
 
@@ -167,7 +169,6 @@ makers `oksana@`, `marko@`, `iryna@`, `luka@`, `sofia@craftwoman.local` / `passw
 ## Open questions
 
 1. **Google OAuth.** The "Continue with Google" button is inactive; the frontend flow isn't built yet.
-2. **Studio and admin pages** are still Ukrainian only (next PR).
 
 ## Verified
 

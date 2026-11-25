@@ -45,6 +45,8 @@ export interface MakerProfilePayload {
     delivery_domestic_minor?: number;
     /** null means the maker does not ship abroad */
     delivery_international_minor?: number | null;
+    content_locale?: 'uk' | 'en';
+    translations?: Partial<Record<'uk' | 'en', { bio?: string | null; story?: string | null }>>;
 }
 
 /** Maker delivery and payment settings (visible to the owner only) */

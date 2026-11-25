@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onBeforeUnmount, onMounted, reactive, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { onBeforeRouteLeave } from 'vue-router';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import BaseInput from '@/components/ui/BaseInput.vue';
@@ -11,18 +12,12 @@ import { useAuthStore } from '@/stores/auth';
 import type { MakerProfile, MakerProfilePayload } from '@/types/maker';
 import type { Currency } from '@/types/product';
 import { inputToMinor, minorToInput } from '@/utils/format';
+import { countries } from '@/utils/orderStatus';
+import ContentLanguage from '@/components/ui/ContentLanguage.vue';
+import type { Locale } from '@/i18n';
 
 const auth = useAuthStore();
-
-const COUNTRIES = [
-    { code: 'UA', name: 'Україна' },
-    { code: 'BG', name: 'Болгарія' },
-    { code: 'PL', name: 'Польща' },
-    { code: 'DE', name: 'Німеччина' },
-    { code: 'CZ', name: 'Чехія' },
-    { code: 'RO', name: 'Румунія' },
-    { code: 'MD', name: 'Молдова' },
-];
+const { t } = useI18n();
 
 const profile = ref<MakerProfile | null>(null);
 const loading = ref(true);
@@ -38,6 +33,10 @@ const form = reactive<MakerProfilePayload>({
     address: '',
     follow_enabled: true,
 });
+/** Source language of bio/story and the optional version in the other language */
+const content = reactive({ locale: 'uk' as Locale, bio: '', story: '' });
+const otherLocale = computed<Locale>(() => (content.locale === 'uk' ? 'en' : 'uk'));
+
 /** Delivery and payment: prices are strings in the inputs and minor units for the server */
 const shipping = reactive({
     cod_enabled: false,
@@ -46,7 +45,7 @@ const shipping = reactive({
     ships_abroad: false,
     international: '',
 });
-const snapshot = () => JSON.stringify([form, shipping]);
+const snapshot = () => JSON.stringify([form, shipping, content]);
 const saved = ref(snapshot());
 const dirty = computed(() => snapshot() !== saved.value);
 
@@ -72,6 +71,9 @@ function fill(p: MakerProfile) {
         address: p.address ?? '',
         follow_enabled: p.follow_enabled,
     });
+    const locale: Locale = p.content_locale ?? 'uk';
+    const other = p.translations?.[locale === 'uk' ? 'en' : 'uk'];
+    Object.assign(content, { locale, bio: other?.bio ?? '', story: other?.story ?? '' });
     if (p.checkout) {
         Object.assign(shipping, {
             cod_enabled: p.checkout.cod_enabled,
@@ -101,15 +103,17 @@ function payload(): MakerProfilePayload {
         delivery_currency: shipping.delivery_currency,
         delivery_domestic_minor: inputToMinor(shipping.domestic) ?? 0,
         delivery_international_minor: shipping.ships_abroad ? (inputToMinor(shipping.international) ?? 0) : null,
+        content_locale: content.locale,
+        translations: { [otherLocale.value]: { bio: clean(content.bio), story: clean(content.story) } },
     };
 }
 
 /** Check prices before sending: NaN from inputToMinor means an invalid format */
 function shippingErrors(): FieldErrors {
     const e: FieldErrors = {};
-    if (Number.isNaN(inputToMinor(shipping.domestic))) e.delivery_domestic_minor = 'Вкажіть суму, наприклад 4 або 4.50';
+    if (Number.isNaN(inputToMinor(shipping.domestic))) e.delivery_domestic_minor = t('studio.enterAmount');
     if (shipping.ships_abroad && Number.isNaN(inputToMinor(shipping.international)))
-        e.delivery_international_minor = 'Вкажіть суму, наприклад 15';
+        e.delivery_international_minor = t('studio.enterAmountAbroad');
     return e;
 }
 
@@ -134,18 +138,18 @@ async function save(): Promise<boolean> {
     const local = shippingErrors();
     if (Object.keys(local).length) {
         errors.value = local;
-        formError.value = 'Перевірте поля, позначені червоним';
+        formError.value = t('studio.checkFields');
         saving.value = false;
         return false;
     }
     try {
         fill(await makersApi.saveMine(payload()));
-        notice.value = 'Зміни збережено';
+        notice.value = t('studio.saved');
         return true;
     } catch (e) {
         const err = toApiError(e);
         errors.value = err.fields;
-        formError.value = Object.keys(err.fields).length ? 'Перевірте поля, позначені червоним' : err.message;
+        formError.value = Object.keys(err.fields).length ? t('studio.checkFields') : err.message;
         return false;
     } finally {
         saving.value = false;
@@ -160,7 +164,7 @@ async function submitForReview() {
             if (!(await save())) return;
         }
         fill(await makersApi.submitMine());
-        notice.value = 'Профіль надіслано на перевірку';
+        notice.value = t('studio.submitted');
     } catch (e) {
         formError.value = toApiError(e).message;
     } finally {
@@ -177,17 +181,17 @@ onMounted(() => {
     window.addEventListener('beforeunload', beforeUnload);
 });
 onBeforeUnmount(() => window.removeEventListener('beforeunload', beforeUnload));
-onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережені зміни. Піти без збереження?') : true));
+onBeforeRouteLeave(() => (dirty.value ? window.confirm(t('studio.leaveConfirm')) : true));
 </script>
 
 <template>
     <div class="max-w-[880px]">
         <div class="flex flex-wrap items-center justify-between gap-4">
-            <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">Моя майстерня</h1>
+            <h1 class="font-flair m-0 text-[40px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ t('studio.title') }}</h1>
             <MakerStatusBadge v-if="status" :status="status" />
         </div>
 
-        <div v-if="loading" class="mt-8 animate-pulse space-y-4" aria-busy="true" aria-label="Завантаження">
+        <div v-if="loading" class="mt-8 animate-pulse space-y-4" aria-busy="true" :aria-label="t('common.loading')">
             <div class="h-24 rounded-card bg-lavender-50" />
             <div class="h-12 rounded-control bg-lavender-50" />
             <div class="h-12 rounded-control bg-lavender-50" />
@@ -195,42 +199,40 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
 
         <div v-else-if="loadError" role="alert" class="mt-8 flex flex-col items-start gap-4 rounded-card border border-kalyna/30 bg-kalyna/5 p-6">
             <p class="m-0 text-kalyna">{{ loadError }}</p>
-            <BaseButton variant="secondary" @click="load">Спробувати ще раз</BaseButton>
+            <BaseButton variant="secondary" @click="load">{{ t('common.retry') }}</BaseButton>
         </div>
 
         <template v-else>
             <!-- What is happening with the profile and what to do next -->
             <div class="mt-6 rounded-card p-5" :class="status === 'rejected' || status === 'suspended' ? 'bg-kalyna/5' : 'bg-lavender-50'">
                 <template v-if="status === null">
-                    <p class="m-0 font-semibold text-plum">Відкрийте свою майстерню</p>
-                    <p class="mt-1 mb-0 text-ink-muted">Заповніть профіль і надішліть його на перевірку. Після схвалення ви зможете продавати й навчати.</p>
+                    <p class="m-0 font-semibold text-plum">{{ t('studio.newTitle') }}</p>
+                    <p class="mt-1 mb-0 text-ink-muted">{{ t('studio.newText') }}</p>
                 </template>
                 <template v-else-if="status === 'draft'">
-                    <p class="m-0 font-semibold text-plum">Профіль ще не надіслано</p>
-                    <p class="mt-1 mb-0 text-ink-muted">Розкажіть про себе й надішліть профіль на перевірку. Зазвичай вона триває до двох робочих днів.</p>
+                    <p class="m-0 font-semibold text-plum">{{ t('studio.draftTitle') }}</p>
+                    <p class="mt-1 mb-0 text-ink-muted">{{ t('studio.draftText') }}</p>
                 </template>
                 <template v-else-if="status === 'pending_review'">
-                    <p class="m-0 font-semibold text-plum">Профіль на перевірці</p>
-                    <p class="mt-1 mb-0 text-ink-muted">Поки триває перевірка, редагування недоступне. Ми напишемо, щойно буде рішення.</p>
+                    <p class="m-0 font-semibold text-plum">{{ t('studio.pendingTitle') }}</p>
+                    <p class="mt-1 mb-0 text-ink-muted">{{ t('studio.pendingText') }}</p>
                 </template>
                 <template v-else-if="status === 'approved'">
-                    <p class="m-0 font-semibold text-plum">Профіль опубліковано</p>
+                    <p class="m-0 font-semibold text-plum">{{ t('studio.approvedTitle') }}</p>
                     <p class="mt-1 mb-0 text-ink-muted">
-                        Його бачать усі.
-                        <RouterLink v-if="profile" :to="{ name: 'maker', params: { slug: profile.slug } }" class="font-semibold text-plum">
-                            Відкрити публічну сторінку
-                        </RouterLink>
+                        {{ t('studio.approvedText') }}
+                        <RouterLink v-if="profile" :to="{ name: 'maker', params: { slug: profile.slug } }" class="font-semibold text-plum">{{ t('studio.openPublic') }}</RouterLink>
                     </p>
                 </template>
                 <template v-else-if="status === 'rejected'">
-                    <p class="m-0 font-semibold text-kalyna">Профіль потребує правок</p>
-                    <p v-if="profile?.review_note" class="mt-2 mb-0 text-ink"><span class="font-semibold">Коментар модератора:</span> {{ profile.review_note }}</p>
-                    <p class="mt-2 mb-0 text-ink-muted">Виправте профіль і надішліть його знову.</p>
+                    <p class="m-0 font-semibold text-kalyna">{{ t('studio.rejectedTitle') }}</p>
+                    <p v-if="profile?.review_note" class="mt-2 mb-0 text-ink"><span class="font-semibold">{{ t('studio.moderatorNote') }}</span> {{ profile.review_note }}</p>
+                    <p class="mt-2 mb-0 text-ink-muted">{{ t('studio.rejectedText') }}</p>
                 </template>
                 <template v-else-if="status === 'suspended'">
-                    <p class="m-0 font-semibold text-kalyna">Майстерню призупинено</p>
-                    <p v-if="profile?.review_note" class="mt-2 mb-0 text-ink"><span class="font-semibold">Причина:</span> {{ profile.review_note }}</p>
-                    <p class="mt-2 mb-0 text-ink-muted">Профіль прихований з каталогу. Напишіть нам, щоб обговорити відновлення.</p>
+                    <p class="m-0 font-semibold text-kalyna">{{ t('studio.suspendedTitle') }}</p>
+                    <p v-if="profile?.review_note" class="mt-2 mb-0 text-ink"><span class="font-semibold">{{ t('studio.reason') }}</span> {{ profile.review_note }}</p>
+                    <p class="mt-2 mb-0 text-ink-muted">{{ t('studio.suspendedText') }}</p>
                 </template>
             </div>
 
@@ -238,7 +240,7 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
                 <fieldset :disabled="!editable" class="m-0 flex flex-col gap-6 border-0 p-0">
                     <BaseInput
                         v-model="form.display_name"
-                        label="Імʼя або назва майстерні"
+                        :label="t('studio.displayName')"
                         :maxlength="120"
                         required
                         :disabled="!editable"
@@ -246,52 +248,76 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
                     />
                     <BaseTextarea
                         v-model="form.bio"
-                        label="Коротко про вас"
+                        :label="t('studio.bio')"
                         :rows="2"
                         :maxlength="280"
-                        hint="Один-два рядки: що створюєте. Показується в картці майстра."
+                        :hint="t('studio.bioHint')"
                         :disabled="!editable"
                         :error="errors.bio"
                     />
                     <BaseTextarea
                         v-model="form.story"
-                        label="Історія майстерні"
+                        :label="t('studio.story')"
                         :rows="7"
                         :maxlength="5000"
-                        hint="Як почали, з чим працюєте, що для вас важливо. Абзаци розділяйте порожнім рядком."
+                        :hint="t('studio.storyHint')"
                         :disabled="!editable"
                         :error="errors.story"
                     />
 
+                    <ContentLanguage v-model="content.locale" :disabled="!editable" />
+                    <fieldset class="m-0 flex flex-col gap-5 rounded-card border border-line p-5" :lang="otherLocale">
+                        <legend class="px-1 text-[15px] font-semibold text-plum">
+                            {{ t('content.translation', { lang: t(`content.langName.${otherLocale}`) }) }}
+                        </legend>
+                        <p class="m-0 text-[13px] text-ink-muted">{{ t('content.translationHint') }}</p>
+                        <BaseTextarea
+                            v-model="content.bio"
+                            :label="t('studio.bio')"
+                            :rows="2"
+                            :maxlength="280"
+                            :disabled="!editable"
+                            :error="errors[`translations.${otherLocale}.bio`]"
+                        />
+                        <BaseTextarea
+                            v-model="content.story"
+                            :label="t('studio.story')"
+                            :rows="5"
+                            :maxlength="5000"
+                            :disabled="!editable"
+                            :error="errors[`translations.${otherLocale}.story`]"
+                        />
+                    </fieldset>
+
                     <div class="grid gap-6 md:grid-cols-2">
                         <div class="flex flex-col gap-2">
-                            <label for="country" class="text-[15px] font-semibold text-ink">Країна</label>
+                            <label for="country" class="text-[15px] font-semibold text-ink">{{ t('studio.country') }}</label>
                             <select
                                 id="country"
                                 v-model="form.country_code"
                                 :disabled="!editable"
                                 class="h-[52px] rounded-control border-[1.5px] border-line-strong bg-white px-4 text-base text-ink focus:border-plum focus:outline-none disabled:bg-lavender-50"
                             >
-                                <option v-for="c in COUNTRIES" :key="c.code" :value="c.code">{{ c.name }}</option>
+                                <option v-for="c in countries()" :key="c.code" :value="c.code">{{ c.name }}</option>
                             </select>
                         </div>
-                        <BaseInput v-model="form.city" label="Місто" autocomplete="address-level2" :disabled="!editable" :error="errors.city" />
+                        <BaseInput v-model="form.city" :label="t('studio.city')" autocomplete="address-level2" :disabled="!editable" :error="errors.city" />
                     </div>
 
                     <BaseInput
                         v-model="form.address"
-                        label="Адреса майстерні"
+                        :label="t('studio.address')"
                         autocomplete="street-address"
-                        hint="Не показується публічно. Знадобиться для майстер-класів наживо."
+                        :hint="t('studio.addressHint')"
                         :disabled="!editable"
                         :error="errors.address"
                     />
                     <BaseInput
                         v-model="form.avatar_url"
-                        label="Посилання на фото"
+                        :label="t('studio.photoUrl')"
                         type="text"
                         placeholder="https://…"
-                        hint="Тимчасово — посиланням. Завантаження фото додамо разом із каталогом."
+                        :hint="t('studio.photoHint')"
                         :disabled="!editable"
                         :error="errors.avatar_url"
                     />
@@ -299,20 +325,20 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
                     <label class="flex items-start gap-3 text-[15px] text-ink">
                         <input v-model="form.follow_enabled" type="checkbox" class="mt-0.5 h-5 w-5 accent-plum" />
                         <span>
-                            Дозволити покупцям стежити за майстернею
-                            <span class="block text-[13px] text-ink-muted">Вони отримуватимуть сповіщення про нові роботи й дописи.</span>
+                            {{ t('studio.follow') }}
+                            <span class="block text-[13px] text-ink-muted">{{ t('studio.followHint') }}</span>
                         </span>
                     </label>
                 </fieldset>
 
                 <section v-if="profile !== null" class="flex flex-col gap-5 border-t border-line pt-8" aria-labelledby="shipping-title">
-                    <h2 id="shipping-title" class="m-0 text-xl font-bold text-plum">Доставка й оплата</h2>
+                    <h2 id="shipping-title" class="m-0 text-xl font-bold text-plum">{{ t('studio.shippingTitle') }}</h2>
                     <p class="m-0 text-[15px] text-ink-muted">
-                        Покупець платить за доставку один раз за вашу частину замовлення, скільки б товарів не взяв.
+                        {{ t('studio.shippingLead') }}
                     </p>
                     <div class="grid gap-6 md:grid-cols-[160px_1fr]">
                         <div class="flex flex-col gap-2">
-                            <label for="delivery-currency" class="text-[15px] font-semibold text-ink">Валюта</label>
+                            <label for="delivery-currency" class="text-[15px] font-semibold text-ink">{{ t('studio.currency') }}</label>
                             <select
                                 id="delivery-currency"
                                 v-model="shipping.delivery_currency"
@@ -326,22 +352,22 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
                         </div>
                         <BaseInput
                             v-model="shipping.domestic"
-                            label="Доставка у вашій країні"
-                            hint="0 — безкоштовно"
+                            :label="t('studio.domestic')"
+                            :hint="t('studio.domesticHint')"
                             :disabled="!editable"
                             :error="errors.delivery_domestic_minor"
                         />
                     </div>
-                    <p class="m-0 -mt-2 text-[13px] text-ink-muted">Валюта доставки має збігатися з валютою ваших товарів.</p>
+                    <p class="m-0 -mt-2 text-[13px] text-ink-muted">{{ t('studio.currencyNote') }}</p>
 
                     <label class="flex items-start gap-3 text-[15px] text-ink">
                         <input v-model="shipping.ships_abroad" type="checkbox" :disabled="!editable" class="mt-0.5 h-5 w-5 accent-plum" />
-                        <span>Відправляю за кордон</span>
+                        <span>{{ t('studio.shipsAbroad') }}</span>
                     </label>
                     <BaseInput
                         v-if="shipping.ships_abroad"
                         v-model="shipping.international"
-                        label="Доставка за кордон"
+                        :label="t('studio.international')"
                         :disabled="!editable"
                         :error="errors.delivery_international_minor"
                     />
@@ -349,9 +375,9 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
                     <label class="flex items-start gap-3 text-[15px] text-ink">
                         <input v-model="shipping.cod_enabled" type="checkbox" :disabled="!editable" class="mt-0.5 h-5 w-5 accent-plum" />
                         <span>
-                            Приймаю оплату при отриманні
+                            {{ t('studio.cod') }}
                             <span class="block text-[13px] text-ink-muted">
-                                Лише для доставки у вашій країні. Покупець зможе обрати цей спосіб, якщо всі майстри в його замовленні його приймають.
+                                {{ t('studio.codHint') }}
                             </span>
                         </span>
                     </label>
@@ -362,11 +388,9 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
 
                 <div v-if="editable" class="flex flex-wrap gap-3">
                     <BaseButton type="submit" size="lg" :variant="canSubmit ? 'secondary' : 'primary'" :loading="saving" :disabled="!dirty && profile !== null">
-                        {{ profile === null ? 'Створити чернетку' : 'Зберегти' }}
+                        {{ profile === null ? t('studio.createDraft') : t('studio.save') }}
                     </BaseButton>
-                    <BaseButton v-if="canSubmit || profile === null" size="lg" :loading="submitting" @click="submitForReview">
-                        Надіслати на перевірку
-                    </BaseButton>
+                    <BaseButton v-if="canSubmit || profile === null" size="lg" :loading="submitting" @click="submitForReview">{{ t('studio.submit') }}</BaseButton>
                 </div>
             </form>
         </template>

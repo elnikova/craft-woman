@@ -43,7 +43,7 @@ class ProductResource extends JsonResource
             'slug' => $this->slug,
             'type' => $this->type->value,
             // Buyers get their language when the maker added it; the editor gets the source text plus translations
-            ...($this->private
+            ...($this->private && $request->routeIs('me.*', 'admin.*')
                 ? ['name' => $this->name, 'description' => $this->description, 'shipping_info' => $this->shipping_info, 'content_locale' => $this->sourceLocale(), 'translations' => (object) ($this->translations ?? [])]
                 : $this->localized()),
             'price' => $this->price()->toArray(),
