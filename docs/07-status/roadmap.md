@@ -70,4 +70,4 @@ From [domain-rules.md §57](../02-architecture/domain-rules.md).
 | 5 | Community: posts, comments, likes, following | L | decision 56.8 |
 | 6 | Favorites for courses and workshops; price filters | S | — |
 | 7 | Google sign-in, password reset | S | mail (3) |
-| 8 | CI pipeline on PostgreSQL (tests, Pint, type-check, i18n check) | M | — |
+| 8 | CI pipeline on PostgreSQL (tests, Pint, type-check, i18n check); the Docker image can be reused | M | — |

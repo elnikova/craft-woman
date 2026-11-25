@@ -1,0 +1,45 @@
+#!/usr/bin/env bash
+# Shortcuts for the Docker setup, for use inside WSL or Linux/macOS (Windows PowerShell: dev.cmd).
+# Usage: ./dev <command> [arguments] — run ./dev without arguments for the list.
+set -euo pipefail
+cd "$(dirname "$0")"
+
+cmd="${1:-help}"
+shift || true
+
+case "$cmd" in
+  up)       docker compose up -d "$@" ;;
+  down)     docker compose down "$@" ;;
+  restart)  docker compose restart "$@" ;;
+  ps)       docker compose ps ;;
+  logs)     docker compose logs -f --tail=100 "$@" ;;
+  ready)
+    docker compose exec app sh -c "test -f vendor/autoload.php && echo 'composer: ready' || echo 'composer: still installing'"
+    docker compose exec vite sh -c "test -f node_modules/.lock.sha1 && echo 'npm: ready' || echo 'npm: still installing'" ;;
+  artisan)  docker compose exec app php artisan "$@" ;;
+  fresh)    docker compose exec app php artisan migrate:fresh --seed ;;
+  test)     docker compose exec app php artisan test "$@" ;;
+  pint)     docker compose exec app vendor/bin/pint "$@" ;;
+  composer) docker compose exec app composer "$@" ;;
+  npm)      docker compose exec vite npm "$@" ;;
+  tsc)      docker compose exec vite npx vue-tsc --noEmit ;;
+  i18n)     docker compose exec vite npm run i18n:check ;;
+  check)
+    echo "== Pint (changed files) =="; docker compose exec app vendor/bin/pint --test --dirty
+    echo "== Tests ==";                docker compose exec app php artisan test --compact
+    echo "== Type-check ==";           docker compose exec vite npx vue-tsc --noEmit
+    echo "== Translations ==";         docker compose exec vite npm run i18n:check
+    echo; echo "All checks passed." ;;
+  shell)    docker compose exec app bash ;;
+  psql)     docker compose exec db psql -U postgres craft_woman ;;
+  ide)      docker compose cp app:/var/www/html/vendor . ;;
+  *)
+    cat <<'HELP'
+Usage: ./dev <command> [arguments]
+
+  up | down | restart [svc] | ps | logs [svc] | ready
+  artisan ... | fresh | test [...] | pint [...] | composer ... | npm ...
+  tsc | i18n | check | shell | psql | ide
+HELP
+    ;;
+esac

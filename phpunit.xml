@@ -23,9 +23,12 @@
         <env name="BCRYPT_ROUNDS" value="4"/>
         <env name="BROADCAST_CONNECTION" value="null"/>
         <env name="CACHE_STORE" value="array"/>
-        <!-- Same engine as development: PostgreSQL, separate test database (host, user, password from .env) -->
-        <env name="DB_CONNECTION" value="pgsql"/>
-        <env name="DB_DATABASE" value="craft_woman_test"/>
+        <!-- Same engine as development: PostgreSQL, separate test database (host, user, password from .env or the container).
+             force="true": Docker sets DB_DATABASE for the app, and tests must never run on that database -->
+        <env name="DB_CONNECTION" value="pgsql" force="true"/>
+        <server name="DB_CONNECTION" value="pgsql" force="true"/>
+        <env name="DB_DATABASE" value="craft_woman_test" force="true"/>
+        <server name="DB_DATABASE" value="craft_woman_test" force="true"/>
         <env name="MAIL_MAILER" value="array"/>
         <env name="QUEUE_CONNECTION" value="sync"/>
         <env name="SESSION_DRIVER" value="array"/>

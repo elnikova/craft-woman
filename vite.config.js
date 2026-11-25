@@ -4,6 +4,10 @@ import tailwindcss from '@tailwindcss/vite';
 import vue from '@vitejs/plugin-vue';
 import { fileURLToPath, URL } from 'node:url';
 
+// In Docker (compose.yaml sets VITE_DOCKER=1) the server must listen on all interfaces,
+// and file changes from the Windows host only arrive by polling.
+const inDocker = process.env.VITE_DOCKER === '1';
+
 export default defineConfig({
     plugins: [
         laravel({
@@ -29,10 +33,14 @@ export default defineConfig({
     server: {
         // Explicit IPv4: on Windows `localhost` may resolve to ::1, and then
         // the HMR websocket fails to connect and the Vite client reloads the page in a loop.
-        host: '127.0.0.1',
+        host: inDocker ? '0.0.0.0' : '127.0.0.1',
+        port: 5173,
+        strictPort: true,
         hmr: { host: '127.0.0.1' },
         watch: {
-            ignored: ['**/storage/framework/views/**', '**/database/*.sqlite*'],
+            ignored: ['**/storage/framework/views/**', '**/database/*.sqlite*', '**/vendor/**'],
+            usePolling: inDocker,
+            interval: 500,
         },
     },
 });
