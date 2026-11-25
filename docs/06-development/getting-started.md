@@ -1,6 +1,6 @@
 # Getting started
 
-Local setup on Windows with [Laravel Herd](https://herd.laravel.com). The project folder is `C:\Users\Admin\Herd\craft-woman` and the site is served at `http://craft-woman.test`.
+Local setup on Windows with [Laravel Herd](https://herd.laravel.com). To run everything in containers instead, see [docker.md](docker.md). The project folder is `C:\Users\Admin\Herd\craft-woman` and the site is served at `http://craft-woman.test`.
 
 ## Requirements
 
