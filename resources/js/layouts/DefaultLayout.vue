@@ -7,7 +7,7 @@ const route = useRoute();
 </script>
 
 <template>
-    <!-- Головна малює шапку всередині першого екрана; решта сторінок отримує її тут -->
+    <!-- The home page draws the header inside its hero; every other page gets it here -->
     <div v-if="!route.meta.ownHeader" class="tx-linen bg-lavender-100">
         <AppHeader />
     </div>

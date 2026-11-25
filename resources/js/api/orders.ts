@@ -4,7 +4,7 @@ import type { Paginated, Wrapped } from '@/types/user';
 
 const unwrap = <T>(p: Promise<{ data: Wrapped<T> }>) => p.then((r) => r.data.data);
 
-/** Гостьовий кошик живе за UUID з localStorage; сервер приймає його в заголовку */
+/** The guest cart is identified by a UUID kept in localStorage and sent in a header */
 const TOKEN_KEY = 'cw.cart';
 export const cartToken = {
     get: (): string | null => {
@@ -19,7 +19,7 @@ export const cartToken = {
             if (token) localStorage.setItem(TOKEN_KEY, token);
             else localStorage.removeItem(TOKEN_KEY);
         } catch {
-            /* приватний режим — кошик житиме до перезавантаження */
+            /* private mode: the cart lives until reload */
         }
     },
 };
@@ -54,12 +54,12 @@ export const ordersApi = {
     },
     show: (number: string) => withDownloads(http.get(`/me/orders/${encodeURIComponent(number)}`)),
     cancel: (number: string) => withDownloads(http.post(`/me/orders/${encodeURIComponent(number)}/cancel`)),
-    /** Лише локально, доки не підключено Stripe */
+    /** Local only, until Stripe is connected */
     testPayment: (number: string) => withDownloads(http.post(`/me/orders/${encodeURIComponent(number)}/test-payment`)),
     downloadUrl: (number: string, item: string, file: string) =>
         `/api/v1/me/orders/${encodeURIComponent(number)}/items/${item}/files/${file}`,
 
-    // ---- майстер ----
+    // ---- maker ----
     async sales(status?: GroupStatus): Promise<Paginated<Sale>> {
         const { data } = await http.get<Paginated<Sale>>('/me/sales', { params: status ? { status } : {} });
         return data;
@@ -68,7 +68,7 @@ export const ordersApi = {
     deliver: (group: string) => unwrap<Sale>(http.post(`/me/sales/${group}/deliver`)),
     cancelSale: (group: string, reason: string) => unwrap<Sale>(http.post(`/me/sales/${group}/cancel`, { reason })),
 
-    // ---- адміністратор ----
+    // ---- admin ----
     async all(params: { status?: OrderStatus; q?: string; page?: number }): Promise<Paginated<Order>> {
         const { data } = await http.get<Paginated<Order>>('/admin/orders', { params });
         return data;

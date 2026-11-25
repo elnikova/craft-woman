@@ -120,7 +120,7 @@ watch(() => props.slug, load, { immediate: true });
             </nav>
 
             <div class="grid gap-12 md:grid-cols-2">
-                <!-- Галерея -->
+                <!-- Gallery -->
                 <div class="flex flex-col gap-3">
                     <ProductCover :uuid="product.uuid" :name="product.name" :src="product.images[imageIndex]?.url" />
                     <div v-if="product.images.length > 1" class="flex flex-wrap gap-2" role="group" aria-label="Фото товару">
@@ -139,7 +139,7 @@ watch(() => props.slug, load, { immediate: true });
                     </div>
                 </div>
 
-                <!-- Покупка -->
+                <!-- Purchase -->
                 <div class="flex flex-col gap-5">
                     <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum md:text-[44px]">{{ product.name }}</h1>
                     <div v-if="price" class="text-3xl font-bold text-plum">{{ formatPrice(price.amount_minor, price.currency) }}</div>

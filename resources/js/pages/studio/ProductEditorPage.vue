@@ -196,7 +196,7 @@ async function destroy() {
     }
 }
 
-// ---- фото й файли (зберігаються одразу) ----
+// ---- photos and files (saved immediately) ----
 async function onImages(e: Event) {
     const files = [...((e.target as HTMLInputElement).files ?? [])];
     (e.target as HTMLInputElement).value = '';
@@ -268,7 +268,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
         </div>
 
         <template v-else>
-            <!-- Що відбувається з товаром -->
+            <!-- What is happening with the product -->
             <div v-if="product" class="mt-6 rounded-card p-5" :class="status === 'rejected' ? 'bg-kalyna/5' : 'bg-lavender-50'">
                 <p v-if="status === 'draft'" class="m-0 text-ink">Чернетка. Заповніть усе й надішліть на перевірку — після схвалення товар зʼявиться в каталозі.</p>
                 <p v-else-if="status === 'pending_review'" class="m-0 text-ink">Товар на перевірці. Поки вона триває, редагування недоступне.</p>
@@ -288,7 +288,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
 
             <form class="mt-8 flex flex-col gap-10" novalidate @submit.prevent="save">
                 <fieldset :disabled="!editable" class="m-0 flex flex-col gap-10 border-0 p-0">
-                    <!-- Основне -->
+                    <!-- Basics -->
                     <section class="flex flex-col gap-6" aria-labelledby="sec-main">
                         <h2 id="sec-main" class="m-0 text-xl font-semibold text-plum">Основне</h2>
                         <div role="radiogroup" aria-label="Тип товару" class="grid gap-3 sm:grid-cols-2">
@@ -338,7 +338,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                         </div>
                     </section>
 
-                    <!-- Ціна -->
+                    <!-- Price -->
                     <section class="flex flex-col gap-6" aria-labelledby="sec-price">
                         <h2 id="sec-price" class="m-0 text-xl font-semibold text-plum">Ціна</h2>
                         <div class="grid max-w-[480px] grid-cols-[minmax(0,1fr)_120px] gap-4">
@@ -354,7 +354,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                         </div>
                     </section>
 
-                    <!-- Варіанти -->
+                    <!-- Variants -->
                     <section v-if="form.type === 'physical'" class="flex flex-col gap-4" aria-labelledby="sec-variants">
                         <div>
                             <h2 id="sec-variants" class="m-0 text-xl font-semibold text-plum">Варіанти й наявність</h2>
@@ -414,7 +414,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                         <div><BaseButton variant="secondary" @click="form.variants.push(emptyVariant())">Додати варіант</BaseButton></div>
                     </section>
 
-                    <!-- Доставка -->
+                    <!-- Delivery -->
                     <section v-if="form.type === 'physical'" class="flex flex-col gap-6" aria-labelledby="sec-shipping">
                         <h2 id="sec-shipping" class="m-0 text-xl font-semibold text-plum">Виготовлення й доставка</h2>
                         <div class="max-w-[280px]">
@@ -424,7 +424,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                     </section>
                 </fieldset>
 
-                <!-- Фото -->
+                <!-- Photos -->
                 <section class="flex flex-col gap-4" aria-labelledby="sec-images">
                     <div>
                         <h2 id="sec-images" class="m-0 text-xl font-semibold text-plum">Фото</h2>
@@ -452,7 +452,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                     </template>
                 </section>
 
-                <!-- Файли -->
+                <!-- Files -->
                 <section v-if="form.type === 'digital'" class="flex flex-col gap-4" aria-labelledby="sec-files">
                     <div>
                         <h2 id="sec-files" class="m-0 text-xl font-semibold text-plum">Файли для покупця</h2>
@@ -477,7 +477,7 @@ onBeforeRouteLeave((to) => (dirty.value && to.name !== 'studio-product' ? window
                 <div v-if="formError" role="alert" class="rounded-[10px] border border-kalyna/30 bg-kalyna/5 px-3.5 py-3 text-[15px] text-kalyna">{{ formError }}</div>
                 <p v-else-if="notice" role="status" class="m-0 text-[15px] font-semibold text-[#2F4A1C]">{{ notice }}</p>
 
-                <!-- Дії -->
+                <!-- Actions -->
                 <div class="flex flex-wrap gap-3 border-t border-line pt-6">
                     <template v-if="editable">
                         <BaseButton type="submit" size="lg" :variant="status === 'draft' || status === 'rejected' ? 'secondary' : 'primary'" :loading="busy === 'save'" :disabled="!dirty && !isNew">

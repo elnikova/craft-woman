@@ -12,7 +12,7 @@ export const productsApi = {
 
     show: (slug: string) => unwrap<Product>(http.get(`/products/${encodeURIComponent(slug)}`)),
 
-    // ---- кабінет майстра ----
+    // ---- maker account ----
     async mine(status?: ProductStatus): Promise<Paginated<Product>> {
         const { data } = await http.get<Paginated<Product>>('/me/products', { params: status ? { status } : {} });
         return data;
@@ -48,7 +48,7 @@ export const productsApi = {
     },
     deleteFile: (uuid: string, fileUuid: string) => unwrap<Product>(http.delete(`/me/products/${uuid}/files/${fileUuid}`)),
 
-    // ---- модерація ----
+    // ---- moderation ----
     async reviewQueue(status: ProductStatus): Promise<Paginated<Product>> {
         const { data } = await http.get<Paginated<Product>>('/admin/products', { params: { status } });
         return data;

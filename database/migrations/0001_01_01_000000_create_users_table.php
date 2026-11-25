@@ -40,7 +40,7 @@ return new class extends Migration
 
         Schema::create('sessions', function (Blueprint $table) {
             $table->string('id')->primary();
-            // Колонку user_id читає DatabaseSessionHandler, тож назва лишається, а тип — uuid
+            // DatabaseSessionHandler reads the user_id column, so the name stays and the type is uuid
             $table->foreignUuid('user_id')->nullable()->index();
             $table->string('ip_address', 45)->nullable();
             $table->text('user_agent')->nullable();

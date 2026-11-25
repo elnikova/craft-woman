@@ -20,7 +20,7 @@ const total = ref(0);
 const loading = ref(true);
 const error = ref('');
 
-/** Повідомлення про помилку дії — біля рядка, якого вона стосується */
+/** Action error, shown next to the row it belongs to */
 const rowError = ref<{ uuid: string; message: string } | null>(null);
 const busy = ref<string | null>(null);
 
@@ -67,7 +67,7 @@ function toggleAdmin(u: AdminUser) {
 
 const unblock = (u: AdminUser) => act(u, () => adminUsersApi.unblock(u.uuid));
 
-// ---------- Діалог блокування ----------
+// ---------- Block dialog ----------
 const dialog = ref<HTMLDialogElement | null>(null);
 const target = ref<AdminUser | null>(null);
 const reason = ref('');

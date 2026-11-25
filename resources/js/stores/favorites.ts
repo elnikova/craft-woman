@@ -2,7 +2,7 @@ import { defineStore } from 'pinia';
 import { computed, ref } from 'vue';
 import { favoritesApi } from '@/api/favorites';
 
-/** UUID обраних товарів — щоб сердечка на картках знали свій стан без окремих запитів */
+/** Favorite product UUIDs, so card hearts know their state without extra requests */
 export const useFavoritesStore = defineStore('favorites', () => {
     const ids = ref<Set<string>>(new Set());
     const count = computed(() => ids.value.size);
@@ -21,7 +21,7 @@ export const useFavoritesStore = defineStore('favorites', () => {
         }
     }
 
-    /** Оптимістично: сердечко змінюється одразу, при помилці повертаємо як було */
+    /** Optimistic: the heart flips at once and rolls back on error */
     async function toggle(uuid: string): Promise<boolean> {
         const was = has(uuid);
         const next = new Set(ids.value);

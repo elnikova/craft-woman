@@ -7,7 +7,7 @@ import FavoriteButton from './FavoriteButton.vue';
 
 const props = defineProps<{ product: Product }>();
 
-/** «від …», якщо у варіантів різні ціни */
+/** "від …" (from …) when variants have different prices */
 const priceLabel = computed(() => {
     const prices = props.product.variants.map((v) => v.price.amount_minor);
     const min = prices.length ? Math.min(...prices) : props.product.price.amount_minor;

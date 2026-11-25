@@ -16,7 +16,7 @@ const sales = ref<Sale[]>([]);
 const loading = ref(true);
 const error = ref('');
 
-/** Яка картка зараз відкрита для дії і з якими даними */
+/** Which card has an action open, and its form data */
 const open = reactive<{ uuid: string | null; mode: 'ship' | 'cancel' | null; tracking: string; reason: string; error: string; busy: boolean }>({
     uuid: null,
     mode: null,
@@ -146,7 +146,7 @@ onMounted(load);
 
                 <p v-if="s.cancel_reason" class="m-0 px-5 pb-4 text-kalyna">Причина скасування: {{ s.cancel_reason }}</p>
 
-                <!-- Дії -->
+                <!-- Actions -->
                 <div v-if="s.status === 'awaiting_shipment' || s.status === 'shipped'" class="border-t border-line px-5 py-4">
                     <form v-if="open.uuid === s.uuid && open.mode === 'ship'" class="flex flex-wrap items-end gap-3" @submit.prevent="ship(s)">
                         <BaseInput v-model="open.tracking" label="Номер відправлення (ТТН)" hint="Необов’язково, але покупцю так спокійніше." class="min-w-[260px] flex-1" />

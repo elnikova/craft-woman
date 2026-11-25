@@ -3,7 +3,7 @@ import type { IconName } from '@/config/accountNav';
 
 defineProps<{ name: IconName; size?: number }>();
 
-/** Прості лінійні іконки (stroke = currentColor) */
+/** Simple line icons (stroke = currentColor) */
 const PATHS: Record<IconName, string[]> = {
     home: ['M4 11l8-7 8 7', 'M6 10v10h12V10'],
     bag: ['M5 8h14l-1 12H6L5 8z', 'M9 8V6a3 3 0 0 1 6 0v2'],

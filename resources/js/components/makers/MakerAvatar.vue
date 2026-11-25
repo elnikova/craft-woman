@@ -2,8 +2,8 @@
 import { computed } from 'vue';
 
 /**
- * Фото майстра або «вишита» заглушка: колір і візерунок стабільно
- * виводяться з uuid, тож у кожного майстра своя.
+ * Maker photo or an "embroidered" placeholder: colour and pattern are derived
+ * from the uuid, so every maker gets a stable one of their own.
  */
 const props = withDefaults(defineProps<{ uuid: string; name: string; src?: string | null; shape?: 'portrait' | 'circle' }>(), {
     src: null,

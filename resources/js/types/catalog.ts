@@ -1,7 +1,7 @@
 /**
- * Тимчасові типи для головної, поки немає API каталогу.
- * Коли з'являться Resources (Maker, Product, Course, Workshop, Post),
- * замінити на дзеркала їхніх toArray().
+ * Temporary types for the home page until the catalog API exists.
+ * When Resources appear (Maker, Product, Course, Workshop, Post),
+ * replace these with mirrors of their toArray().
  */
 export type Placeholder = { color: string; pattern: 'ph-knit' | 'ph-weave' | 'ph-stitch' };
 
@@ -10,7 +10,7 @@ export interface CourseCardData {
     title: string;
     makerName: string;
     lessonsCount: number;
-    /** null — доступ назавжди, інакше кількість місяців */
+    /** null means lifetime access, otherwise the number of months */
     accessMonths: number | null;
     hasCertificate: boolean;
     priceCents: number;

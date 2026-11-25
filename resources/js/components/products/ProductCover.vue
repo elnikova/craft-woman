@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed } from 'vue';
 
-/** Перше фото товару або «вишита» заглушка, стабільна для uuid. */
+/** First product photo or an "embroidered" placeholder that is stable per uuid. */
 const props = withDefaults(defineProps<{ uuid: string; name: string; src?: string | null; ratio?: 'square' | 'portrait' }>(), {
     src: null,
     ratio: 'square',

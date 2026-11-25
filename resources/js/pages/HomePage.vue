@@ -23,7 +23,7 @@ const router = useRouter();
 const auth = useAuthStore();
 const query = ref('');
 
-// Майстри — справжні, з API; решта блоків поки на прикладах
+// Makers are real (from the API); other blocks still use sample data
 const makers = ref<MakerProfile[]>([]);
 const makersLoading = ref(true);
 onMounted(async () => {
@@ -64,7 +64,7 @@ watch(productFilter, loadProducts);
 onMounted(loadProducts);
 
 function search() {
-    // TODO: сторінка пошуку /search?q=…
+    // TODO: search page /search?q=…
     void router.push({ path: '/', query: query.value ? { q: query.value } : {} });
 }
 
@@ -75,7 +75,7 @@ const heroStitches = [
 </script>
 
 <template>
-    <!-- Перший екран -->
+    <!-- Hero -->
     <section class="tx-linen relative overflow-hidden bg-lavender-100 text-ink">
         <AppHeader />
 
@@ -129,7 +129,7 @@ const heroStitches = [
         <OrnamentBand start="rhombus" />
     </section>
 
-    <!-- Майстри -->
+    <!-- Makers -->
     <section id="makers" aria-labelledby="makers-title" class="mx-auto max-w-[1280px] px-6 pt-24 md:px-8">
         <SectionHeader
             id="makers-title"
@@ -150,7 +150,7 @@ const heroStitches = [
         </p>
     </section>
 
-    <!-- Товари -->
+    <!-- Products -->
     <section id="products" aria-labelledby="products-title" class="mx-auto max-w-[1280px] px-6 pt-28 md:px-8">
         <SectionHeader id="products-title" title="Нове в майстернях">
             <template #aside>
@@ -181,7 +181,7 @@ const heroStitches = [
         </div>
     </section>
 
-    <!-- Курси -->
+    <!-- Courses -->
     <section id="courses" aria-labelledby="courses-title" class="tx-weave mt-28 bg-lavender-50">
         <OrnamentBand start="tree" />
         <div class="mx-auto max-w-[1280px] px-6 py-[88px] md:px-8">
@@ -198,7 +198,7 @@ const heroStitches = [
         </div>
     </section>
 
-    <!-- Майстер-класи -->
+    <!-- Workshops -->
     <section id="workshops" aria-labelledby="workshops-title" class="mx-auto max-w-[1280px] px-6 pt-24 md:px-8">
         <SectionHeader id="workshops-title" title="Найближчі майстер-класи" link-label="Календар" link-to="/" />
         <ul class="mt-10 mb-0 list-none border-t border-line p-0">
@@ -208,7 +208,7 @@ const heroStitches = [
 
     <OrnamentBand start="barvinok" class="mt-24" />
 
-    <!-- Спільнота -->
+    <!-- Community -->
     <section id="community" aria-labelledby="community-title" class="mx-auto max-w-[1280px] px-6 pt-[72px] md:px-8">
         <SectionHeader
             id="community-title"
@@ -220,7 +220,7 @@ const heroStitches = [
         </div>
     </section>
 
-    <!-- Стати майстром -->
+    <!-- Become a maker -->
     <section class="mx-auto max-w-[1280px] px-6 py-28 md:px-8">
         <div class="tx-knit relative flex flex-wrap items-center justify-between gap-8 overflow-hidden rounded-panel bg-lavender-100 p-8 md:p-14">
             <StarOrnament :size="180" class="absolute -top-10 right-[300px] hidden lg:block" />

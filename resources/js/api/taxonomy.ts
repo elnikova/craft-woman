@@ -13,7 +13,7 @@ export const taxonomyApi = {
         return data.data;
     },
 
-    // ---- адміністрування ----
+    // ---- admin ----
     async adminCategories(): Promise<Category[]> {
         const { data } = await http.get<Wrapped<Category[]>>('/admin/categories');
         return data.data;

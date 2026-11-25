@@ -8,7 +8,7 @@ const auth = useAuthStore();
 const cart = useCartStore();
 const favorites = useFavoritesStore();
 
-// Кошик підтягуємо після перевірки сесії і щоразу, коли користувач входить або виходить
+// Load the cart and favorites after the session check and whenever the user signs in or out
 watch(
     () => [auth.checked, auth.user?.uuid] as const,
     ([checked]) => {
@@ -21,6 +21,6 @@ watch(
 </script>
 
 <template>
-    <!-- Сесію перевіряє router guard (stores/auth → fetchUser) -->
+    <!-- The router guard checks the session (stores/auth → fetchUser) -->
     <RouterView />
 </template>

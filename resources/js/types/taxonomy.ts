@@ -1,4 +1,4 @@
-/** Дзеркало CategoryResource */
+/** Mirrors CategoryResource */
 export interface Category {
     uuid: string;
     parent_uuid: string | null;
@@ -8,7 +8,7 @@ export interface Category {
     sort_order: number;
     is_visible: boolean;
     children?: Category[];
-    /** Тільки в адмінці: скільки товарів/курсів прив'язано */
+    /** Admin only: how many products/courses are attached */
     usage_count?: number;
 }
 

@@ -12,7 +12,7 @@ const auth = useAuthStore();
 
 const ROLE_LABELS: Record<Role, string> = { buyer: 'Покупець', master: 'Майстер', admin: 'Адміністратор' };
 
-// ---------- Профіль ----------
+// ---------- Profile ----------
 const profile = reactive({ name: auth.user?.name ?? '', email: auth.user?.email ?? '', current_password: '' });
 const profileErrors = ref<FieldErrors>({});
 const profileError = ref('');
@@ -45,7 +45,7 @@ async function saveProfile() {
     }
 }
 
-// ---------- Пароль ----------
+// ---------- Password ----------
 const pwd = reactive({ current_password: '', password: '', password_confirmation: '' });
 const pwdErrors = ref<FieldErrors>({});
 const pwdError = ref('');

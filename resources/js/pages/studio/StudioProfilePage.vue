@@ -38,7 +38,7 @@ const form = reactive<MakerProfilePayload>({
     address: '',
     follow_enabled: true,
 });
-/** Доставка й оплата: ціни в полях вводу як рядки, на сервер — у мінорних одиницях */
+/** Delivery and payment: prices are strings in the inputs and minor units for the server */
 const shipping = reactive({
     cod_enabled: false,
     delivery_currency: 'EUR' as Currency,
@@ -85,7 +85,7 @@ function fill(p: MakerProfile) {
     auth.setMakerStatus(p.status ?? null);
 }
 
-/** Порожні рядки надсилаємо як null, щоб не зберігати «пусті» значення */
+/** Send empty strings as null so blank values aren't stored */
 function payload(): MakerProfilePayload {
     const clean = (v: string | null) => (v && v.trim() ? v.trim() : null);
     return {
@@ -104,7 +104,7 @@ function payload(): MakerProfilePayload {
     };
 }
 
-/** Перевірка цін до відправки: NaN з inputToMinor означає неправильний формат */
+/** Check prices before sending: NaN from inputToMinor means an invalid format */
 function shippingErrors(): FieldErrors {
     const e: FieldErrors = {};
     if (Number.isNaN(inputToMinor(shipping.domestic))) e.delivery_domestic_minor = 'Вкажіть суму, наприклад 4 або 4.50';
@@ -155,7 +155,7 @@ async function save(): Promise<boolean> {
 async function submitForReview() {
     submitting.value = true;
     try {
-        // Спершу зберігаємо незбережені правки, потім надсилаємо
+        // Save pending edits first, then submit
         if (dirty.value || profile.value === null) {
             if (!(await save())) return;
         }
@@ -168,7 +168,7 @@ async function submitForReview() {
     }
 }
 
-// Не загубити незбережені зміни
+// Don't lose unsaved changes
 function beforeUnload(e: BeforeUnloadEvent) {
     if (dirty.value) e.preventDefault();
 }
@@ -199,7 +199,7 @@ onBeforeRouteLeave(() => (dirty.value ? window.confirm('Є незбережен�
         </div>
 
         <template v-else>
-            <!-- Що відбувається з профілем і що робити далі -->
+            <!-- What is happening with the profile and what to do next -->
             <div class="mt-6 rounded-card p-5" :class="status === 'rejected' || status === 'suspended' ? 'bg-kalyna/5' : 'bg-lavender-50'">
                 <template v-if="status === null">
                     <p class="m-0 font-semibold text-plum">Відкрийте свою майстерню</p>

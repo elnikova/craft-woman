@@ -13,7 +13,7 @@ export default defineConfig({
         vue({
             template: {
                 transformAssetUrls: {
-                    // /images/... лишаються шляхами з public/, Vite їх не чіпає
+                    // /images/... stay as public/ paths; Vite leaves them alone
                     base: null,
                     includeAbsolute: false,
                 },
@@ -27,8 +27,8 @@ export default defineConfig({
         },
     },
     server: {
-        // IPv4 явно: на Windows `localhost` може резолвитися в ::1, і тоді
-        // вебсокет HMR не під'єднується, а клієнт Vite перезавантажує сторінку по колу.
+        // Explicit IPv4: on Windows `localhost` may resolve to ::1, and then
+        // the HMR websocket fails to connect and the Vite client reloads the page in a loop.
         host: '127.0.0.1',
         hmr: { host: '127.0.0.1' },
         watch: {

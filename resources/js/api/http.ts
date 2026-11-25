@@ -1,9 +1,9 @@
 import axios, { AxiosError } from 'axios';
 
 /**
- * Один axios-клієнт для всього застосунку.
- * SPA на тому ж домені → сесійна cookie Sanctum + XSRF-TOKEN.
- * Версія API — у baseURL.
+ * One axios client for the whole app.
+ * Same-domain SPA → Sanctum session cookie + XSRF-TOKEN.
+ * The API version lives in baseURL.
  */
 export const http = axios.create({
     baseURL: '/api/v1',
@@ -12,12 +12,12 @@ export const http = axios.create({
     headers: {
         Accept: 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
-        // Мова повідомлень API (валідація, доменні помилки). Стане динамічною разом із перемикачем мови.
+        // Language of API messages (validation, domain errors). Becomes dynamic with the language switcher.
         'Accept-Language': 'uk',
     },
 });
 
-// Заблокований акаунт: сервер уже завершив сесію — повне перезавантаження очищає всі сторінки й сховища
+// Blocked account: the server has already ended the session; a full reload clears every page and store
 http.interceptors.response.use(undefined, (error) => {
     if (error instanceof AxiosError && error.response?.status === 403 && error.response.data?.code === 'account_blocked') {
         if (!window.location.pathname.startsWith('/login')) window.location.assign('/login?blocked=1');
@@ -25,12 +25,12 @@ http.interceptors.response.use(undefined, (error) => {
     return Promise.reject(error);
 });
 
-/** Отримати CSRF-cookie перед першим запитом, що змінює стан (login, register). */
+/** Get the CSRF cookie before the first state-changing request (login, register). */
 export function ensureCsrfCookie(): Promise<unknown> {
     return axios.get('/sanctum/csrf-cookie', { withCredentials: true });
 }
 
-/** Помилки валідації Laravel (422) у зручному вигляді: { field: 'перше повідомлення' }. */
+/** Laravel validation errors (422) in a handy shape: { field: 'first message' }. */
 export type FieldErrors = Record<string, string>;
 
 export interface ApiError {
@@ -58,7 +58,7 @@ export function toApiError(error: unknown): ApiError {
             return { status, message: 'Немає з’єднання із сервером. Перевірте інтернет і спробуйте ще раз.', fields };
         }
 
-        // Помилки сервера (5xx) не показуємо користувачу: там можуть бути SQL і шляхи
+        // Don't show server errors (5xx) to users: they may contain SQL and paths
         if (status >= 500) {
             return { status, message: 'На сервері сталася помилка. Спробуйте трохи пізніше.', fields };
         }

@@ -16,7 +16,7 @@ const total = ref(0);
 const loading = ref(true);
 const error = ref('');
 
-/** Профіль, для якого відкрито форму з коментарем (відхилення чи призупинення) */
+/** Profile with the note form open (reject or suspend) */
 const noteFor = ref<{ uuid: string; action: 'reject' | 'suspend' } | null>(null);
 const note = ref('');
 const noteError = ref('');

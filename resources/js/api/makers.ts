@@ -13,7 +13,7 @@ export const makersApi = {
         return data.data;
     },
 
-    // ---- власний профіль ----
+    // ---- own profile ----
     async mine(): Promise<MakerProfile | null> {
         const { data } = await http.get<Wrapped<MakerProfile | null>>('/me/maker-profile');
         return data.data;
@@ -29,13 +29,13 @@ export const makersApi = {
         return data.data;
     },
 
-    // ---- модерація ----
+    // ---- moderation ----
     async reviewQueue(status: MakerStatus, page = 1): Promise<Paginated<MakerProfile>> {
         const { data } = await http.get<Paginated<MakerProfile>>('/admin/makers', { params: { status, page } });
         return data;
     },
 
-    /** reject і suspend вимагають note — бекенд поверне 422 без нього */
+    /** reject and suspend require a note; the backend returns 422 without it */
     async review(uuid: string, action: 'approve' | 'reinstate' | 'reject' | 'suspend', note?: string): Promise<MakerProfile> {
         const { data } = await http.post<Wrapped<MakerProfile>>(`/admin/makers/${uuid}/${action}`, note ? { note } : {});
         return data.data;
