@@ -12,6 +12,8 @@ export const http = axios.create({
     headers: {
         Accept: 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
+        // Мова повідомлень API (валідація, доменні помилки). Стане динамічною разом із перемикачем мови.
+        'Accept-Language': 'uk',
     },
 });
 

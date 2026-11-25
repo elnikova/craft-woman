@@ -64,7 +64,7 @@ const admin: NavSection = {
     items: [
         { label: 'Перевірка майстрів', to: { name: 'admin-makers' }, icon: 'check' },
         soon('users', 'Користувачі', 'users'),
-        soon('categories', 'Категорії', 'tag'),
+        { label: 'Категорії', to: { name: 'admin-categories' }, icon: 'tag' },
         soon('moderation', 'Модерація', 'flag'),
         soon('all-orders', 'Усі замовлення', 'bag'),
     ],

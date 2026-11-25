@@ -209,3 +209,12 @@ test('suspended maker disappears from the public list and can be reinstated', fu
     $this->actingAs($admin)->postJson("/api/v1/admin/makers/{$profile->uuid}/reinstate")
         ->assertOk()->assertJsonPath('data.status', 'approved');
 });
+
+test('maker status conflicts are explained in Ukrainian', function () {
+    $profile = MakerProfile::factory()->pendingReview()->create();
+
+    $this->actingAs($profile->user)
+        ->postJson('/api/v1/me/maker-profile/submit', [], ['Accept-Language' => 'uk'])
+        ->assertStatus(409)
+        ->assertJsonPath('message', 'Цю дію не можна виконати для профілю зі статусом «на перевірці».');
+});

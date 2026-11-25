@@ -481,6 +481,12 @@ parent_uuid → categories.uuid
 
 This allows hierarchical categories.
 
+Implementation rules:
+
+* The tree has two levels: category → subcategory.
+* A category with subcategories or attached entities cannot be deleted; hide it with `is_visible = false` instead.
+* Hidden categories are not returned by the public API.
+
 Examples:
 
 ```text
