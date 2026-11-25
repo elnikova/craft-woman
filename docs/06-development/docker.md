@@ -35,10 +35,56 @@ On first start, `app` runs `composer install` when `vendor/autoload.php` is miss
 
 ## Notes
 
-- **Speed.** The project lives on the Windows drive and is mounted into Linux containers, which is slower than native PHP. Pages take hundreds of milliseconds, and tests take about a minute. Keeping `vendor` and `node_modules` in volumes helps a lot. For full speed, move the project into the WSL file system (`\\wsl$\Ubuntu\home\…`) and open it from there.
+- **Speed.** See [Speed](#speed) below.
 - **Limits.** PHP accepts uploads up to 110 MB and nginx up to 120 MB (`docker/php/php.ini`, `docker/nginx/default.conf`). The app allows 100 MB for course files and 50 MB for product files.
 - **Rebuild** the PHP image after changing `docker/php/*`: `docker compose up -d --build app`.
 - **Secrets.** `secret` is a local development password. This setup is for development only, not for a server.
+
+## Speed
+
+On Windows the project folder is mounted into Linux containers through a slow bridge (9p): every file PHP checks costs a round trip. A Laravel request touches thousands of files, so pages can take one to several seconds.
+
+### Already applied
+
+| Setting | Effect |
+|---|---|
+| `vendor`, `node_modules` in Docker volumes | Dependencies never cross the bridge |
+| `composer dump-autoload --optimize` on start | Classes come from a class map instead of file lookups |
+| `realpath_cache_size = 4096K`, `realpath_cache_ttl = 600` | PHP remembers resolved paths |
+| OPcache with `revalidate_freq = 1` | Compiled code is reused; changes show up within a second |
+| Vite polling every 500 ms | Less CPU spent watching files |
+
+After changing `docker/php/*`, rebuild the image with `.\dev up --build`.
+
+### The real fix: keep the project inside WSL
+
+Inside the WSL file system the containers read files natively, which is usually 5–10× faster. Then it's as fast as Herd.
+
+1. Install Ubuntu in WSL from an administrator PowerShell, then restart Windows if asked:
+   ```powershell
+   wsl --install -d Ubuntu
+   ```
+   On first start, Ubuntu asks for a Linux user name and password.
+2. *(Optional, to keep it off drive C:)* Move the distribution:
+   ```powershell
+   wsl --shutdown
+   wsl --manage Ubuntu --move D:\WSL\Ubuntu
+   ```
+3. In Docker Desktop, go to Settings → Resources → **WSL integration** → turn on **Ubuntu** → Apply & restart.
+4. In Ubuntu (Start → Ubuntu), copy the project without the Windows `vendor` and `node_modules`. Your `.env` and any uncommitted work come along:
+   ```bash
+   sudo apt-get update && sudo apt-get install -y rsync
+   rsync -a --exclude vendor --exclude node_modules /mnt/c/Users/Admin/Herd/craft-woman/ ~/craft-woman/
+   cd ~/craft-woman
+   docker compose down          # stop the containers that use the Windows copy
+   ./dev up
+   ./dev fresh
+   ```
+   The volumes (`vendor`, `node_modules`, the database) are reused because the compose project name stays `craft-woman`.
+5. In PhpStorm, use File → Open → `\\wsl$\Ubuntu\home\<user>\craft-woman`. Run commands in the PhpStorm terminal (it opens Ubuntu for WSL projects) with `./dev …` — `dev.cmd` is for Windows paths only.
+6. Git works the same inside Ubuntu. The first time, set your name and e-mail (`git config --global user.name …`) and sign in to GitHub (`gh auth login` or a personal access token).
+
+Keep only one copy of the project in use, so changes don't end up in two places.
 
 ## Troubleshooting
 

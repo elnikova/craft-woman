@@ -49,8 +49,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
-    # Install PHP dependencies on the first start, then run PHP-FPM
-    command: sh -c "[ -f vendor/autoload.php ] || composer install --no-interaction; php-fpm"
+    # Install PHP dependencies on the first start; an optimized class map saves thousands of
+    # file lookups per request on the Windows mount (new classes still load through PSR-4)
+    command: sh -c "[ -f vendor/autoload.php ] || composer install --no-interaction; composer dump-autoload --optimize --no-scripts --quiet; php-fpm"
 
   web:
     image: nginx:1.27-alpine

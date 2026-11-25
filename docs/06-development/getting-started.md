@@ -25,7 +25,7 @@ The first `up` takes 5–10 minutes: it builds the PHP image and runs `composer 
 
 Open **http://localhost:8080**.
 
-`dev.cmd` in the project root is a shortcut for the `docker compose` commands. It works in PowerShell and cmd and needs no execution-policy changes. Run `.\dev` with no arguments to list the commands.
+`dev.cmd` in the project root is a shortcut for the `docker compose` commands. It works in PowerShell and cmd and needs no execution-policy changes. Run `.\dev` with no arguments to list the commands. Inside WSL (see [docker.md → Speed](docker.md#speed)) use `./dev`, which has the same commands.
 
 ## Demo data
 
@@ -81,6 +81,7 @@ There's no real payment yet. An unpaid order has a **«Оплатити (тес�
 | `.\dev` is not recognized | Run it from the project root, with `.\` in front |
 | `error during connect` / `The system cannot find the file specified` | Docker Desktop isn't running — start it and wait for "Engine running" |
 | Site at :8080 doesn't open right after `up` | Dependencies are still installing — `.\dev ready` |
+| Pages are slow (seconds) | Expected with the project on a Windows drive — see [docker.md → Speed](docker.md#speed) |
 | "No upcoming workshops" | Seeded dates have passed — `.\dev fresh` |
 
 Docker-specific problems (ports, Vite, CSRF) are covered in [docker.md](docker.md#troubleshooting).

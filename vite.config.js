@@ -40,7 +40,7 @@ export default defineConfig({
         watch: {
             ignored: ['**/storage/framework/views/**', '**/database/*.sqlite*', '**/vendor/**'],
             usePolling: inDocker,
-            interval: 300,
+            interval: 500,
         },
     },
 });
