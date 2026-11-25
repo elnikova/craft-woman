@@ -2,8 +2,8 @@
 
 namespace Modules\Identity\Infrastructure\Persistence;
 
-use App\Support\HasTranslations;
 use App\Models\User;
+use App\Support\HasTranslations;
 use Database\Factories\MakerProfileFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;

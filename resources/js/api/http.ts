@@ -1,4 +1,5 @@
 import axios, { AxiosError } from 'axios';
+import { currentLocale, localePath, t } from '@/i18n';
 
 /**
  * One axios client for the whole app.
@@ -12,15 +13,19 @@ export const http = axios.create({
     headers: {
         Accept: 'application/json',
         'X-Requested-With': 'XMLHttpRequest',
-        // Language of API messages (validation, domain errors). Becomes dynamic with the language switcher.
-        'Accept-Language': 'uk',
     },
+});
+
+// API messages (validation, domain errors) come back in the interface language
+http.interceptors.request.use((config) => {
+    config.headers.set('Accept-Language', currentLocale());
+    return config;
 });
 
 // Blocked account: the server has already ended the session; a full reload clears every page and store
 http.interceptors.response.use(undefined, (error) => {
     if (error instanceof AxiosError && error.response?.status === 403 && error.response.data?.code === 'account_blocked') {
-        if (!window.location.pathname.startsWith('/login')) window.location.assign('/login?blocked=1');
+        if (!/^(\/en)?\/login/.test(window.location.pathname)) window.location.assign(`${localePath('/login')}?blocked=1`);
     }
     return Promise.reject(error);
 });
@@ -55,16 +60,16 @@ export function toApiError(error: unknown): ApiError {
         }
 
         if (status === null) {
-            return { status, message: 'Немає з’єднання із сервером. Перевірте інтернет і спробуйте ще раз.', fields };
+            return { status, message: t('errors.offline'), fields };
         }
 
         // Don't show server errors (5xx) to users: they may contain SQL and paths
         if (status >= 500) {
-            return { status, message: 'На сервері сталася помилка. Спробуйте трохи пізніше.', fields };
+            return { status, message: t('errors.server'), fields };
         }
 
-        return { status, message: body.message ?? 'Щось пішло не так. Спробуйте ще раз.', fields };
+        return { status, message: body.message ?? t('errors.generic'), fields };
     }
 
-    return { status: null, message: 'Щось пішло не так. Спробуйте ще раз.', fields: {} };
+    return { status: null, message: t('errors.generic'), fields: {} };
 }

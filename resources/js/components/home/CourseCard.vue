@@ -1,19 +1,21 @@
 <script setup lang="ts">
+import { useI18n } from 'vue-i18n';
 import { computed } from 'vue';
 import type { CourseCardData } from '@/types/catalog';
 import { formatPrice, plural } from '@/utils/format';
 
+const { t } = useI18n();
 const props = defineProps<{ course: CourseCardData }>();
 
 const access = computed(() =>
     props.course.accessMonths === null
-        ? 'Доступ назавжди'
-        : `Доступ ${plural(props.course.accessMonths, ['місяць', 'місяці', 'місяців'])}`,
+        ? t('course.lifetime')
+        : t('course.access', { period: plural(props.course.accessMonths, 'months') }),
 );
 </script>
 
 <template>
-    <RouterLink to="/" class="group flex flex-col overflow-hidden rounded-[20px] bg-white text-inherit no-underline">
+    <RouterLink :to="{ name: 'home' }" class="group flex flex-col overflow-hidden rounded-[20px] bg-white text-inherit no-underline">
         <div class="aspect-video" :class="course.cover.pattern" :style="{ backgroundColor: course.cover.color }" />
         <div class="flex flex-col gap-2 px-6 pt-5 pb-6">
             <div class="text-sm text-ink-soft">{{ course.makerName }}</div>
@@ -21,9 +23,9 @@ const access = computed(() =>
                 {{ course.title }}
             </div>
             <div class="mt-2 flex flex-wrap gap-4 text-sm text-ink-soft">
-                <span>{{ plural(course.lessonsCount, ['урок', 'уроки', 'уроків']) }}</span>
+                <span>{{ plural(course.lessonsCount, 'lessons') }}</span>
                 <span>{{ access }}</span>
-                <span>{{ course.hasCertificate ? 'Сертифікат' : 'Без сертифіката' }}</span>
+                <span>{{ course.hasCertificate ? t('course.certificate') : t('course.noCertificate') }}</span>
             </div>
             <div class="mt-2 text-lg font-bold text-plum">{{ formatPrice(course.priceCents, course.currency) }}</div>
         </div>

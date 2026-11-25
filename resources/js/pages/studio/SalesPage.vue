@@ -8,7 +8,7 @@ import { ordersApi } from '@/api/orders';
 import { toApiError } from '@/api/http';
 import type { GroupStatus, Sale } from '@/types/order';
 import { formatPrice } from '@/utils/format';
-import { COUNTRIES, GROUP_STATUS_LABELS, formatDate } from '@/utils/orderStatus';
+import { countryName, GROUP_STATUS_LABELS, formatDate } from '@/utils/orderStatus';
 
 const TABS: (GroupStatus | 'all')[] = ['awaiting_shipment', 'shipped', 'pending_payment', 'delivered', 'cancelled', 'all'];
 const tab = ref<GroupStatus | 'all'>('awaiting_shipment');
@@ -26,7 +26,6 @@ const open = reactive<{ uuid: string | null; mode: 'ship' | 'cancel' | null; tra
     busy: false,
 });
 
-const countryName = (code: string) => COUNTRIES.find((c) => c.code === code)?.name ?? code;
 
 async function load() {
     loading.value = true;

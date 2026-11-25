@@ -10,6 +10,10 @@ export interface MakerProfile {
     display_name: string;
     bio: string | null;
     story: string | null;
+    /** Language of bio/story: the source language when no translation exists */
+    content_locale?: 'uk' | 'en';
+    /** Owner/admin only: translations keyed by locale */
+    translations?: Partial<Record<'uk' | 'en', { bio?: string; story?: string }>>;
     avatar_url: string | null;
     country_code: string | null;
     city: string | null;

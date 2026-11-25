@@ -2,8 +2,8 @@
 
 namespace Modules\Marketplace\Infrastructure\Persistence;
 
-use Database\Factories\ProductFactory;
 use App\Support\HasTranslations;
+use Database\Factories\ProductFactory;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Concerns\HasUuids;
 use Illuminate\Database\Eloquent\Factories\HasFactory;

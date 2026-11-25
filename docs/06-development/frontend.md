@@ -77,6 +77,18 @@ Utilities: `font-flair`, `tx-linen`, `tx-weave`, `tx-knit`, `ph-knit`, `ph-weave
 - Every data page handles loading (skeleton), error (message + retry) and empty states.
 - Prices travel as minor units (`amount_minor`); inputs use `minorToInput` / `inputToMinor` from `utils/format.ts`.
 
+## Languages (vue-i18n)
+
+- Messages: `resources/js/i18n/uk.json` and `en.json`, set up in `i18n/index.ts`. Use `const { t } = useI18n()` in components and `t` from `@/i18n` in plain modules.
+- Ukrainian plurals use three forms: `"{n} товар | {n} товари | {n} товарів"`; English uses two. Call `plural(n, 'products')` from `utils/format.ts`.
+- URLs: Ukrainian has no prefix, English is under `/en`. All routes are children of `/:locale(en)?`. Named links keep the current language automatically; for string paths use `localePath('/checkout')`.
+- `LocaleRoot` remounts the page when the language changes, so data is refetched in the new language. The API client sends `Accept-Language` with every request.
+- Header switcher (`LocaleSwitcher`) and Settings → "Interface language". Signed-in users keep the choice in `users.locale`, and a user whose saved language is English is taken to `/en` on arrival.
+- Status labels (`MAKER_STATUS_LABELS`, `ORDER_STATUS_LABELS`, …) are built with `labelMap()` and follow the current language.
+- Country names come from `Intl.DisplayNames` (`countries()`, `countryName()`).
+- Maker content: the API returns `content_locale`. When it differs from the interface language, pages mark the text with `lang` and show a short note.
+- Not translated yet: studio and admin pages (next PR) and the sample home blocks in `mocks/home.ts`.
+
 ## Account area
 
 After login every user lands in `/account`, a separate layout (`layouts/AccountLayout.vue`) with a sidebar.
@@ -155,7 +167,7 @@ makers `oksana@`, `marko@`, `iryna@`, `luka@`, `sofia@craftwoman.local` / `passw
 ## Open questions
 
 1. **Google OAuth.** The "Continue with Google" button is inactive; the frontend flow isn't built yet.
-2. **Language switcher.** The UI is Ukrainian only; `Accept-Language` is fixed to `uk` in `api/http.ts`.
+2. **Studio and admin pages** are still Ukrainian only (next PR).
 
 ## Verified
 

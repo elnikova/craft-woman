@@ -1,7 +1,10 @@
-const locale = 'uk-UA';
+import { INTL_LOCALE, currentLocale, t } from '@/i18n';
+
+/** Intl tag of the interface language, read on every call so formatting follows the switcher */
+const intl = () => INTL_LOCALE[currentLocale()];
 
 export function formatPrice(cents: number, currency: string): string {
-    return new Intl.NumberFormat(locale, {
+    return new Intl.NumberFormat(intl(), {
         style: 'currency',
         currency,
         maximumFractionDigits: cents % 100 === 0 ? 0 : 2,
@@ -9,22 +12,20 @@ export function formatPrice(cents: number, currency: string): string {
 }
 
 export function formatRating(value: number): string {
-    return new Intl.NumberFormat(locale, { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
+    return new Intl.NumberFormat(intl(), { minimumFractionDigits: 1, maximumFractionDigits: 1 }).format(value);
 }
 
-/** Ukrainian plural forms: plural(3, ['урок', 'уроки', 'уроків']) → "3 уроки" */
-export function plural(n: number, forms: [string, string, string]): string {
-    const rule = new Intl.PluralRules(locale).select(n);
-    const word = rule === 'one' ? forms[0] : rule === 'few' ? forms[1] : forms[2];
-    return `${n} ${word}`;
+/** Count with the right plural form: plural(3, 'lessons') → "3 уроки" / "3 lessons" (messages under `plural.*`) */
+export function plural(n: number, key: string): string {
+    return t(`plural.${key}`, { n }, n);
 }
 
 export function formatDay(iso: string): { day: string; month: string; time: string } {
     const d = new Date(iso);
     return {
-        day: new Intl.DateTimeFormat(locale, { day: 'numeric' }).format(d),
-        month: new Intl.DateTimeFormat(locale, { month: 'short' }).format(d).replace('.', ''),
-        time: new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' }).format(d),
+        day: new Intl.DateTimeFormat(intl(), { day: 'numeric' }).format(d),
+        month: new Intl.DateTimeFormat(intl(), { month: 'short' }).format(d).replace('.', ''),
+        time: new Intl.DateTimeFormat(intl(), { hour: '2-digit', minute: '2-digit' }).format(d),
     };
 }
 
@@ -44,7 +45,7 @@ export function inputToMinor(value: string): number | null {
 }
 
 export function formatFileSize(bytes: number): string {
-    if (bytes < 1024) return `${bytes} Б`;
-    if (bytes < 1024 * 1024) return `${Math.round(bytes / 1024)} КБ`;
-    return `${(bytes / 1024 / 1024).toFixed(1)} МБ`;
+    if (bytes < 1024) return t('units.bytes', { n: bytes });
+    if (bytes < 1024 * 1024) return t('units.kb', { n: Math.round(bytes / 1024) });
+    return t('units.mb', { n: (bytes / 1024 / 1024).toFixed(1) });
 }

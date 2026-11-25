@@ -12,8 +12,8 @@ defineProps<{ post: PostCardData }>();
             <div class="text-[15px] font-semibold text-plum">{{ post.makerName }}</div>
             <p class="m-0 text-base leading-relaxed text-ink">{{ post.text }}</p>
             <div class="mt-auto flex gap-4 text-sm text-ink-muted">
-                <span>{{ plural(post.likes, ['вподобання', 'вподобання', 'вподобань']) }}</span>
-                <span>{{ plural(post.comments, ['коментар', 'коментарі', 'коментарів']) }}</span>
+                <span>{{ plural(post.likes, 'likes') }}</span>
+                <span>{{ plural(post.comments, 'comments') }}</span>
             </div>
         </div>
     </article>

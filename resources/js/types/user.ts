@@ -11,6 +11,7 @@ export interface User {
     uuid: string;
     name: string;
     email: string;
+    locale: 'uk' | 'en';
     role: Role;
     status: UserStatus;
     email_verified: boolean;

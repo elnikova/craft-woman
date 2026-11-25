@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { computed, onMounted, ref } from 'vue';
+import { useI18n } from 'vue-i18n';
 import { useRoute } from 'vue-router';
 import BaseButton from '@/components/ui/BaseButton.vue';
 import StatusPill from '@/components/orders/StatusPill.vue';
@@ -7,10 +8,11 @@ import ProductCover from '@/components/products/ProductCover.vue';
 import { ordersApi, type OrderWithDownloads } from '@/api/orders';
 import { toApiError } from '@/api/http';
 import { formatFileSize, formatPrice } from '@/utils/format';
-import { COUNTRIES, PAYMENT_LABELS, formatDate } from '@/utils/orderStatus';
+import { countryName, PAYMENT_LABELS, formatDate } from '@/utils/orderStatus';
 
 const props = defineProps<{ number: string }>();
 const route = useRoute();
+const { t } = useI18n();
 
 const order = ref<OrderWithDownloads | null>(null);
 const loading = ref(true);
@@ -29,7 +31,6 @@ const canCancel = computed(() => {
     return early && (o.status === 'pending_payment' || o.payment_method === 'cash_on_delivery');
 });
 
-const countryName = (code: string) => COUNTRIES.find((c) => c.code === code)?.name ?? code;
 
 async function load() {
     loading.value = true;
@@ -44,7 +45,7 @@ async function load() {
 }
 
 async function act(kind: 'pay' | 'cancel') {
-    if (kind === 'cancel' && !window.confirm('Скасувати замовлення? Майстри його вже не побачать.')) return;
+    if (kind === 'cancel' && !window.confirm(t('order.cancelConfirm'))) return;
     busy.value = kind;
     actionError.value = '';
     try {
@@ -61,44 +62,42 @@ onMounted(load);
 
 <template>
     <div class="max-w-[900px]">
-        <RouterLink :to="{ name: 'account-orders' }" class="text-[15px] text-plum">← Усі замовлення</RouterLink>
+        <RouterLink :to="{ name: 'account-orders' }" class="text-[15px] text-plum">{{ t('order.all') }}</RouterLink>
 
-        <div v-if="loading" class="mt-6 h-64 animate-pulse rounded-card bg-lavender-50" aria-busy="true" aria-label="Завантаження" />
+        <div v-if="loading" class="mt-6 h-64 animate-pulse rounded-card bg-lavender-50" aria-busy="true" :aria-label="t('common.loading')" />
 
         <div v-else-if="error || !order" role="alert" class="mt-6 rounded-card border border-kalyna/30 bg-kalyna/5 p-6 text-kalyna">
-            {{ error || 'Замовлення не знайдено.' }}
+            {{ error || t('order.notFound') }}
         </div>
 
         <template v-else>
             <div v-if="justPlaced" role="status" class="mt-6 rounded-card bg-[#E6F0DC] p-5 text-[#2F4A1C]">
-                <p class="m-0 font-semibold">Замовлення оформлено.</p>
+                <p class="m-0 font-semibold">{{ t('order.placed') }}</p>
                 <p class="mt-1 mb-0">
                     {{
                         order.payment_method === 'online' && !order.is_paid
-                            ? 'Залишилось оплатити — після цього майстри почнуть готувати відправлення.'
-                            : 'Майстри вже бачать його і готують відправлення.'
+                            ? t('order.payNext')
+                            : t('order.makersSee')
                     }}
                 </p>
             </div>
 
             <div class="mt-6 flex flex-wrap items-center justify-between gap-4">
                 <div>
-                    <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum">№ {{ order.order_number }}</h1>
+                    <h1 class="font-flair m-0 text-[36px] leading-tight font-bold tracking-[-0.015em] text-plum">{{ t('orders.number', { number: order.order_number }) }}</h1>
                     <p class="mt-1 mb-0 text-ink-muted">
                         {{ formatDate(order.placed_at) }} · {{ PAYMENT_LABELS[order.payment_method] }} ·
-                        {{ order.is_paid ? 'оплачено' : 'не оплачено' }}
+                        {{ order.is_paid ? t('order.paid') : t('order.unpaid') }}
                     </p>
                 </div>
                 <StatusPill :status="order.status" />
             </div>
 
             <div v-if="(order.status === 'pending_payment' && canTestPay) || canCancel" class="mt-6 flex flex-wrap items-center gap-3">
-                <BaseButton v-if="order.status === 'pending_payment' && canTestPay" :loading="busy === 'pay'" @click="act('pay')">
-                    Оплатити (тестова оплата)
-                </BaseButton>
-                <BaseButton v-if="canCancel" variant="secondary" :loading="busy === 'cancel'" @click="act('cancel')">Скасувати замовлення</BaseButton>
+                <BaseButton v-if="order.status === 'pending_payment' && canTestPay" :loading="busy === 'pay'" @click="act('pay')">{{ t('order.testPay') }}</BaseButton>
+                <BaseButton v-if="canCancel" variant="secondary" :loading="busy === 'cancel'" @click="act('cancel')">{{ t('order.cancel') }}</BaseButton>
                 <p v-if="order.status === 'pending_payment' && canTestPay" class="m-0 w-full text-sm text-ink-muted">
-                    Онлайн-оплату підключимо через Stripe. Поки що ця кнопка лише позначає замовлення оплаченим (працює тільки локально).
+                    {{ t('order.testPayNote') }}
                 </p>
             </div>
             <p v-if="actionError" role="alert" class="mt-3 mb-0 text-kalyna">{{ actionError }}</p>
@@ -107,7 +106,7 @@ onMounted(load);
                 v-for="g in order.groups"
                 :key="g.uuid"
                 class="mt-6 rounded-card border border-line bg-white"
-                :aria-label="`Частина від ${g.maker.name}`"
+                :aria-label="t('order.partFrom', { maker: g.maker.name })"
             >
                 <header class="flex flex-wrap items-center justify-between gap-3 border-b border-line px-5 py-3">
                     <span class="font-semibold text-plum">{{ g.maker.name }}</span>
@@ -124,7 +123,7 @@ onMounted(load);
                             <span v-else class="font-semibold">{{ i.name }}</span>
                             <div class="text-sm text-ink-muted">
                                 {{
-                                    [i.is_digital ? 'Цифровий файл' : i.variant_name, `${i.quantity} × ${formatPrice(i.unit_price.amount_minor, i.unit_price.currency)}`]
+                                    [i.is_digital ? t('common.digitalFile') : i.variant_name, `${i.quantity} × ${formatPrice(i.unit_price.amount_minor, i.unit_price.currency)}`]
                                         .filter(Boolean)
                                         .join(' · ')
                                 }}
@@ -136,41 +135,41 @@ onMounted(load);
                                         class="inline-flex h-9 items-center gap-2 rounded-full bg-lavender-50 px-4 text-sm font-semibold text-plum no-underline hover:bg-lavender-100"
                                         download
                                     >
-                                        Завантажити {{ f.name }} <span class="font-normal text-ink-muted">{{ formatFileSize(f.size) }}</span>
+                                        {{ t('order.download', { name: f.name }) }} <span class="font-normal text-ink-muted">{{ formatFileSize(f.size) }}</span>
                                     </a>
                                 </li>
                             </ul>
-                            <p v-else-if="i.is_digital && !order.is_paid" class="mt-1 mb-0 text-sm text-ink-muted">Файл стане доступним після оплати.</p>
+                            <p v-else-if="i.is_digital && !order.is_paid" class="mt-1 mb-0 text-sm text-ink-muted">{{ t('order.fileAfterPayment') }}</p>
                         </div>
                         <div class="font-bold text-plum">{{ formatPrice(i.total.amount_minor, i.total.currency) }}</div>
                     </li>
                 </ul>
 
                 <div v-if="g.shipment || g.cancel_reason" class="grid gap-2 border-t border-line bg-lavender-50/50 px-5 py-4 text-[15px]">
-                    <p v-if="g.cancel_reason" class="m-0 text-kalyna">Майстер скасував: {{ g.cancel_reason }}</p>
+                    <p v-if="g.cancel_reason" class="m-0 text-kalyna">{{ t('order.makerCancelled', { reason: g.cancel_reason }) }}</p>
                     <template v-if="g.shipment">
                         <p class="m-0">
-                            <span class="text-ink-muted">Доставка: </span>
+                            <span class="text-ink-muted">{{ t('order.deliveryTo') }}</span>
                             {{ g.shipment.recipient_name }}, {{ g.shipment.phone }} — {{ countryName(g.shipment.country_code) }}, {{ g.shipment.city }},
                             {{ g.shipment.address }}<template v-if="g.shipment.postal_code">, {{ g.shipment.postal_code }}</template>
                         </p>
                         <p v-if="g.shipment.tracking_number" class="m-0">
-                            <span class="text-ink-muted">Номер відправлення: </span><strong>{{ g.shipment.tracking_number }}</strong>
+                            <span class="text-ink-muted">{{ t('order.tracking') }}</span><strong>{{ g.shipment.tracking_number }}</strong>
                         </p>
                     </template>
                 </div>
                 <div class="flex justify-end gap-6 border-t border-line px-5 py-3 text-[15px]">
-                    <span v-if="g.shipment" class="text-ink-muted">Доставка {{ formatPrice(g.delivery_fee.amount_minor, g.delivery_fee.currency) }}</span>
-                    <span class="font-semibold">Разом {{ formatPrice(g.total.amount_minor, g.total.currency) }}</span>
+                    <span v-if="g.shipment" class="text-ink-muted">{{ t('order.deliveryAmount', { amount: formatPrice(g.delivery_fee.amount_minor, g.delivery_fee.currency) }) }}</span>
+                    <span class="font-semibold">{{ t('order.totalAmount', { amount: formatPrice(g.total.amount_minor, g.total.currency) }) }}</span>
                 </div>
             </section>
 
             <div class="mt-6 flex justify-end">
                 <div class="w-full max-w-[320px] rounded-card bg-lavender-50 p-5">
-                    <div class="flex justify-between text-[15px]"><span class="text-ink-muted">Товари</span><span>{{ formatPrice(order.subtotal.amount_minor, order.subtotal.currency) }}</span></div>
-                    <div class="mt-1 flex justify-between text-[15px]"><span class="text-ink-muted">Доставка</span><span>{{ formatPrice(order.delivery.amount_minor, order.delivery.currency) }}</span></div>
+                    <div class="flex justify-between text-[15px]"><span class="text-ink-muted">{{ t('checkout.items') }}</span><span>{{ formatPrice(order.subtotal.amount_minor, order.subtotal.currency) }}</span></div>
+                    <div class="mt-1 flex justify-between text-[15px]"><span class="text-ink-muted">{{ t('checkout.delivery') }}</span><span>{{ formatPrice(order.delivery.amount_minor, order.delivery.currency) }}</span></div>
                     <div class="mt-3 flex items-baseline justify-between border-t border-lavender-200 pt-3">
-                        <span class="font-semibold">Разом</span>
+                        <span class="font-semibold">{{ t('checkout.total') }}</span>
                         <span class="text-2xl font-bold text-plum">{{ formatPrice(order.total.amount_minor, order.total.currency) }}</span>
                     </div>
                 </div>

@@ -1,9 +1,9 @@
 import { createRouter, createWebHistory } from 'vue-router';
+import { DEFAULT_LOCALE, applyLocale, currentLocale, isLocale, t } from '@/i18n';
 import { useAuthStore } from '@/stores/auth';
 
 declare module 'vue-router' {
     interface RouteMeta {
-        title?: string;
         /** Guest-only page (login, register) */
         guestOnly?: boolean;
         /** Requires authentication */
@@ -24,190 +24,204 @@ export const router = createRouter({
     },
     routes: [
         {
-            path: '/',
-            component: () => import('@/layouts/DefaultLayout.vue'),
+            // Ukrainian has no prefix; English lives under /en (domain-rules.md §42)
+            path: '/:locale(en)?',
+            component: () => import('@/layouts/LocaleRoot.vue'),
             children: [
                 {
                     path: '',
-                    name: 'home',
-                    component: () => import('@/pages/HomePage.vue'),
-                    meta: { title: 'Речі, зроблені руками', ownHeader: true },
+                    component: () => import('@/layouts/DefaultLayout.vue'),
+                    children: [
+                        {
+                            path: '',
+                            name: 'home',
+                            component: () => import('@/pages/HomePage.vue'),
+                            meta: { ownHeader: true },
+                        },
+                        {
+                            path: 'catalog',
+                            name: 'catalog',
+                            component: () => import('@/pages/products/CatalogPage.vue'),
+                        },
+                        {
+                            path: 'products/:slug',
+                            name: 'product',
+                            component: () => import('@/pages/products/ProductPage.vue'),
+                            props: true,
+                        },
+                        {
+                            path: 'makers',
+                            name: 'makers',
+                            component: () => import('@/pages/makers/MakersPage.vue'),
+                        },
+                        {
+                            path: 'makers/:slug',
+                            name: 'maker',
+                            component: () => import('@/pages/makers/MakerPage.vue'),
+                            props: true,
+                        },
+                        {
+                            path: 'cart',
+                            name: 'cart',
+                            component: () => import('@/pages/cart/CartPage.vue'),
+                        },
+                        {
+                            path: 'checkout',
+                            name: 'checkout',
+                            component: () => import('@/pages/cart/CheckoutPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                    ],
                 },
                 {
-                    path: 'catalog',
-                    name: 'catalog',
-                    component: () => import('@/pages/products/CatalogPage.vue'),
-                    meta: { title: 'Каталог' },
+                    path: 'account',
+                    component: () => import('@/layouts/AccountLayout.vue'),
+                    meta: { requiresAuth: true },
+                    children: [
+                        {
+                            path: '',
+                            name: 'account',
+                            component: () => import('@/pages/account/AccountHomePage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'studio',
+                            name: 'studio',
+                            component: () => import('@/pages/studio/StudioProfilePage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'admin/makers',
+                            name: 'admin-makers',
+                            component: () => import('@/pages/admin/AdminMakersPage.vue'),
+                            meta: { requiresAuth: true, requiresAdmin: true },
+                        },
+                        {
+                            path: 'products',
+                            name: 'studio-products',
+                            component: () => import('@/pages/studio/MyProductsPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'products/new',
+                            name: 'studio-product-new',
+                            component: () => import('@/pages/studio/ProductEditorPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'products/:uuid',
+                            name: 'studio-product',
+                            component: () => import('@/pages/studio/ProductEditorPage.vue'),
+                            props: true,
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'admin/products',
+                            name: 'admin-products',
+                            component: () => import('@/pages/admin/AdminProductsPage.vue'),
+                            meta: { requiresAuth: true, requiresAdmin: true },
+                        },
+                        {
+                            path: 'admin/categories',
+                            name: 'admin-categories',
+                            component: () => import('@/pages/admin/AdminCategoriesPage.vue'),
+                            meta: { requiresAuth: true, requiresAdmin: true },
+                        },
+                        {
+                            path: 'orders',
+                            name: 'account-orders',
+                            component: () => import('@/pages/account/OrdersPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'orders/:number',
+                            name: 'account-order',
+                            component: () => import('@/pages/account/OrderPage.vue'),
+                            props: true,
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'settings',
+                            name: 'account-settings',
+                            component: () => import('@/pages/account/SettingsPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'admin/users',
+                            name: 'admin-users',
+                            component: () => import('@/pages/admin/AdminUsersPage.vue'),
+                            meta: { requiresAuth: true, requiresAdmin: true },
+                        },
+                        {
+                            path: 'favorites',
+                            name: 'account-favorites',
+                            component: () => import('@/pages/account/FavoritesPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'sales',
+                            name: 'studio-sales',
+                            component: () => import('@/pages/studio/SalesPage.vue'),
+                            meta: { requiresAuth: true },
+                        },
+                        {
+                            path: 'admin/orders',
+                            name: 'admin-orders',
+                            component: () => import('@/pages/admin/AdminOrdersPage.vue'),
+                            meta: { requiresAuth: true, requiresAdmin: true },
+                        },
+                        {
+                            path: 'soon/:section',
+                            name: 'account-soon',
+                            component: () => import('@/pages/account/ComingSoonPage.vue'),
+                            props: true,
+                            meta: { requiresAuth: true },
+                        },
+                    ],
+                },
+                // Old URLs
+                { path: 'studio', redirect: { name: 'studio' } },
+                { path: 'admin/makers', redirect: { name: 'admin-makers' } },
+                {
+                    path: 'login',
+                    name: 'login',
+                    component: () => import('@/pages/auth/AuthPage.vue'),
+                    props: { mode: 'login' },
+                    meta: { guestOnly: true },
                 },
                 {
-                    path: 'products/:slug',
-                    name: 'product',
-                    component: () => import('@/pages/products/ProductPage.vue'),
-                    props: true,
-                    meta: { title: 'Товар' },
+                    path: 'register',
+                    name: 'register',
+                    component: () => import('@/pages/auth/AuthPage.vue'),
+                    props: (route) => ({ mode: 'register', role: route.query.role === 'master' ? 'master' : 'buyer' }),
+                    meta: { guestOnly: true },
                 },
                 {
-                    path: 'makers',
-                    name: 'makers',
-                    component: () => import('@/pages/makers/MakersPage.vue'),
-                    meta: { title: 'Майстри' },
-                },
-                {
-                    path: 'makers/:slug',
-                    name: 'maker',
-                    component: () => import('@/pages/makers/MakerPage.vue'),
-                    props: true,
-                    meta: { title: 'Майстер' },
-                },
-                {
-                    path: 'cart',
-                    name: 'cart',
-                    component: () => import('@/pages/cart/CartPage.vue'),
-                    meta: { title: 'Кошик' },
-                },
-                {
-                    path: 'checkout',
-                    name: 'checkout',
-                    component: () => import('@/pages/cart/CheckoutPage.vue'),
-                    meta: { title: 'Оформлення', requiresAuth: true },
+                    path: ':pathMatch(.*)*',
+                    name: 'not-found',
+                    component: () => import('@/pages/NotFoundPage.vue'),
                 },
             ],
-        },
-        {
-            path: '/account',
-            component: () => import('@/layouts/AccountLayout.vue'),
-            meta: { requiresAuth: true },
-            children: [
-                {
-                    path: '',
-                    name: 'account',
-                    component: () => import('@/pages/account/AccountHomePage.vue'),
-                    meta: { title: 'Кабінет', requiresAuth: true },
-                },
-                {
-                    path: 'studio',
-                    name: 'studio',
-                    component: () => import('@/pages/studio/StudioProfilePage.vue'),
-                    meta: { title: 'Профіль майстерні', requiresAuth: true },
-                },
-                {
-                    path: 'admin/makers',
-                    name: 'admin-makers',
-                    component: () => import('@/pages/admin/AdminMakersPage.vue'),
-                    meta: { title: 'Перевірка майстрів', requiresAuth: true, requiresAdmin: true },
-                },
-                {
-                    path: 'products',
-                    name: 'studio-products',
-                    component: () => import('@/pages/studio/MyProductsPage.vue'),
-                    meta: { title: 'Товари', requiresAuth: true },
-                },
-                {
-                    path: 'products/new',
-                    name: 'studio-product-new',
-                    component: () => import('@/pages/studio/ProductEditorPage.vue'),
-                    meta: { title: 'Новий товар', requiresAuth: true },
-                },
-                {
-                    path: 'products/:uuid',
-                    name: 'studio-product',
-                    component: () => import('@/pages/studio/ProductEditorPage.vue'),
-                    props: true,
-                    meta: { title: 'Товар', requiresAuth: true },
-                },
-                {
-                    path: 'admin/products',
-                    name: 'admin-products',
-                    component: () => import('@/pages/admin/AdminProductsPage.vue'),
-                    meta: { title: 'Перевірка товарів', requiresAuth: true, requiresAdmin: true },
-                },
-                {
-                    path: 'admin/categories',
-                    name: 'admin-categories',
-                    component: () => import('@/pages/admin/AdminCategoriesPage.vue'),
-                    meta: { title: 'Категорії', requiresAuth: true, requiresAdmin: true },
-                },
-                {
-                    path: 'orders',
-                    name: 'account-orders',
-                    component: () => import('@/pages/account/OrdersPage.vue'),
-                    meta: { title: 'Замовлення', requiresAuth: true },
-                },
-                {
-                    path: 'orders/:number',
-                    name: 'account-order',
-                    component: () => import('@/pages/account/OrderPage.vue'),
-                    props: true,
-                    meta: { title: 'Замовлення', requiresAuth: true },
-                },
-                {
-                    path: 'settings',
-                    name: 'account-settings',
-                    component: () => import('@/pages/account/SettingsPage.vue'),
-                    meta: { title: 'Налаштування', requiresAuth: true },
-                },
-                {
-                    path: 'admin/users',
-                    name: 'admin-users',
-                    component: () => import('@/pages/admin/AdminUsersPage.vue'),
-                    meta: { title: 'Користувачі', requiresAuth: true, requiresAdmin: true },
-                },
-                {
-                    path: 'favorites',
-                    name: 'account-favorites',
-                    component: () => import('@/pages/account/FavoritesPage.vue'),
-                    meta: { title: 'Обране', requiresAuth: true },
-                },
-                {
-                    path: 'sales',
-                    name: 'studio-sales',
-                    component: () => import('@/pages/studio/SalesPage.vue'),
-                    meta: { title: 'Продажі', requiresAuth: true },
-                },
-                {
-                    path: 'admin/orders',
-                    name: 'admin-orders',
-                    component: () => import('@/pages/admin/AdminOrdersPage.vue'),
-                    meta: { title: 'Усі замовлення', requiresAuth: true, requiresAdmin: true },
-                },
-                {
-                    path: 'soon/:section',
-                    name: 'account-soon',
-                    component: () => import('@/pages/account/ComingSoonPage.vue'),
-                    props: true,
-                    meta: { title: 'Скоро', requiresAuth: true },
-                },
-            ],
-        },
-        // Old URLs
-        { path: '/studio', redirect: { name: 'studio' } },
-        { path: '/admin/makers', redirect: { name: 'admin-makers' } },
-        {
-            path: '/login',
-            name: 'login',
-            component: () => import('@/pages/auth/AuthPage.vue'),
-            props: { mode: 'login' },
-            meta: { title: 'Вхід', guestOnly: true },
-        },
-        {
-            path: '/register',
-            name: 'register',
-            component: () => import('@/pages/auth/AuthPage.vue'),
-            props: (route) => ({ mode: 'register', role: route.query.role === 'master' ? 'master' : 'buyer' }),
-            meta: { title: 'Реєстрація', guestOnly: true },
-        },
-        {
-            path: '/:pathMatch(.*)*',
-            name: 'not-found',
-            component: () => import('@/pages/NotFoundPage.vue'),
-            meta: { title: 'Сторінку не знайдено' },
         },
     ],
 });
 
+let firstNavigation = true;
+
 router.beforeEach(async (to) => {
     const auth = useAuthStore();
     if (!auth.checked) await auth.fetchUser();
+
+    const locale = isLocale(to.params.locale) ? to.params.locale : DEFAULT_LOCALE;
+    // Signed-in users who chose English land on the English site when they arrive without a prefix
+    if (firstNavigation) {
+        firstNavigation = false;
+        if (auth.user?.locale === 'en' && locale !== 'en') {
+            return { name: to.name ?? 'home', params: { ...to.params, locale: 'en' }, query: to.query, hash: to.hash };
+        }
+    }
+    // Always on the first navigation too, so <html lang> matches the URL from the start
+    if (locale !== currentLocale() || document.documentElement.lang !== locale) applyLocale(locale);
 
     if ((to.meta.requiresAuth || to.meta.requiresAdmin) && !auth.isAuthenticated) {
         return { name: 'login', query: { redirect: to.fullPath } };
@@ -222,5 +236,7 @@ router.beforeEach(async (to) => {
 });
 
 router.afterEach((to) => {
-    document.title = to.meta.title ? `${to.meta.title} — Craft Woman` : 'Craft Woman';
+    const key = `title.${String(to.name ?? '')}`;
+    const title = to.name ? t(key) : '';
+    document.title = title && title !== key ? `${title} — Craft Woman` : 'Craft Woman';
 });
